@@ -1,6 +1,6 @@
 # Hecker Islam
 
-**Hecker Islam** combines Hecker's Calendar and Shia Azaan projects into one offline-first Android application. This initial integration preserves their separate original codebases and adds a new unified dashboard, Qibla compass, and Tasbeeh counter.
+**Hecker Islam** combines Hecker's Calendar and Shia Azaan projects into one offline-first Android application. The reference UI branch adds a redesigned dashboard, offline Qur'an / Azkar / Hadith readers with search and bookmarks, five-prayer tracking, and import of an authorized content pack.
 
 ## Implemented in the integration branch
 
@@ -10,7 +10,7 @@
 - **Qibla:** Sensor-based direction relative to Kaaba, using the location selected in Azaan.
 - **Tasbeeh:** Local counter and saved progress by remembrance phrase.
 
-The existing **Calendar** and **Azaan** repositories remain untouched. This does not yet reproduce every function in the user-supplied Salat Times APK.
+The existing **Calendar** and **Azaan** repositories remain untouched. For the latest reference UI/feature implementation and remaining gaps, see docs/FEATURE_PARITY.md.
 
 ## Planned Salat Times reference parity
 
@@ -32,3 +32,9 @@ GitHub Actions builds and uploads the debug APK for every push. If you need a Gr
 - Because this is a new application ID (`com.hecker.islam`), settings from the previous two separate apps do not automatically migrate. Set city, calculation method and recordings again on first use.
 - Azaan audio files must be provided/imported by the user. No copyrighted human reciter recording is bundled.
 - Compare locally calculated prayer times against your trusted community timetable before using alerts.
+
+
+## Reference UI + content build
+
+Use branch `feat/reference-ui-parity`. Install the debug APK built by GitHub Actions, then open **More → Import offline library** and select the supplied Salat Times APK or the reference-content-pack ZIP. The catalog data is extracted offline to private app storage. This avoids storing a copy of the large binary assets in Git history.
+
