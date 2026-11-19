@@ -55,6 +55,13 @@ public final class TasbeehActivity extends Activity {
             if (value < Integer.MAX_VALUE) prefs.edit().putInt(key(), value + 1).apply();
             countView.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
             refresh();
+            if (android.animation.ValueAnimator.areAnimatorsEnabled()) {
+                countView.animate().scaleX(1.13f).scaleY(1.13f).setDuration(110)
+                    .withEndAction(() -> countView.animate().scaleX(1f).scaleY(1f)
+                        .setDuration(230)
+                        .setInterpolator(new android.view.animation.OvershootInterpolator(.9f)).start())
+                    .start();
+            }
         });
         card.addView(countView);
         TextView tap = Ui.text(this, "TAP THE NUMBER TO COUNT", 12, Ui.MUTED, true);

@@ -1,6 +1,12 @@
 package com.hecker.islam;
 
 import android.app.Activity;
+import android.animation.ValueAnimator;
+import android.graphics.drawable.GradientDrawable;
+import android.view.View;
+import android.widget.ImageView;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.OvershootInterpolator;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
@@ -29,23 +35,18 @@ import java.util.concurrent.Executors;
  * The original Calendar and Azaan activities are preserved verbatim.
  */
 public final class IslamDashboardActivity extends Activity {
-    private static final int IMPORT_ARCHIVE = 4821;
-    private final ExecutorService worker = Executors.newSingleThreadExecutor();
-    private final Handler handler = new Handler(Looper.getMainLooper());
     private LinearLayout content, navigation;
     private int page = 0;
-    private boolean importing = false;
     @Override public void onCreate(Bundle state) {
         super.onCreate(state); render();
     }
     @Override protected void onResume() { super.onResume(); render(); }
-    @Override protected void onDestroy() { worker.shutdownNow(); super.onDestroy(); }
     private void render() {
         Ui.applyTheme(this);
         getWindow().setStatusBarColor(Ui.BACKGROUND);
         getWindow().setNavigationBarColor(Ui.BACKGROUND);
         getWindow().getDecorView().setSystemUiVisibility(
-                Ui.BACKGROUND == android.graphics.Color.parseColor("#F5F8F2")
+                !getSharedPreferences("islam_ui", MODE_PRIVATE).getBoolean("dark", false)
                 ? android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
                 : 0);
         LinearLayout root = Ui.column(this);
@@ -61,14 +62,34 @@ public final class IslamDashboardActivity extends Activity {
         navigation = new LinearLayout(this);
         navigation.setOrientation(LinearLayout.HORIZONTAL);
         navigation.setPadding(Ui.dp(this, 10), Ui.dp(this, 8), Ui.dp(this, 10), Ui.dp(this, 11));
-        navigation.setBackgroundColor(Ui.BACKGROUND);
-        root.addView(navigation, new LinearLayout.LayoutParams(-1, Ui.dp(this, 80)));
+        GradientDrawable navSurface = new GradientDrawable();
+        navSurface.setColor(Ui.CARD);
+        navSurface.setCornerRadius(Ui.dp(this, 35));
+        navSurface.setStroke(Ui.dp(this, 1), Ui.OUTLINE);
+        navigation.setBackground(navSurface);
+        navigation.setElevation(Ui.dp(this, 10));
+        LinearLayout.LayoutParams navParams = new LinearLayout.LayoutParams(-1, Ui.dp(this, 72));
+        navParams.setMargins(Ui.dp(this, 16), Ui.dp(this, 4), Ui.dp(this, 16), Ui.dp(this, 12));
+        root.addView(navigation, navParams);
         setContentView(root);
         header();
         if (page == 0) today();
         else if (page == 4) more();
         else page = 0;
         tabs();
+        if (ValueAnimator.areAnimatorsEnabled()) {
+            for (int i = 0; i < content.getChildCount(); i++) {
+                View item = content.getChildAt(i);
+                item.setAlpha(0f);
+                item.setTranslationY(Ui.dp(this, 12));
+                item.animate().alpha(1f).translationY(0f)
+                        .setStartDelay(Math.min(180, i * 20L))
+                        .setDuration(360).setInterpolator(new DecelerateInterpolator()).start();
+            }
+            navigation.setScaleX(.96f); navigation.setScaleY(.96f);
+            navigation.animate().scaleX(1f).scaleY(1f).setDuration(370)
+                    .setInterpolator(new OvershootInterpolator(.6f)).start();
+        }
     }
     private void header() {
         LinearLayout line = new LinearLayout(this);
@@ -163,10 +184,10 @@ public final class IslamDashboardActivity extends Activity {
         tile("Tasbeeh", "Your personal dhikr counter",
                 () -> launch(TasbeehActivity.class));
         if (!ReferenceLibrary.ready(this)) {
-            rowTitle("Offline content");
-            tile(importing ? "Importing the content pack..." : "Import reference content",
-                    "Select your friend's original APK or the Hecker Islam content ZIP",
-                    this::chooseDataPack);
+            rowTitle("Offline library unavailable");
+            content.addView(Ui.text(this,
+                    "This development build is missing its content. Only release APKs with embedded offline catalogs should be distributed.",
+                    14, Ui.MUTED, false));
         }
     }
     private void more() {
@@ -179,13 +200,30 @@ public final class IslamDashboardActivity extends Activity {
         tile("Qibla compass", "Compass calibrated with device sensors", () -> launch(QiblaActivity.class));
         tile("Prayer tracker", "Your local prayer history", () -> launch(PrayerTrackerActivity.class));
         tile("Tasbeeh counter", "Remembrance and saved counts", () -> launch(TasbeehActivity.class));
-        tile("Import offline library", "Import Qur'an, Azkar, Hadith and city catalogs from the reference APK or ZIP", this::chooseDataPack);
+        tile("Offline library", ReferenceLibrary.ready(this)
+                ? "Qur'an, Hadith, Azkar and city catalogs included, ready offline"
+                : "Developer build incomplete: embedded content missing",
+                () -> new AlertDialog.Builder(this)
+                .setMessage(ReferenceLibrary.ready(this)
+                        ? "Your complete offline library is already included with Hecker Islam."
+                        : "This build is missing assets. Rebuild with the complete offline reference pack.")
+                .setPositiveButton("OK", null).show());
         boolean dark = getSharedPreferences("islam_ui", MODE_PRIVATE).getBoolean("dark", false);
         tile(dark ? "Appearance: Dark mode" : "Appearance: Light mode",
                 "Tap to switch between light and dark Material-inspired palettes", () -> {
                     getSharedPreferences("islam_ui", MODE_PRIVATE).edit().putBoolean("dark", !dark).apply();
                     render();
                 });
+        if (android.os.Build.VERSION.SDK_INT >= 31) {
+            boolean dynamic = getSharedPreferences("islam_ui", MODE_PRIVATE).getBoolean("dynamic", true);
+            tile(dynamic ? "Material You colors: On" : "Material You colors: Off",
+                    "Match the accent colors from your device, as in Material 3",
+                    () -> {
+                        getSharedPreferences("islam_ui", MODE_PRIVATE).edit()
+                                .putBoolean("dynamic", !dynamic).apply();
+                        render();
+                    });
+        }
         rowTitle("Content status");
         content.addView(Ui.text(this,
                 ReferenceLibrary.ready(this)
@@ -196,19 +234,36 @@ public final class IslamDashboardActivity extends Activity {
     }
     private void tabs() {
         String[] labels = {"Today", "Qur'an", "Azkar", "Hadith", "More"};
-        String[] icons = {"⌂", "☷", "✺", "▤", "☰"};
+        int[] icons = {
+            android.R.drawable.ic_menu_today,
+            android.R.drawable.ic_menu_agenda,
+            android.R.drawable.ic_menu_compass,
+            android.R.drawable.ic_menu_info_details,
+            android.R.drawable.ic_menu_more
+        };
         for (int i = 0; i < labels.length; i++) {
             final int position = i;
             LinearLayout pill = Ui.column(this);
             pill.setGravity(Gravity.CENTER);
-            pill.setBackgroundColor(i == page ? Ui.CARD : Ui.BACKGROUND);
-            TextView icon = Ui.text(this, icons[i], 22, i == page ? Ui.GOLD : Ui.MUTED, true);
-            icon.setGravity(Gravity.CENTER);
-            pill.addView(icon);
+            GradientDrawable highlight = new GradientDrawable();
+            highlight.setColor(i == page ? Ui.BACKGROUND : Ui.CARD);
+            highlight.setCornerRadius(Ui.dp(this, 32));
+            pill.setBackground(highlight);
+            ImageView icon = new ImageView(this);
+            icon.setImageResource(icons[i]);
+            icon.setColorFilter(i == page ? Ui.GOLD : Ui.MUTED);
+            pill.addView(icon, new LinearLayout.LayoutParams(Ui.dp(this, 23), Ui.dp(this, 23)));
+            Ui.space(this, pill, 4);
             TextView label = Ui.text(this, labels[i], 10, i == page ? Ui.WHITE : Ui.MUTED, i == page);
             label.setGravity(Gravity.CENTER);
             pill.addView(label);
+            pill.setContentDescription("Open " + labels[i]);
             pill.setOnClickListener(v -> {
+                if (ValueAnimator.areAnimatorsEnabled()) {
+                    v.animate().scaleX(.88f).scaleY(.88f).setDuration(90)
+                        .withEndAction(() -> v.animate().scaleX(1f).scaleY(1f)
+                        .setDuration(240).setInterpolator(new OvershootInterpolator(.75f)).start()).start();
+                }
                 if (position == 1) library("quran");
                 else if (position == 2) library("azkar");
                 else if (position == 3) library("hadith");
@@ -238,31 +293,5 @@ public final class IslamDashboardActivity extends Activity {
             new AlertDialog.Builder(this).setMessage("Install a maps app to search nearby mosques.")
                     .setPositiveButton("OK", null).show();
         }
-    }
-    private void chooseDataPack() {
-        if (importing) return;
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("*/*");
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        startActivityForResult(intent, IMPORT_ARCHIVE);
-    }
-    @Override protected void onActivityResult(int request, int result, Intent data) {
-        super.onActivityResult(request, result, data);
-        if (request != IMPORT_ARCHIVE || result != RESULT_OK || data == null || data.getData() == null) return;
-        Uri file = data.getData();
-        importing = true; render();
-        worker.execute(() -> {
-            String message;
-            try { message = ReferenceLibrary.importArchive(this, file); }
-            catch (Exception ex) { message = "Import failed: " + ex.getMessage(); }
-            String report = message;
-            handler.post(() -> {
-                if (isFinishing()) return;
-                importing = false; render();
-                new AlertDialog.Builder(this).setTitle("Offline library")
-                        .setMessage(report).setPositiveButton("OK", null).show();
-            });
-        });
     }
 }

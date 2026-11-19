@@ -13,6 +13,9 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.animation.ValueAnimator;
+import android.transition.Fade;
+import android.transition.TransitionManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.BufferedReader;
@@ -53,9 +56,9 @@ public final class ReferenceReadingActivity extends Activity {
         scroll.addView(content);
         setContentView(root);
         if (!ReferenceLibrary.ready(this)) {
-            content.addView(Ui.text(this, "Offline library not installed", 25, Ui.WHITE, true));
+            content.addView(Ui.text(this, "Offline content missing from build", 25, Ui.WHITE, true));
             Ui.space(this, content, 15);
-            content.addView(Ui.text(this, "Import the authorized Salat Times APK or Hecker Islam content pack from the Home screen. Once imported, all reading works offline.", 16, Ui.MUTED, false));
+            content.addView(Ui.text(this, "This APK was compiled without its mandatory bundled content. Install a complete standalone release build.", 16, Ui.MUTED, false));
             return;
         }
         try {
@@ -85,6 +88,11 @@ public final class ReferenceReadingActivity extends Activity {
         super.onDestroy();
     }
     private void draw() {
+        if (content != null && ValueAnimator.areAnimatorsEnabled()) {
+            Fade fade = new Fade();
+            fade.setDuration(260);
+            TransitionManager.beginDelayedTransition(content, fade);
+        }
         generation++;
         content.removeAllViews();
         TextView back = Ui.text(this, "‹  " + (stage == 0 ? "Hecker Islam" : "Back"), 15, Ui.GOLD, true);

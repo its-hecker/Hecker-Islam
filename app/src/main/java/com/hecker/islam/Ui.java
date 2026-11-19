@@ -1,6 +1,9 @@
 package com.hecker.islam;
 
 import android.content.Context;
+import android.animation.ValueAnimator;
+import android.view.MotionEvent;
+import android.view.animation.DecelerateInterpolator;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -19,6 +22,15 @@ final class Ui {
     private Ui() {}
     static void applyTheme(Context c) {
         boolean night = c.getSharedPreferences("islam_ui", Context.MODE_PRIVATE).getBoolean("dark", false);
+        if (Build.VERSION.SDK_INT >= 31 && c.getSharedPreferences("islam_ui", Context.MODE_PRIVATE).getBoolean("dynamic", true)) {
+            BACKGROUND = c.getColor(night ? android.R.color.system_neutral1_900 : android.R.color.system_neutral1_10);
+            CARD = c.getColor(night ? android.R.color.system_neutral1_800 : android.R.color.system_neutral1_50);
+            GOLD = c.getColor(night ? android.R.color.system_accent1_200 : android.R.color.system_accent1_600);
+            WHITE = c.getColor(night ? android.R.color.system_neutral1_50 : android.R.color.system_neutral1_900);
+            MUTED = c.getColor(night ? android.R.color.system_neutral2_300 : android.R.color.system_neutral2_600);
+            OUTLINE = c.getColor(night ? android.R.color.system_neutral2_700 : android.R.color.system_neutral2_200);
+            return;
+        }
         BACKGROUND = Color.parseColor(night ? "#101916" : "#F5F8F2");
         CARD = Color.parseColor(night ? "#1E312A" : "#FFFFFF");
         GOLD = Color.parseColor(night ? "#BDE9C4" : "#286D54");
@@ -39,9 +51,24 @@ final class Ui {
     static LinearLayout panel(Context c) {
         LinearLayout v = column(c);
         GradientDrawable bg = new GradientDrawable();
-        bg.setColor(CARD); bg.setCornerRadius(dp(c, 24)); bg.setStroke(dp(c, 1), OUTLINE);
+        bg.setColor(CARD); bg.setCornerRadius(dp(c, 28)); bg.setStroke(dp(c, 1), OUTLINE);
         v.setBackground(bg);
-        v.setPadding(dp(c, 18), dp(c, 18), dp(c, 18), dp(c, 18));
+        v.setPadding(dp(c, 18), dp(c, 19), dp(c, 18), dp(c, 19));
+        // Material expressive pressed feedback: scale without swallowing Click listeners.
+        v.setOnTouchListener((view, ev) -> {
+            if (!view.isClickable() || !ValueAnimator.areAnimatorsEnabled()) return false;
+            switch (ev.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN:
+                    view.animate().scaleX(.975f).scaleY(.975f).setDuration(130)
+                        .setInterpolator(new DecelerateInterpolator()).start(); break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    view.animate().scaleX(1f).scaleY(1f).setDuration(250)
+                        .setInterpolator(new android.view.animation.OvershootInterpolator(.8f)).start(); break;
+                default: break;
+            }
+            return false;
+        });
         return v;
     }
     static void space(Context c, LinearLayout parent, int height) {

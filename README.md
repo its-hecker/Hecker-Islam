@@ -1,40 +1,42 @@
 # Hecker Islam
 
-**Hecker Islam** combines Hecker's Calendar and Shia Azaan projects into one offline-first Android application. The reference UI branch adds a redesigned dashboard, offline Qur'an / Azkar / Hadith readers with search and bookmarks, five-prayer tracking, and import of an authorized content pack.
+An offline-first unified Islamic Android app, combining Hecker's Calendar and Azaan projects and a reference-inspired Material 3 interface.
 
-## Implemented in the integration branch
+## Included features
 
-- **Calendar:** Gregorian, calculated Hijri and Desi dates, religious occasions (Wiladat/Eid/Shahadat), month and date navigation, Fatimiyya views, themes, fonts and accents. Uses the original Calendar 2.3 assets and activity.
-- **Azaan:** Jaʿfari/Qom and Tehran prayer calculations, three daily announcements (Fajr, combined Dhuhr–Asr, combined Maghrib–Isha), Arabic recitation plus optional Urdu and English explanations, audio import/preview, local city/timezone selection, prayer offsets, reliable exact-alarm scheduling, and lockscreen countdown notifications where supported. Uses the Azaan app's feat/male-reciter-countdown source.
-- **Unified dashboard:** Live upcoming-prayer summary, location status, and navigation to the Calendar, Azaan, Qibla and Tasbeeh.
-- **Qibla:** Sensor-based direction relative to Kaaba, using the location selected in Azaan.
-- **Tasbeeh:** Local counter and saved progress by remembrance phrase.
+- **Shia Azaan:** Ja'fari and Tehran prayer calculations, three daily announcements, adjustable offsets, imported recordings and notifications
+- **Calendar:** Gregorian / Hijri / Desi dates, Islamic occasions and customization
+- **Qur'an:** 114 chapters, 6,236 Uthmani verses, reader, offline search, bookmarks
+- **Azkar:** 11 categories, 133 chapters, 287 supplications with translations/repeat counts and saved items
+- **Hadith:** 3,574 searchable records, 493 categories and bookmarks
+- **Prayer tracking:** privately saved history of five daily prayers
+- **Qibla and Tasbeeh:** compass and saved remembrance counts
+- **Home UI:** rounded Material-inspired cards, floating nav bar, Material You dynamic colors, dark/light mode and animated interaction
 
-The existing **Calendar** and **Azaan** repositories remain untouched. For the latest reference UI/feature implementation and remaining gaps, see docs/FEATURE_PARITY.md.
+## Standalone APK: bundled offline data
 
-## Planned Salat Times reference parity
+**No manual import is required inside the app.** On `fix/standalone-offline-expressive`,
+all 40 authorized catalog files are embedded into `app/src/main/assets/reference`
+when built for release. The original Salat Times reference APK is only
+needed by the maintainer **one time** to commit the source data into Git.
 
-See [docs/FEATURE_PARITY.md](docs/FEATURE_PARITY.md). The reference was inspected for feature discovery only. The app does not redistribute third-party proprietary code, fonts, photos, recordings, translations, or branding. Qur'an, Hadith and Azkar modules require appropriately licensed/verifiable text sources.
+See **[Standalone build guide](docs/STANDALONE_BUILD.md)** to embed the assets. 
+GitHub Actions intentionally **will not upload an incomplete APK**: the
+`hecker-islam-standalone-debug-apk` artifact is published only after
+the offline dataset verification succeeds.
 
-## Build
+## Local build
 
-Android Gradle Plugin 8.9.2, Gradle 8.11.1, JDK 17 and Android SDK 35:
+Android SDK 35, JDK 17, Gradle 8.11.1:
 
 ```bash
-gradle testDebugUnitTest lintDebug assembleDebug
+python3 tools/bundle_reference_assets.py --verify
+gradle --no-daemon testDebugUnitTest lintDebug assembleDebug
 ```
 
-GitHub Actions builds and uploads the debug APK for every push. If you need a Gradle wrapper locally, run `gradle wrapper --gradle-version 8.11.1` once and commit the generated wrapper files.
+The UI is still being brought toward the reference application's exact
+Compose animation and layout behavior. This Java-native integration is
+not yet pixel-perfect; see [Feature parity](docs/FEATURE_PARITY.md).
 
-## Notes
-
-- No account, ad SDK, Internet permission or background location permission.
-- Because this is a new application ID (`com.hecker.islam`), settings from the previous two separate apps do not automatically migrate. Set city, calculation method and recordings again on first use.
-- Azaan audio files must be provided/imported by the user. No copyrighted human reciter recording is bundled.
-- Compare locally calculated prayer times against your trusted community timetable before using alerts.
-
-
-## Reference UI + content build
-
-Use branch `feat/reference-ui-parity`. Install the debug APK built by GitHub Actions, then open **More → Import offline library** and select the supplied Salat Times APK or the reference-content-pack ZIP. The catalog data is extracted offline to private app storage. This avoids storing a copy of the large binary assets in Git history.
-
+The Calendar and Azaan source repositories remain unchanged.
+Hecker Islam has its own application ID `com.hecker.islam`.
