@@ -47,3 +47,10 @@ jobs:
         with:
           name: hecker-islam-standalone-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+
+      - name: Upload internal staging APK for bundling (not for users)
+        if: success() && steps.content.outputs.ready == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: STAGING-INCOMPLETE-NOT-FOR-INSTALLATION
+          path: app/build/outputs/apk/debug/*.apk
