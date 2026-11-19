@@ -15,6 +15,8 @@ jobs:
       ANDROID_SDK_ROOT: ${{ github.workspace }}/.android-sdk
     steps:
       - uses: actions/checkout@v4
+      - name: Verify bundled offline catalogs
+        run: python3 tools/bundle_reference_assets.py --verify
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -32,18 +34,8 @@ jobs:
           gradle-version: '8.11.1'
       - name: Unit tests, lint and APK
         run: gradle --no-daemon testDebugUnitTest lintDebug assembleDebug
-      - name: Confirm the APK is truly standalone
-        id: content
-        shell: bash
-        run: |
-          if python3 tools/bundle_reference_assets.py --verify; then
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Standalone APK not published: required offline catalogs are missing from Git. Embed the authorized reference data and push it first."
-          fi
       - uses: actions/upload-artifact@v4
-        if: success() && steps.content.outputs.ready == 'true'
         with:
           name: hecker-islam-standalone-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
