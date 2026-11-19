@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+
+    <queries><intent><action android:name="android.intent.action.TTS_SERVICE"/></intent></queries>
+    <application
+        android:label="Hecker Islam"
+        android:icon="@drawable/ic_azaan"
+        android:roundIcon="@drawable/ic_azaan"
+        android:theme="@style/AppTheme"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:supportsRtl="true"
+        android:enableOnBackInvokedCallback="true">
+        <activity android:name="com.hecker.islam.HomeActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <activity android:name="com.hecker.azaan.MainActivity" android:exported="false"/>
+        <activity android:name="com.sabber.taqwim.MainActivity" android:exported="false"
+            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"/>
+        <activity android:name="com.hecker.islam.QiblaActivity" android:exported="false"/>
+        <activity android:name="com.hecker.islam.TasbeehActivity" android:exported="false"/>
+        <receiver android:name="com.hecker.azaan.AlarmReceiver" android:exported="false"/>
+        <receiver android:name="com.hecker.azaan.RescheduleReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.TIME_SET"/>
+                <action android:name="android.intent.action.TIMEZONE_CHANGED"/>
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED"/>
+            </intent-filter>
+        </receiver>
+        <service android:name="com.hecker.azaan.PlaybackService" android:exported="false"
+            android:foregroundServiceType="mediaPlayback"/>
+    </application>
+</manifest>
