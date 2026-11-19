@@ -19,7 +19,7 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:supportsRtl="true"
         android:enableOnBackInvokedCallback="true">
-        <activity android:name="com.hecker.islam.HomeActivity" android:exported="true">
+        <activity android:name="com.hecker.islam.IslamDashboardActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -29,6 +29,9 @@
         <activity android:name="com.sabber.taqwim.MainActivity" android:exported="false"
             android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"/>
         <activity android:name="com.hecker.islam.QiblaActivity" android:exported="false"/>
+        <activity android:name="com.hecker.islam.HomeActivity" android:exported="false"/>
+        <activity android:name="com.hecker.islam.ReferenceReadingActivity" android:exported="false"/>
+        <activity android:name="com.hecker.islam.PrayerTrackerActivity" android:exported="false"/>
         <activity android:name="com.hecker.islam.TasbeehActivity" android:exported="false"/>
         <receiver android:name="com.hecker.azaan.AlarmReceiver" android:exported="false"/>
         <receiver android:name="com.hecker.azaan.RescheduleReceiver" android:exported="false">
