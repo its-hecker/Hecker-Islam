@@ -52,6 +52,7 @@ public final class ReferenceReadingActivity extends Activity {
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         section = getIntent().getStringExtra("section");
+        if ("hadith".equals(section)) { startActivity(new android.content.Intent(this, ShiaHadithActivity.class)); finish(); return; }
         if (!"quran".equals(section) && !"azkar".equals(section) && !"hadith".equals(section))
             section = "quran";
         saved = getSharedPreferences("islam_library", MODE_PRIVATE);
@@ -90,6 +91,7 @@ public final class ReferenceReadingActivity extends Activity {
         int selected = "quran".equals(section) ? 1 : "azkar".equals(section) ? 2 : 3;
         Ui.fillNavigation(this, navigation, selected, index -> {
             if (index >= 1 && index <= 3) {
+                if (index == 3) { startActivity(new android.content.Intent(this, ShiaHadithActivity.class)); finish(); return; }
                 String next = index == 1 ? "quran" : index == 2 ? "azkar" : "hadith";
                 if (!next.equals(section)) {
                     section = next; stage = 0; chapter = -1; category = -1; query = "";
