@@ -28,7 +28,7 @@ public final class SourceWebActivity extends Activity {
         Ui.rootInsets(root);
         LinearLayout heading=Ui.column(this);
         heading.setPadding(Ui.dp(this,20),Ui.dp(this,14),Ui.dp(this,20),Ui.dp(this,12));
-        TextView back=Ui.text(this,"‹  Shia Duas",17,Ui.GOLD,true);
+        TextView back=Ui.text(this,"‹  Hecker Islam",17,Ui.GOLD,true);
         back.setOnClickListener(v -> onBackPressed());
         heading.addView(back); Ui.space(this,heading,10);
         heading.addView(Ui.text(this,getIntent().getStringExtra("title"),18,Ui.WHITE,true));
@@ -56,7 +56,8 @@ public final class SourceWebActivity extends Activity {
     private static boolean allowed(Uri uri) {
         if(!"https".equals(uri.getScheme())) return false;
         String host=uri.getHost();
-        return "fzic.org".equals(host) || "www.fzic.org".equals(host)
+        return "nehjulbalagah.com".equals(host) || "www.nehjulbalagah.com".equals(host)
+            || "fzic.org".equals(host) || "www.fzic.org".equals(host)
             || "duas.org".equals(host) || "www.duas.org".equals(host);
     }
     @Override public void onBackPressed() {
