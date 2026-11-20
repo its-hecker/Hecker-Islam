@@ -353,6 +353,7 @@ public final class RecitationService extends Service {
         if (speech != null && speechReady) {
             speakNext(); return;
         }
+        if (speech != null) { speech.shutdown(); speech = null; }
         loading = true; saveState();
         final int token = ++serial;
         speech = new TextToSpeech(getApplicationContext(), status -> handler.post(() -> {
@@ -372,21 +373,21 @@ public final class RecitationService extends Service {
                 @Override public void onStart(String id) { }
                 @Override public void onRangeStart(String id, int start, int end, int frame) {
                     handler.post(() -> {
-                        if (id.equals("segment-" + serial) && playing) {
+                        if (id.equals(activeUtterance) && playing) {
                             textOffset = Math.min(text.length(), segmentStart + start);
                             savePosition();
                         }
                     });
                 }
                 @Override public void onDone(String id) { handler.post(() -> {
-                    if (id.equals("segment-" + serial) && playing) {
+                    if (id.equals(activeUtterance) && playing) {
                         textOffset = segmentEnd;
                         savePosition();
                         speakNext();
                     }
                 }); }
                 @Override public void onError(String id) { handler.post(() -> {
-                    if (id.equals("segment-" + serial)) pausePlayback();
+                    if (id.equals(activeUtterance)) pausePlayback();
                 }); }
             });
             speechReady = true;
@@ -394,6 +395,7 @@ public final class RecitationService extends Service {
         }));
     }
     private int segmentStart;
+    private String activeUtterance;
     private void speakNext() {
         if (!playing || speech == null || !speechReady) return;
         if (textOffset >= text.length()) { finishPlayback(); return; }
@@ -410,21 +412,26 @@ public final class RecitationService extends Service {
         }
         segmentStart = textOffset;
         segmentEnd = end;
+        activeUtterance = "segment-" + serial + "-" + segmentStart;
         loading = false;
         saveState();
         if (speechWake != null) speechWake.acquire(90000L);
         if (speech.speak(text.substring(segmentStart, segmentEnd),
-                TextToSpeech.QUEUE_FLUSH, null, "segment-" + serial) == TextToSpeech.ERROR)
+                TextToSpeech.QUEUE_FLUSH, null, activeUtterance) == TextToSpeech.ERROR)
             pausePlayback();
     }
     private void pausePlayback() {
         if (key.isEmpty()) return;
         savePosition();
+        boolean wasLoading = loading;
         playing = false; loading = false; serial++;
+        activeUtterance = null;
         handler.removeCallbacks(checkpoint);
         clearTimeout();
         if (player != null) {
-            try { if (player.isPlaying()) player.pause(); } catch (RuntimeException ignored) { }
+            if (wasLoading) releasePlayer();
+            else try { if (player.isPlaying()) player.pause(); }
+                 catch (RuntimeException ignored) { }
         }
         if (speech != null) speech.stop();
         if (speechWake != null && speechWake.isHeld()) speechWake.release();
@@ -477,6 +484,10 @@ public final class RecitationService extends Service {
     @Override public void onDestroy() {
         savePosition();
         // Do not erase the checkpoint if Android stops the service or process.
+        if (!key.isEmpty()) {
+            playing = false; loading = false;
+            saveState();
+        }
         releaseResources();
         super.onDestroy();
     }
