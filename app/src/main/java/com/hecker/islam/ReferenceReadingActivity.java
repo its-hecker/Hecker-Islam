@@ -56,6 +56,14 @@ public final class ReferenceReadingActivity extends Activity {
         if ("hadith".equals(section)) { startActivity(new android.content.Intent(this, ShiaHadithActivity.class)); finish(); return; }
         if (!"quran".equals(section) && !"azkar".equals(section) && !"hadith".equals(section))
             section = "quran";
+        if (state != null) {
+            stage = state.getInt("reader_stage", 0);
+            chapter = state.getInt("reader_chapter", -1);
+            category = state.getInt("reader_category", -1);
+        } else if ("quran".equals(section) && getIntent().getBooleanExtra("resume_recitation", false)) {
+            chapter = RecitationService.currentSurah(this);
+            if (chapter >= 1 && chapter <= 114) stage = 1;
+        }
         saved = getSharedPreferences("islam_library", MODE_PRIVATE);
         Ui.applyTheme(this);
         LinearLayout root = Ui.column(this);
@@ -130,6 +138,12 @@ public final class ReferenceReadingActivity extends Activity {
             content.removeAllViews();
             content.addView(Ui.text(this, "Cannot load library: " + ex.getMessage(), 16, Ui.MUTED, false));
         }
+    }
+    @Override protected void onSaveInstanceState(Bundle state) {
+        super.onSaveInstanceState(state);
+        state.putInt("reader_stage", stage);
+        state.putInt("reader_chapter", chapter);
+        state.putInt("reader_category", category);
     }
     @Override public void onBackPressed() {
         stopAudio();
@@ -361,7 +375,8 @@ public final class ReferenceReadingActivity extends Activity {
                 String title = c.optString("name_simple") + "  •  " + c.optString("name_arabic");
                 String subtitle = c.optInt("verses_count") + " verses";
                 card(String.format(Locale.ENGLISH, "%d. %s", id, title), subtitle, () -> {
-                    stopAudio(); chapter = id; stage = 1; query = ""; draw();
+                    if (!RecitationService.matchesQuran(this, id)) stopAudio();
+                    chapter = id; stage = 1; query = ""; draw();
                 });
             }
         } else if (stage == 1) {
