@@ -139,8 +139,9 @@ public final class DashboardCalendar {
         JSONObject source = data(context);
         if (source == null) return new Day("Hijri date unavailable", "Desi date unavailable",
                 Collections.emptyList(), null, 0, false);
-        int[] h = hijri(date.plusDays(context.getSharedPreferences("islam_ui", Context.MODE_PRIVATE)
-                .getInt("calendar_hijri_adjustment", 0)));
+        int hijriAdjustment = context.getSharedPreferences("islam_ui", Context.MODE_PRIVATE)
+                .getInt("calendar_hijri_adjustment", 0);
+        int[] h = hijri(date.plusDays(hijriAdjustment));
         JSONArray names = source.optJSONArray("HM");
         String month = names == null ? "Hijri" : names.optString(h[1] - 1, "Hijri");
         String label = h[2] + " " + month + " " + h[0] + " AH";
@@ -150,8 +151,7 @@ public final class DashboardCalendar {
         Occasion next = null;
         int until = 0;
         for (int delta = 1; delta <= 400; delta++) {
-            int[] follow = hijri(date.plusDays(delta + context.getSharedPreferences(
-                    "islam_ui", Context.MODE_PRIVATE).getInt("calendar_hijri_adjustment", 0)));
+            int[] follow = hijri(date.plusDays(delta + hijriAdjustment));
             List<Occasion> found = events(source, follow[1], follow[2]);
             if (!found.isEmpty()) { next = found.get(0); until = delta; break; }
         }
