@@ -30,6 +30,7 @@ final class ReaderSpeech {
         @Override public void onReceive(Context context, Intent intent) { updateControl(); }
     };
 
+    @android.annotation.SuppressLint("UnspecifiedRegisterReceiverFlag")
     ReaderSpeech(Activity activity) {
         this.activity = activity;
         speed = activity.getSharedPreferences("islam_reader", Activity.MODE_PRIVATE)
