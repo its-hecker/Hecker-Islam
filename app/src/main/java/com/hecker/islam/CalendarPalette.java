@@ -32,6 +32,10 @@ public final class CalendarPalette {
             colors.put("muted", hex(Ui.MUTED));
             colors.put("line", hex(Ui.OUTLINE));
             colors.put("accent", hex(Ui.GOLD));
+            colors.put("accent-text", hex(Ui.GOLD));
+            colors.put("on-accent", hex(Ui.BACKGROUND));
+            colors.put("hero-start", hex(Ui.CARD));
+            colors.put("hero-end", hex(mix(Ui.CARD, Ui.GOLD, dark ? .10f : .05f)));
             colors.put("soft", hex(mix(Ui.CARD, Ui.GOLD, dark ? .14f : .10f)));
             colors.put("hijri", hex(Ui.GOLD));
             colors.put("desi", hex(Ui.MUTED));
