@@ -38,7 +38,7 @@ public final class ReferenceReadingActivity extends Activity {
     private JSONObject selectedHadith;
     private android.media.MediaPlayer surahPlayer;
     private android.speech.tts.TextToSpeech arabicSpeech;
-    private TextView recitationControl;
+    private TextView recitationControl, quranSpeedControl;
     private Runnable recitationTimeout;
     private boolean audioLoading, audioPlaying;
     private int recitationSource;
@@ -52,6 +52,7 @@ public final class ReferenceReadingActivity extends Activity {
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         section = getIntent().getStringExtra("section");
+        if ("hadith".equals(section)) { startActivity(new android.content.Intent(this, ShiaHadithActivity.class)); finish(); return; }
         if (!"quran".equals(section) && !"azkar".equals(section) && !"hadith".equals(section))
             section = "quran";
         saved = getSharedPreferences("islam_library", MODE_PRIVATE);
@@ -90,6 +91,7 @@ public final class ReferenceReadingActivity extends Activity {
         int selected = "quran".equals(section) ? 1 : "azkar".equals(section) ? 2 : 3;
         Ui.fillNavigation(this, navigation, selected, index -> {
             if (index >= 1 && index <= 3) {
+                if (index == 3) { startActivity(new android.content.Intent(this, ShiaHadithActivity.class)); finish(); return; }
                 String next = index == 1 ? "quran" : index == 2 ? "azkar" : "hadith";
                 if (!next.equals(section)) {
                     section = next; stage = 0; chapter = -1; category = -1; query = "";
@@ -296,6 +298,11 @@ public final class ReferenceReadingActivity extends Activity {
                 clearRecitationTimeout();
                 try {
                     prepared.start();
+                    try {
+                        prepared.setPlaybackParams(new android.media.PlaybackParams().setSpeed(quranSpeed()));
+                    } catch (RuntimeException unsupported) {
+                        android.util.Log.w("HeckerIslamQuran", "Playback speed unsupported on this device", unsupported);
+                    }
                     audioLoading = false;
                     audioPlaying = true;
                     updateRecitationControl();
@@ -338,6 +345,41 @@ public final class ReferenceReadingActivity extends Activity {
         if (chapter < 1 || chapter > 114) return;
         stopAudio();
         connectRecitation(chapter, 0);
+    }
+
+    private static final float[] QURAN_SPEEDS = {0.75f, 1.00f, 1.25f, 1.50f, 2.00f};
+    private float quranSpeed() {
+        float value = saved.getFloat("quran_playback_speed", 1.0f);
+        return value >= 0.75f && value <= 2.0f ? value : 1.0f;
+    }
+    private String quranSpeedLabel() {
+        return String.format(Locale.ENGLISH, "%.2fx", quranSpeed());
+    }
+    private void chooseQuranSpeed() {
+        final String[] options = {"0.75x • Slower", "1.00x • Normal", "1.25x • Faster", "1.50x • Fast", "2.00x • Very fast"};
+        int selected = 1;
+        for (int i = 0; i < QURAN_SPEEDS.length; i++) {
+            if (Math.abs(QURAN_SPEEDS[i] - quranSpeed()) < 0.01f) { selected = i; break; }
+        }
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Qur'an recitation speed")
+                .setSingleChoiceItems(options, selected, (dialog, choice) -> {
+                    float newRate = QURAN_SPEEDS[choice];
+                    saved.edit().putFloat("quran_playback_speed", newRate).apply();
+                    if (quranSpeedControl != null)
+                        quranSpeedControl.setText("Playback speed • " + quranSpeedLabel() + "  ›");
+                    if (surahPlayer != null && audioPlaying) {
+                        try {
+                            surahPlayer.setPlaybackParams(new android.media.PlaybackParams().setSpeed(newRate));
+                        } catch (RuntimeException ex) {
+                            android.widget.Toast.makeText(this,
+                                    "This device cannot change the playback speed of this stream.",
+                                    android.widget.Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    dialog.dismiss();
+                })
+                .setNegativeButton("Cancel", null).show();
     }
 
     /** Duas have no licensed studio recordings bundled; use the available Arabic speech voice. */
@@ -469,6 +511,8 @@ public final class ReferenceReadingActivity extends Activity {
             }
             recitationControl = button("▶ Listen • Mishary Alafasy", this::playSurah);
             updateRecitationControl();
+            quranSpeedControl = button("Playback speed • " + quranSpeedLabel() + "  ›",
+                    this::chooseQuranSpeed);
             content.addView(Ui.text(this, "Recorded reciter playback requires internet. Qur’an text remains available offline.", 12, Ui.MUTED, false));
             Ui.space(this, content, 16);
             int selected = 0;
