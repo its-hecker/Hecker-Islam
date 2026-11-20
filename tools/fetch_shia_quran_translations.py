@@ -37,12 +37,20 @@ def download(edition):
             data = payload.get("data", {})
             if data.get("edition", {}).get("identifier") != edition:
                 raise ValueError("Translation edition mismatch")
-            ayahs = data.get("ayahs", [])
-            if len(ayahs) != EXPECTED:
-                raise ValueError(f"Expected {EXPECTED} verses, received {len(ayahs)}")
+            # Full Quran endpoint nests ayahs under data.surahs; individual
+            # surah endpoints return data.ayahs instead. Support both schemas.
+            records = []
+            if isinstance(data.get("surahs"), list):
+                for chapter in data["surahs"]:
+                    for ayah in chapter.get("ayahs", []):
+                        records.append((chapter.get("number"), ayah))
+            else:
+                for ayah in data.get("ayahs", []):
+                    records.append((ayah.get("surah", {}).get("number"), ayah))
+            if len(records) != EXPECTED:
+                raise ValueError(f"Expected {EXPECTED} verses, received {len(records)}")
             rows, seen = [], set()
-            for ayah in ayahs:
-                surah = ayah.get("surah", {}).get("number")
+            for surah, ayah in records:
                 number = ayah.get("numberInSurah")
                 translation = ayah.get("text")
                 if not isinstance(surah, int) or not 1 <= surah <= 114:
