@@ -2,6 +2,7 @@ package com.hecker.islam;
 
 import android.app.Activity;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 import android.webkit.WebView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,6 +20,7 @@ final class ReaderSpeech {
     private Locale pendingLanguage;
     private boolean ready, failed, speaking, disposed;
     private int requestId;
+    private volatile String lastUtteranceId;
 
     ReaderSpeech(Activity activity) {
         this.activity = activity;
@@ -26,6 +28,13 @@ final class ReaderSpeech {
             if (disposed) return;
             ready = status == TextToSpeech.SUCCESS;
             failed = !ready;
+            if (ready && speech != null) {
+                speech.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                    @Override public void onStart(String utteranceId) { }
+                    @Override public void onDone(String utteranceId) { complete(utteranceId); }
+                    @Override public void onError(String utteranceId) { complete(utteranceId); }
+                });
+            }
             if (ready && pendingText != null) {
                 String text = pendingText;
                 Locale language = pendingLanguage;
@@ -90,9 +99,12 @@ final class ReaderSpeech {
                 if (boundary > pos + chunkSize / 2) end = boundary + 1;
             }
             String piece = text.substring(pos, end).trim();
-            if (!piece.isEmpty()) speech.speak(piece,
-                    part == 0 ? TextToSpeech.QUEUE_FLUSH : TextToSpeech.QUEUE_ADD,
-                    null, "hecker-reader-" + (++requestId));
+            if (!piece.isEmpty()) {
+                String id = "hecker-reader-" + (++requestId);
+                lastUtteranceId = id;
+                speech.speak(piece, part == 0 ? TextToSpeech.QUEUE_FLUSH : TextToSpeech.QUEUE_ADD,
+                        null, id);
+            }
             pos = end;
             part++;
         }
@@ -148,7 +160,17 @@ final class ReaderSpeech {
         return Locale.ENGLISH;
     }
 
+    private void complete(String id) {
+        if (disposed || !id.equals(lastUtteranceId)) return;
+        activity.runOnUiThread(() -> {
+            if (disposed || !id.equals(lastUtteranceId)) return;
+            speaking = false;
+            updateControl();
+        });
+    }
+
     void stop() {
+        lastUtteranceId = null;
         pendingText = null;
         speaking = false;
         if (speech != null) speech.stop();
