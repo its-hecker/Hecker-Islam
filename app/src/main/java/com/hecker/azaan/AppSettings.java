@@ -41,6 +41,15 @@ public final class AppSettings {
         catch (IllegalArgumentException e) { return PrayerCalculator.Method.JAFARI; }
     }
     public void method(PrayerCalculator.Method m) { prefs.edit().putString("method", m.name()).apply(); }
+    /** Pakistan defaults to the AlAdhan Ja'fari provider; a user can choose offline calculation. */
+    public boolean providerEnabled() {
+        boolean pakistan = configured() && latitude() >= 23 && latitude() <= 38
+                && longitude() >= 60 && longitude() <= 78 && "Asia/Karachi".equals(zone().getId());
+        return prefs.getBoolean("remote_times", pakistan);
+    }
+    public void providerEnabled(boolean enabled) {
+        prefs.edit().putBoolean("remote_times", enabled).apply();
+    }
     public boolean wilayah() { return prefs.getBoolean("wilayah", true); }
     public void wilayah(boolean value) { prefs.edit().putBoolean("wilayah", value).apply(); }
     public boolean language(AzaanText.Language l) { return l == AzaanText.Language.ARABIC || prefs.getBoolean("lang_" + l.name(), false); }
