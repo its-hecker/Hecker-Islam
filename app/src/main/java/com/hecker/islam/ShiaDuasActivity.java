@@ -22,18 +22,35 @@ import java.util.Locale;
  */
 public final class ShiaDuasActivity extends Activity {
     private static final class Dua {
-        final String id, name, urduName, occasion, arabic, instructions, source;
+        final String id, name, urduName, occasion, arabic, instructions, source, urduTranslation;
         Dua(String id, String name, String urduName, String occasion,
             String arabic, String instructions, String source) {
             this.id = id; this.name = name; this.urduName = urduName;
             this.occasion = occasion; this.arabic = arabic;
             this.instructions = instructions; this.source = source;
+            this.urduTranslation = translations(id);
+        }
+        private static String translations(String id) {
+            switch (id) {
+                case "faraj": return "اے اللہ! اپنے ولی، حجت ابن الحسنؑ کے لیے اس گھڑی اور ہر گھڑی سرپرست، محافظ، رہنما، مددگار اور نگہبان بن، یہاں تک کہ تو انہیں اپنی زمین پر بااختیار طور پر بسائے اور انہیں طویل عرصے تک اس سے بہرہ مند فرمائے۔";
+                case "tasbih": return "اللہ سب سے بڑا ہے (۳۴ مرتبہ)۔ تمام تعریفیں اللہ ہی کے لیے ہیں (۳۳ مرتبہ)۔ اللہ ہر نقص سے پاک ہے (۳۳ مرتبہ)۔";
+                case "salawat": return "اے اللہ! محمدؐ اور آلِ محمدؑ پر رحمت نازل فرما۔";
+                case "ahad": return "دعائے عہد: امام مہدیؑ سے اپنے عہد کی تجدید کے لیے پڑھی جانے والی دعا۔ مکمل عربی متن اور اردو ترجمہ ماخذ پر دستیاب ہے۔";
+                case "kumayl": return "دعائے کمیل: اللہ سے مغفرت، رحمت اور بندگی کی درخواست۔ یہ مکمل دعا کا ترجمہ نہیں بلکہ تعارف ہے۔";
+                case "tawassul": return "دعائے توسل: اللہ سے اہلِ بیتؑ کے وسیلے سے دعا۔ یہ مکمل دعا کا ترجمہ نہیں بلکہ تعارف ہے۔";
+                case "nudba": return "دعائے ندبہ: امام زمانہؑ کی یاد اور انتظار سے متعلق مناجات؛ یہ مکمل متن کا ترجمہ نہیں۔";
+                case "iftitah": return "دعائے افتتاح: رمضان المبارک میں دعا، حمد اور رحمت کی طلب؛ یہ مکمل متن کا ترجمہ نہیں۔";
+                case "simaat": return "دعائے سمات: اللہ کی حمد اور اس کے اسمائے مبارکہ کے وسیلے سے دعا؛ یہ خلاصہ ہے۔";
+                case "sabah": return "دعائے صباح: اللہ کی عظمت، ہدایت اور رحمت کی التجا؛ یہ تعارف ہے، مکمل ترجمہ نہیں۔";
+                case "ashura": return "زیارت عاشورا: امام حسینؑ کی یاد، سلام اور وفاداری کی زیارت؛ یہ مکمل ترجمہ نہیں۔";
+                default: return "";
+            }
         }
         boolean offline() { return !arabic.isEmpty(); }
     }
 
     private static final Dua[] DUAS = {
-        new Dua("faraj", "Dua al-Faraj (Allahumma Kun)", "دعائے فرج",
+        new Dua("faraj", "Dua Imam-e-Zamana (Dua al-Faraj)", "دعائے امامِ زمانہؑ / دعائے فرج",
             "Supplication for Imam al-Mahdi (a.j.)",
             "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\n"
             + "اللَّهُمَّ كُنْ لِوَلِيِّكَ الْحُجَّةِ بْنِ الْحَسَنِ، صَلَوَاتُكَ عَلَيْهِ وَعَلَىٰ آبَائِهِ، "
@@ -41,6 +58,10 @@ public final class ShiaDuasActivity extends Activity {
             + "وَدَلِيلًا وَعَيْنًا، حَتَّىٰ تُسْكِنَهُ أَرْضَكَ طَوْعًا، وَتُمَتِّعَهُ فِيهَا طَوِيلًا.",
             "Short Arabic supplication, available offline.",
             "https://www.duas.org/Allahumma.htm"),
+        new Dua("ahad", "Dua-e-Ahad • Imam-e-Zamana", "دعائے عہد / امامِ زمانہؑ",
+            "Morning covenant supplication • full Arabic, English and Urdu from FZIC",
+            "", "Complete Arabic and Urdu text are available at the linked reference.",
+            "https://fzic.org/library/dua/dua-e-ahad-1232"),
         new Dua("tasbih", "Tasbih of Sayyida Fatima al-Zahra", "تسبیحِ حضرت فاطمہ زہراؑ",
             "Remembrance after prayers",
             "اللَّهُ أَكْبَرُ × 34\nالْحَمْدُ لِلَّهِ × 33\nسُبْحَانَ اللَّهِ × 33",
@@ -171,7 +192,7 @@ public final class ShiaDuasActivity extends Activity {
             favoritesOnly = !favoritesOnly; render();
         });
         content.addView(Ui.text(this,
-                "Offline short duas are marked. Longer supplications open their complete, credited source online.",
+                "Short duas include Arabic and Urdu offline. For longer duas, the Urdu introduction is not the full translation; open the linked source.",
                 13, Ui.MUTED, false));
         Ui.space(this, content, 16);
         int shown = 0;
@@ -196,7 +217,7 @@ public final class ShiaDuasActivity extends Activity {
         if (shown == 0) content.addView(Ui.text(this, "No matching duas", 15, Ui.MUTED, false));
         Ui.space(this, content, 12);
         content.addView(Ui.text(this,
-                "Source: Duas.org (permission for content reuse stated on its About page). Historical attributions do not establish an authentication grade.",
+                "Sources: Duas.org and FZIC. Original text and any full translation must be checked at the cited source; attribution is not a grading claim.",
                 12, Ui.MUTED, false));
     }
     private void showDua(Dua dua) {
@@ -219,10 +240,25 @@ public final class ShiaDuasActivity extends Activity {
             content.addView(panel);
             Ui.space(this, content, 14);
         }
+        if (!dua.urduTranslation.isEmpty()) {
+            Ui.space(this, content, 8);
+            LinearLayout translation = Ui.panel(this);
+            translation.addView(Ui.text(this,
+                    dua.offline() ? "اردو ترجمہ" : "اردو تعارف • مکمل ترجمہ نہیں",
+                    14, Ui.GOLD, true));
+            Ui.space(this, translation, 10);
+            TextView text = Ui.text(this, dua.urduTranslation, 19, Ui.WHITE, false);
+            text.setTextDirection(View.TEXT_DIRECTION_RTL);
+            text.setGravity(Gravity.RIGHT);
+            text.setLineSpacing(Ui.dp(this, 5), 1.15f);
+            translation.addView(text);
+            content.addView(translation);
+            Ui.space(this, content, 12);
+        }
         content.addView(Ui.text(this, dua.instructions, 13, Ui.MUTED, false));
         Ui.space(this, content, 15);
         button(favorite(dua.id) ? "★ Remove bookmark" : "☆ Save dua",
                 () -> toggleFavorite(dua));
-        button("Open original text • Duas.org", () -> openSource(dua));
+        button("Open full source text / translations", () -> openSource(dua));
     }
 }
