@@ -31,6 +31,7 @@ public final class AlarmScheduler {
             alarms.cancel(intent(c, p, 0));
             s.prefs.edit().remove("expected_" + p.name()).apply();
         }
+        if (s.configured()) PrayerTimeProvider.refreshAsync(c, false, null);
         if (!s.active() || !s.configured()) return;
         // This maintenance alarm only recalculates times, never starts playback.
         // It also recovers when a twilight crossing reappears after a polar season.
@@ -39,7 +40,7 @@ public final class AlarmScheduler {
         // Inexact alarms cannot reliably launch media foreground services in the background.
         if (!exactAllowed(c)) { s.status("Allow Alarms & reminders to schedule azaan."); return; }
         if (!Notifications.allowed(c)) { s.status("Allow notifications, then reopen Azaan to restore alerts."); return; }
-        List<AlarmPlanner.Event> events = AlarmPlanner.upcoming(Instant.now(), s.zone(), s.latitude(), s.longitude(), s.method(), s.offsets(), s.enabled());
+        List<AlarmPlanner.Event> events = AlarmPlanner.upcoming(c, Instant.now(), s, s.enabled());
         EnumSet<Prayer> done = EnumSet.noneOf(Prayer.class);
         try {
             for (AlarmPlanner.Event event : events) {
