@@ -3,6 +3,7 @@ package com.hecker.islam;
 import android.app.Activity;
 import android.animation.ValueAnimator;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.Color;
 import android.view.View;
 import android.widget.ImageView;
 import android.view.animation.DecelerateInterpolator;
@@ -18,6 +19,8 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import com.hecker.azaan.AppSettings;
+import com.hecker.azaan.AlarmPlanner;
+import com.hecker.azaan.PrayerTimeProvider;
 import com.hecker.azaan.Prayer;
 import com.hecker.azaan.PrayerCalculator;
 import java.time.Duration;
@@ -36,6 +39,23 @@ import java.util.concurrent.Executors;
  */
 public final class IslamDashboardActivity extends Activity {
     private LinearLayout content, navigation;
+    private TextView nextAzaanCountdown;
+    private Instant nextAzaanInstant;
+    private LocalDate renderedCalendarDay;
+    private final Handler clock = new Handler(Looper.getMainLooper());
+    private final Runnable clockTick = new Runnable() {
+        @Override public void run() {
+            if (page != 0 || isFinishing() || isDestroyed()) return;
+            if (renderedCalendarDay != null && !renderedCalendarDay.equals(LocalDate.now())) {
+                render(); return;
+            }
+            if (nextAzaanInstant != null && !nextAzaanInstant.isAfter(Instant.now())) {
+                render(); return;
+            }
+            updateCountdown();
+            clock.postDelayed(this, 15_000);
+        }
+    };
     private int page = 0;
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -52,11 +72,16 @@ public final class IslamDashboardActivity extends Activity {
             });
         }
     }
+    @Override protected void onPause() { clock.removeCallbacks(clockTick); super.onPause(); }
+    @Override protected void onDestroy() { clock.removeCallbacks(clockTick); super.onDestroy(); }
     @Override protected void onSaveInstanceState(Bundle b) { super.onSaveInstanceState(b); b.putInt("tab", page); }
     @Override protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent); setIntent(intent); page = intent.getIntExtra("tab", 0); render();
     }
     private void render() {
+        clock.removeCallbacks(clockTick);
+        nextAzaanCountdown = null;
+        nextAzaanInstant = null;
         Ui.applyTheme(this);
         getWindow().setStatusBarColor(Ui.BACKGROUND);
         getWindow().setNavigationBarColor(Ui.BACKGROUND);
@@ -92,6 +117,10 @@ public final class IslamDashboardActivity extends Activity {
         else if (page == 4) more();
         else page = 0;
         tabs();
+        if (page == 0) {
+            updateCountdown();
+            clock.postDelayed(clockTick, 15_000);
+        }
         if (ValueAnimator.areAnimatorsEnabled()) {
             for (int i = 0; i < content.getChildCount(); i++) {
                 View item = content.getChildAt(i);
@@ -140,77 +169,290 @@ public final class IslamDashboardActivity extends Activity {
         content.addView(Ui.text(this, title, 21, Ui.WHITE, true));
         Ui.space(this, content, 13);
     }
-    private void today() {
-        AppSettings cfg = new AppSettings(this);
-        LocalDate date = LocalDate.now(cfg.zone());
-        title("Assalamu Alaikum", date.format(DateTimeFormatter.ofPattern("EEEE • d MMMM yyyy", Locale.ENGLISH)));
-        LinearLayout featured = Ui.panel(this);
-        featured.addView(Ui.text(this, cfg.configured() ? cfg.city() : "Choose your city", 14, Ui.GOLD, true));
-        Ui.space(this, featured, 12);
-        featured.addView(Ui.text(this, "Next prayer", 14, Ui.MUTED, false));
-        Ui.space(this, featured, 3);
-        String prayerTitle = "Configure prayer times";
-        String upcoming = "Tap to select your location and calculation method.";
-        try {
-            if (cfg.configured()) {
-                Instant now = Instant.now(), nextAt = null; Prayer nextPrayer = null;
-                for (int d = 0; d < 3; d++) {
-                    Map<Prayer, Instant> times = com.hecker.azaan.PrayerTimeProvider.calculate(
-                            this, date.plusDays(d), cfg);
-                    for (Prayer p : Prayer.values()) {
-                        Instant t = times.get(p);
-                        if (t != null && t.isAfter(now) && (nextAt == null || t.isBefore(nextAt))) {
-                            nextAt = t; nextPrayer = p;
-                        }
-                    }
-                }
-                if (nextAt != null) {
-                    prayerTitle = nextPrayer.title;
-                    long minutes = Math.max(0, Duration.between(now, nextAt).toMinutes());
-                    upcoming = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH).withZone(cfg.zone()).format(nextAt)
-                            + " • in " + minutes / 60 + "h " + minutes % 60 + "m";
-                } else upcoming = "No calculated time. Check your settings.";
+    private static int mix(int a, int b, float amount) {
+        float inverse = 1f - amount;
+        return Color.rgb(
+                Math.round(Color.red(a) * inverse + Color.red(b) * amount),
+                Math.round(Color.green(a) * inverse + Color.green(b) * amount),
+                Math.round(Color.blue(a) * inverse + Color.blue(b) * amount));
+    }
+
+    private LinearLayout dashboardCard(boolean featured) {
+        LinearLayout card = Ui.panel(this);
+        GradientDrawable surface = new GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                new int[]{featured ? mix(Ui.CARD, Ui.GOLD, .12f) : Ui.CARD,
+                          featured ? mix(Ui.CARD, Ui.GOLD, .03f) : Ui.CARD});
+        surface.setCornerRadius(Ui.dp(this, 30));
+        surface.setStroke(Ui.dp(this, 1), Ui.OUTLINE);
+        card.setBackground(surface);
+        card.setPadding(Ui.dp(this, 20), Ui.dp(this, 21),
+                Ui.dp(this, 20), Ui.dp(this, 21));
+        return card;
+    }
+
+    private TextView eyebrow(String value) {
+        TextView t = Ui.text(this, value, 11, Ui.GOLD, true);
+        t.setLetterSpacing(.12f);
+        return t;
+    }
+
+    private void addCard(LinearLayout card) {
+        content.addView(card, new LinearLayout.LayoutParams(-1, -2));
+        Ui.space(this, content, 14);
+    }
+
+    private void separator(LinearLayout parent) {
+        Ui.space(this, parent, 17);
+        View line = new View(this);
+        line.setBackgroundColor(Ui.OUTLINE);
+        parent.addView(line, new LinearLayout.LayoutParams(-1, Ui.dp(this, 1)));
+        Ui.space(this, parent, 15);
+    }
+
+    private void dateDashboard(LocalDate date) {
+        DashboardCalendar.Day calendar = DashboardCalendar.today(this, date);
+        LinearLayout card = dashboardCard(true);
+        card.addView(eyebrow("TODAY · YOUR CALENDAR"));
+        Ui.space(this, card, 14);
+        LinearLayout numberRow = new LinearLayout(this);
+        numberRow.setGravity(Gravity.CENTER_VERTICAL);
+        TextView number = Ui.text(this, String.valueOf(date.getDayOfMonth()), 64, Ui.GOLD, true);
+        number.setIncludeFontPadding(false);
+        numberRow.addView(number);
+        LinearLayout dateDetail = Ui.column(this);
+        dateDetail.setPadding(Ui.dp(this, 17), 0, 0, 0);
+        dateDetail.addView(Ui.text(this, date.format(DateTimeFormatter.ofPattern("EEEE", Locale.ENGLISH)),
+                23, Ui.WHITE, true));
+        dateDetail.addView(Ui.text(this, date.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH)),
+                15, Ui.MUTED, false));
+        numberRow.addView(dateDetail, new LinearLayout.LayoutParams(0, -2, 1));
+        card.addView(numberRow);
+        Ui.space(this, card, 16);
+
+        TextView hijri = Ui.text(this, "☾  " + calendar.hijriDate, 15, Ui.WHITE, true);
+        hijri.setPadding(Ui.dp(this, 13), Ui.dp(this, 11), Ui.dp(this, 13), Ui.dp(this, 11));
+        GradientDrawable hijriBg = new GradientDrawable();
+        hijriBg.setColor(mix(Ui.CARD, Ui.GOLD, .13f));
+        hijriBg.setCornerRadius(Ui.dp(this, 17));
+        hijri.setBackground(hijriBg);
+        card.addView(hijri);
+        Ui.space(this, card, 9);
+        TextView desi = Ui.text(this, "✦  " + calendar.desiDate + " · Desi calendar", 13, Ui.MUTED, false);
+        desi.setPadding(Ui.dp(this, 9), Ui.dp(this, 3), Ui.dp(this, 9), Ui.dp(this, 3));
+        card.addView(desi);
+        separator(card);
+
+        if (!calendar.calendarLoaded) {
+            card.addView(eyebrow("CALENDAR EVENTS"));
+            Ui.space(this, card, 7);
+            card.addView(Ui.text(this, "Calendar details are unavailable in this build.", 14, Ui.MUTED, false));
+        } else if (!calendar.today.isEmpty()) {
+            card.addView(eyebrow("TODAY'S OCCASION"));
+            Ui.space(this, card, 7);
+            DashboardCalendar.Occasion event = calendar.today.get(0);
+            card.addView(Ui.text(this, event.title, 18, Ui.WHITE, true));
+            if (!event.summary.isEmpty()) {
+                Ui.space(this, card, 5);
+                card.addView(Ui.text(this, event.summary, 13, Ui.MUTED, false));
             }
-        } catch (Exception ignored) { upcoming = "Check your coordinates and calculation settings."; }
-        featured.addView(Ui.text(this, prayerTitle, 31, Ui.WHITE, true));
-        Ui.space(this, featured, 7);
-        featured.addView(Ui.text(this, upcoming, 15, Ui.MUTED, false));
-        Ui.space(this, featured, 10);
-        if (cfg.configured()) {
-            featured.addView(Ui.text(this,
-                    com.hecker.azaan.PrayerTimeProvider.status(this, date, cfg),
-                    12, Ui.MUTED, false));
-            Ui.space(this, featured, 8);
+            if (calendar.today.size() > 1) {
+                Ui.space(this, card, 8);
+                card.addView(Ui.text(this, "+" + (calendar.today.size() - 1)
+                        + " more occasion(s) · View Calendar", 12, Ui.GOLD, true));
+            }
+        } else {
+            card.addView(eyebrow("UPCOMING OCCASION"));
+            Ui.space(this, card, 7);
+            if (calendar.upcoming != null) {
+                card.addView(Ui.text(this, calendar.upcoming.title, 17, Ui.WHITE, true));
+                Ui.space(this, card, 5);
+                card.addView(Ui.text(this, "In " + calendar.daysUntilNext
+                        + (calendar.daysUntilNext == 1 ? " day" : " days")
+                        + " · Based on the Calendar's Hijri dates", 13, Ui.MUTED, false));
+            } else {
+                card.addView(Ui.text(this, "No upcoming occasion listed.", 14, Ui.MUTED, false));
+            }
         }
-        featured.addView(Ui.text(this, cfg.active() ? "● Azaan enabled" : "○ Configure Azaan", 13, Ui.GOLD, true));
-        featured.setOnClickListener(v -> launch(com.hecker.azaan.MainActivity.class));
-        content.addView(featured);
-        rowTitle("Prayer & calendar");
-        tile("Prayer times & Azaan", "Full prayer setup, voice announcements and countdown",
-                () -> launch(com.hecker.azaan.MainActivity.class));
-        tile("Islamic calendar", "Gregorian • Hijri • Desi • Shia religious occasions",
-                () -> launch(com.sabber.taqwim.MainActivity.class));
-        tile("Prayer tracker", "Mark your five daily prayers",
-                () -> launch(PrayerTrackerActivity.class));
-        rowTitle("Read & reflect");
-        tile("The Holy Qur'an", "114 Surahs with Shia Urdu translations • Jawadi & Najafi",
-                () -> library("quran"));
-        tile("Shia Duas & Ziyarat", "Kumayl • Tawassul • Nudba • Faraj • Ziyarat Ashura",
+        Ui.space(this, card, 12);
+        card.addView(Ui.text(this, "Open full calendar  ›", 13, Ui.GOLD, true));
+        card.setContentDescription("Open Islamic calendar with today's dates and occasions");
+        card.setOnClickListener(v -> launch(com.sabber.taqwim.MainActivity.class));
+        addCard(card);
+    }
+
+    private void updateCountdown() {
+        if (nextAzaanCountdown == null) return;
+        if (nextAzaanInstant == null) {
+            nextAzaanCountdown.setText("Set your city to see upcoming Azaan times");
+            return;
+        }
+        long seconds = Math.max(0, Duration.between(Instant.now(), nextAzaanInstant).getSeconds());
+        long hours = seconds / 3600, minutes = seconds % 3600 / 60;
+        nextAzaanCountdown.setText("In " + hours + "h " + minutes + "m");
+    }
+
+    private void azaanDashboard(AppSettings cfg) {
+        LinearLayout card = dashboardCard(false);
+        LocalDate prayerDay = LocalDate.now(cfg.zone());
+        card.addView(eyebrow("NEXT AZAAN"));
+        Ui.space(this, card, 12);
+        LinearLayout top = new LinearLayout(this);
+        top.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout copy = Ui.column(this);
+        TextView name = Ui.text(this, "Set your location", 25, Ui.WHITE, true);
+        copy.addView(name);
+        Ui.space(this, copy, 3);
+        nextAzaanCountdown = Ui.text(this, "", 14, Ui.GOLD, true);
+        copy.addView(nextAzaanCountdown);
+        top.addView(copy, new LinearLayout.LayoutParams(0, -2, 1));
+        TextView clockTime = Ui.text(this, "—", 23, Ui.GOLD, true);
+        clockTime.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+        top.addView(clockTime);
+        card.addView(top);
+
+        if (cfg.configured()) {
+            try {
+                java.util.List<AlarmPlanner.Event> upcoming = AlarmPlanner.upcoming(
+                        this, Instant.now(), cfg, new boolean[]{true, true, true});
+                if (!upcoming.isEmpty()) {
+                    AlarmPlanner.Event next = upcoming.get(0);
+                    nextAzaanInstant = next.time;
+                    name.setText(next.prayer.title);
+                    clockTime.setText(DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH)
+                            .withZone(cfg.zone()).format(next.time));
+                } else {
+                    name.setText("Check local timetable");
+                    nextAzaanCountdown.setText("No upcoming calculated time available");
+                }
+            } catch (RuntimeException e) {
+                name.setText("Check prayer settings");
+                nextAzaanCountdown.setText("Prayer times could not be calculated");
+            }
+            Ui.space(this, card, 12);
+            card.addView(Ui.text(this,
+                    cfg.city() + "  ·  " + PrayerTimeProvider.status(this, prayerDay, cfg),
+                    12, Ui.MUTED, false));
+        } else {
+            Ui.space(this, card, 12);
+            card.addView(Ui.text(this, "Choose your city or coordinates in Azaan settings.",
+                    13, Ui.MUTED, false));
+        }
+        separator(card);
+        card.addView(eyebrow("TODAY'S THREE AZAAN TIMES"));
+        Ui.space(this, card, 10);
+        Map<Prayer, Instant> todayTimes = null;
+        if (cfg.configured()) {
+            try { todayTimes = PrayerTimeProvider.calculate(this, prayerDay, cfg); }
+            catch (RuntimeException ignored) { }
+        }
+        LinearLayout strip = new LinearLayout(this);
+        strip.setOrientation(LinearLayout.HORIZONTAL);
+        for (Prayer prayer : Prayer.values()) {
+            LinearLayout mini = Ui.column(this);
+            mini.setGravity(Gravity.CENTER);
+            mini.setPadding(Ui.dp(this, 2), Ui.dp(this, 8), Ui.dp(this, 2), Ui.dp(this, 8));
+            String label = prayer == Prayer.FAJR ? "FAJR" :
+                    prayer == Prayer.DHUHR ? "DHUHR" : "MAGHRIB";
+            TextView labelView = Ui.text(this, label, 10, Ui.MUTED, true);
+            labelView.setGravity(Gravity.CENTER);
+            mini.addView(labelView);
+            Ui.space(this, mini, 7);
+            Instant at = todayTimes == null ? null : todayTimes.get(prayer);
+            String time = at == null ? "—" : DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH)
+                    .withZone(cfg.zone()).format(at);
+            TextView value = Ui.text(this, time, 13, Ui.WHITE, true);
+            value.setGravity(Gravity.CENTER);
+            mini.addView(value);
+            GradientDrawable pill = new GradientDrawable();
+            pill.setColor(mix(Ui.CARD, Ui.GOLD, .08f));
+            pill.setCornerRadius(Ui.dp(this, 16));
+            mini.setBackground(pill);
+            LinearLayout.LayoutParams miniParams = new LinearLayout.LayoutParams(0, -2, 1);
+            miniParams.setMargins(Ui.dp(this, 2), 0, Ui.dp(this, 2), 0);
+            strip.addView(mini, miniParams);
+        }
+        card.addView(strip);
+        Ui.space(this, card, 13);
+        card.addView(Ui.text(this, "Prayer times & Azaan settings  ›", 13, Ui.GOLD, true));
+        card.setContentDescription("Open Azaan and prayer times");
+        card.setOnClickListener(v -> launch(com.hecker.azaan.MainActivity.class));
+        addCard(card);
+    }
+
+    private LinearLayout shortcut(String symbol, String title, String description, Runnable action) {
+        LinearLayout card = dashboardCard(false);
+        card.setMinimumHeight(Ui.dp(this, 132));
+        TextView mark = Ui.text(this, symbol, 24, Ui.GOLD, true);
+        card.addView(mark);
+        Ui.space(this, card, 10);
+        card.addView(Ui.text(this, title, 17, Ui.WHITE, true));
+        Ui.space(this, card, 5);
+        TextView descriptionText = Ui.text(this, description, 12, Ui.MUTED, false);
+        descriptionText.setMaxLines(3);
+        card.addView(descriptionText);
+        card.setContentDescription("Open " + title);
+        card.setOnClickListener(v -> action.run());
+        return card;
+    }
+
+    private void shortcutRow(String leftIcon, String leftTitle, String leftSubtitle, Runnable left,
+                             String rightIcon, String rightTitle, String rightSubtitle, Runnable right) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout leftCard = shortcut(leftIcon, leftTitle, leftSubtitle, left);
+        LinearLayout rightCard = shortcut(rightIcon, rightTitle, rightSubtitle, right);
+        LinearLayout.LayoutParams lp1 = new LinearLayout.LayoutParams(0, -1, 1);
+        lp1.setMargins(0, 0, Ui.dp(this, 6), 0);
+        LinearLayout.LayoutParams lp2 = new LinearLayout.LayoutParams(0, -1, 1);
+        lp2.setMargins(Ui.dp(this, 6), 0, 0, 0);
+        row.addView(leftCard, lp1);
+        row.addView(rightCard, lp2);
+        content.addView(row);
+        Ui.space(this, content, 12);
+    }
+
+    private void today() {
+        renderedCalendarDay = LocalDate.now();
+        AppSettings cfg = new AppSettings(this);
+        content.addView(Ui.text(this, "Assalamu Alaikum", 30, Ui.WHITE, true));
+        Ui.space(this, content, 5);
+        content.addView(Ui.text(this, "Your day, your prayers, your moments.", 14, Ui.MUTED, false));
+        Ui.space(this, content, 22);
+
+        dateDashboard(renderedCalendarDay);
+        azaanDashboard(cfg);
+
+        Ui.space(this, content, 10);
+        content.addView(Ui.text(this, "Explore", 23, Ui.WHITE, true));
+        Ui.space(this, content, 5);
+        content.addView(Ui.text(this, "Everything you need, one tap away.", 13, Ui.MUTED, false));
+        Ui.space(this, content, 15);
+
+        shortcutRow("☪", "Qur'an", "Read, listen & Urdu translation",
+                () -> library("quran"), "✧", "Shia Duas", "Duas, Ziyarat & bookmarks",
                 () -> launch(ShiaDuasActivity.class));
-        tile("Azkar and Duas", "Daily supplications with translations and repeat counts",
-                () -> library("azkar"));
-        tile("Hadith", "Search 3,574 Hadith, read and bookmark",
-                () -> library("hadith"));
-        rowTitle("Explore");
-        tile("Qibla direction", "Live compass toward the Kaaba",
-                () -> launch(QiblaActivity.class));
-        tile("Tasbeeh", "Your personal dhikr counter",
+        shortcutRow("▦", "Calendar", "Hijri, Desi & occasions",
+                () -> launch(com.sabber.taqwim.MainActivity.class),
+                "☾", "Azaan", "Times, voice & settings",
+                () -> launch(com.hecker.azaan.MainActivity.class));
+        shortcutRow("◎", "Qibla", "Direction of the Kaaba",
+                () -> launch(QiblaActivity.class),
+                "✿", "Tasbeeh", "Keep track of your dhikr",
                 () -> launch(TasbeehActivity.class));
+
+        Ui.space(this, content, 8);
+        content.addView(Ui.text(this, "More to explore", 19, Ui.WHITE, true));
+        Ui.space(this, content, 12);
+        tile("Hadith Library", "Browse and save Hadith", () -> library("hadith"));
+        tile("Azkar & daily remembrance", "Daily supplications and repeat counts", () -> library("azkar"));
+        tile("Prayer tracker", "Keep a personal record of five daily prayers",
+                () -> launch(PrayerTrackerActivity.class));
         if (!ReferenceLibrary.ready(this)) {
-            rowTitle("Offline library unavailable");
+            Ui.space(this, content, 6);
             content.addView(Ui.text(this,
-                    "This development build is missing its content. Only release APKs with embedded offline catalogs should be distributed.",
-                    14, Ui.MUTED, false));
+                    "This build is missing its offline library. Install a complete release.",
+                    13, Ui.MUTED, false));
         }
     }
     private void more() {
