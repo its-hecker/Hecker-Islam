@@ -83,6 +83,11 @@ public final class RecitationService extends Service {
     public static boolean hasPlayback(Context context) {
         return !prefs(context).getString("key", "").isEmpty();
     }
+    public static int currentSurah(Context context) {
+        SharedPreferences values = prefs(context);
+        return "quran".equals(values.getString("kind", ""))
+                ? values.getInt("surah", -1) : -1;
+    }
     private static void dispatch(Context context, Intent intent) {
         if (android.os.Build.VERSION.SDK_INT >= 26) context.startForegroundService(intent);
         else context.startService(intent);
@@ -233,7 +238,10 @@ public final class RecitationService extends Service {
     private Notification notification() {
         Intent open = new Intent(this, "quran".equals(kind)
                 ? ReferenceReadingActivity.class : IslamDashboardActivity.class);
-        if ("quran".equals(kind)) open.putExtra("section", "quran");
+        if ("quran".equals(kind)) {
+            open.putExtra("section", "quran");
+            open.putExtra("resume_recitation", true);
+        }
         open.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent openIntent = PendingIntent.getActivity(this, 3, open,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
