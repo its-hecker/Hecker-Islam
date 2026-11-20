@@ -42,6 +42,11 @@ public final class SourceWebActivity extends Activity {
         reciter.attach(recite);
         recite.setOnClickListener(v -> reciter.reciteFromWeb(web));
         root.addView(recite);
+        TextView speed = Ui.text(this, "Recitation speed • " + reciter.speedLabel() + "  ›", 14, Ui.GOLD, true);
+        speed.setGravity(android.view.Gravity.CENTER);
+        speed.setPadding(0, Ui.dp(this, 9), 0, Ui.dp(this, 9));
+        speed.setOnClickListener(v -> reciter.chooseSpeed(speed));
+        root.addView(speed);
         TextView hint = Ui.text(this,
             "Select a passage for precise recitation • Uses Android speech voice",
             12, Ui.MUTED, false);
