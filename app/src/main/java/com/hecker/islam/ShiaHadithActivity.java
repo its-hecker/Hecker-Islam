@@ -40,12 +40,16 @@ public final class ShiaHadithActivity extends Activity {
         "https://rewayaat.info/books/thawab-al-a-mal-wa-iqab-al-a-mal"
     };
     private WebView web;
+    private ReaderSpeech reciter;
     private String selectedName;
 
     @Override public void onCreate(Bundle state) { super.onCreate(state); showBooks(); }
     @Override public void onBackPressed() {
         if (web != null && web.canGoBack()) { web.goBack(); return; }
-        if (web != null) { web.destroy(); web=null; selectedName=null; showBooks(); return; }
+        if (web != null) {
+            if (reciter != null) reciter.stop();
+            web.destroy(); web=null; selectedName=null; showBooks(); return;
+        }
         super.onBackPressed();
     }
     private LinearLayout scaffold() {
@@ -120,15 +124,35 @@ public final class ShiaHadithActivity extends Activity {
         LinearLayout head=Ui.column(this);
         head.setPadding(Ui.dp(this,17),Ui.dp(this,12),Ui.dp(this,17),Ui.dp(this,10));
         TextView back=Ui.text(this,"‹  Shia Hadith",17,Ui.GOLD,true);
-        back.setOnClickListener(v -> { if(web!=null) { web.destroy(); web=null; } showBooks(); });
+        back.setOnClickListener(v -> {
+            if (reciter != null) reciter.stop();
+            if(web!=null) { web.destroy(); web=null; }
+            showBooks();
+        });
         head.addView(back); Ui.space(this,head,8);
         head.addView(Ui.text(this,selectedName,16,Ui.WHITE,true));
         root.addView(head);
+        if (reciter == null) reciter = new ReaderSpeech(this);
+        TextView listen=Ui.text(this,"▶ Recite selected Hadith / page",15,Ui.GOLD,true);
+        listen.setGravity(Gravity.CENTER);
+        listen.setContentDescription("Recite selected Hadith or page text with device speech");
+        listen.setPadding(0,Ui.dp(this,13),0,Ui.dp(this,13));
+        reciter.attach(listen);
+        listen.setOnClickListener(v -> reciter.reciteFromWeb(web));
+        root.addView(listen);
+        TextView hint=Ui.text(this,
+            "Highlight one narration for accurate playback • Android speech voice",
+            12,Ui.MUTED,false);
+        hint.setGravity(Gravity.CENTER);
+        root.addView(hint);
         web=new WebView(this);
         web.getSettings().setJavaScriptEnabled(true);
         web.getSettings().setDomStorageEnabled(true);
         web.getSettings().setAllowFileAccess(false);
         web.setWebViewClient(new WebViewClient() {
+            @Override public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
+                if (reciter != null) reciter.stop();
+            }
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri link=request.getUrl();
                 if("https".equals(link.getScheme()) && "rewayaat.info".equals(link.getHost())) return false;
@@ -145,6 +169,7 @@ public final class ShiaHadithActivity extends Activity {
     }
     @Override protected void onDestroy() {
         if(web!=null) { web.destroy(); web=null; }
+        if (reciter != null) { reciter.destroy(); reciter=null; }
         super.onDestroy();
     }
 }
