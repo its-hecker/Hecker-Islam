@@ -60,9 +60,31 @@ import java.util.concurrent.Executors;
 /** Native Android UI. No WebView, account, network service, or background location. */
 @SuppressWarnings("deprecation")
 public final class MainActivity extends Activity {
-    private static final int BG = Color.rgb(11,25,23), CARD = Color.rgb(21,43,38);
-    private static final int GOLD = Color.rgb(217,187,119), TEXT = Color.rgb(241,242,230);
-    private static final int MUTED = Color.rgb(158,181,168), LINE = Color.rgb(43,67,56);
+    // Share the dashboard's Material You palette, rather than a separate Azaan theme.
+    private int BG, CARD, GOLD, TEXT, MUTED, LINE;
+    private void applyPalette() {
+        boolean night = getSharedPreferences("islam_ui", MODE_PRIVATE).getBoolean("dark", true);
+        boolean dynamic = getSharedPreferences("islam_ui", MODE_PRIVATE).getBoolean("dynamic", true);
+        if (Build.VERSION.SDK_INT >= 31 && dynamic) {
+            BG = getColor(night ? android.R.color.system_neutral1_900 : android.R.color.system_neutral1_10);
+            CARD = getColor(night ? android.R.color.system_neutral1_800 : android.R.color.system_neutral1_50);
+            GOLD = getColor(night ? android.R.color.system_accent1_200 : android.R.color.system_accent1_600);
+            TEXT = getColor(night ? android.R.color.system_neutral1_50 : android.R.color.system_neutral1_900);
+            MUTED = getColor(night ? android.R.color.system_neutral2_300 : android.R.color.system_neutral2_600);
+            LINE = getColor(night ? android.R.color.system_neutral2_700 : android.R.color.system_neutral2_200);
+        } else {
+            BG = Color.parseColor(night ? "#101916" : "#F5F8F2");
+            CARD = Color.parseColor(night ? "#1E312A" : "#FFFFFF");
+            GOLD = Color.parseColor(night ? "#BDE9C4" : "#286D54");
+            TEXT = Color.parseColor(night ? "#F0F7EE" : "#173D2E");
+            MUTED = Color.parseColor(night ? "#A4BCAF" : "#62766C");
+            LINE = Color.parseColor(night ? "#3B5748" : "#DDE8DE");
+        }
+        getWindow().setStatusBarColor(BG);
+        getWindow().setNavigationBarColor(BG);
+        getWindow().getDecorView().setSystemUiVisibility(night ? 0 :
+                View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+    }
     private static final int NOTIFICATION_REQUEST = 71, LOCATION_REQUEST = 72, AUDIO_REQUEST = 73;
     private static final int EXACT_REQUEST = 74, NOTIFICATION_SETTINGS = 75;
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -126,6 +148,7 @@ public final class MainActivity extends Activity {
 
     private void render() {
         if (destroyed) return;
+        applyPalette();
         countdown = null; lastStatus = null;
         renderedDate = LocalDate.now(settings.zone());
         root = vertical(); root.setBackgroundColor(BG);
@@ -144,18 +167,28 @@ public final class MainActivity extends Activity {
         TextView brand = text("A Z A A N     /     H E C K E R", 11, GOLD);
         brand.setLetterSpacing(0.12f); body.addView(brand);
         if (tab == 0) today(); else if (tab == 1) reader(); else preferences();
-        LinearLayout nav = horizontal(); nav.setPadding(dp(16), dp(10), dp(16), dp(10));
-        nav.setBackgroundColor(CARD);
+        LinearLayout nav = horizontal();
+        nav.setPadding(dp(10), dp(8), dp(10), dp(11));
+        GradientDrawable navBackground = round(CARD, 35);
+        navBackground.setStroke(dp(1), LINE);
+        nav.setBackground(navBackground);
+        nav.setElevation(dp(10));
         String[] titles = {"Today", "Azaan", "Settings"};
         for (int i = 0; i < titles.length; i++) {
             final int index = i;
             Button b = button(titles[i], () -> { tab = index; render(); });
-            b.setTextColor(tab == i ? BG : MUTED);
-            b.setBackground(round(tab == i ? GOLD : CARD, 24));
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(48), 1); lp.setMargins(dp(4), 0, dp(4), 0);
+            b.setTextColor(tab == i ? GOLD : MUTED);
+            b.setTextSize(13);
+            b.setBackground(round(tab == i ? BG : CARD, 28));
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(53), 1);
+            lp.setMargins(dp(2), 0, dp(2), 0);
             nav.addView(b, lp);
         }
-        root.addView(nav); setContentView(root); root.requestApplyInsets();
+        LinearLayout.LayoutParams navLayout = new LinearLayout.LayoutParams(-1, dp(72));
+        navLayout.setMargins(dp(16), dp(4), dp(16), dp(12));
+        root.addView(nav, navLayout);
+        setContentView(root);
+        root.requestApplyInsets();
     }
 
     private void today() {
@@ -163,7 +196,7 @@ public final class MainActivity extends Activity {
         body.addView(text("A moment to return.", 31, TEXT));
         body.addView(text(renderedDate.format(DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy", Locale.ENGLISH)), 14, MUTED));
         gap(body, 20);
-        LinearLayout hero = card(body); hero.setBackground(round(Color.rgb(27,59,48), 28));
+        LinearLayout hero = card(body); hero.setBackground(round(CARD, 28));
         hero.addView(new HorizonView(), new LinearLayout.LayoutParams(-1, dp(132)));
         TextView invocation = text("حَيَّ عَلَى خَيْرِ الْعَمَلِ", 29, GOLD);
         invocation.setGravity(Gravity.CENTER); invocation.setTextDirection(View.TEXT_DIRECTION_RTL);
@@ -578,7 +611,8 @@ public final class MainActivity extends Activity {
     private LinearLayout vertical() { LinearLayout v = new LinearLayout(this); v.setOrientation(LinearLayout.VERTICAL); return v; }
     private LinearLayout horizontal() { LinearLayout v = new LinearLayout(this); v.setOrientation(LinearLayout.HORIZONTAL); return v; }
     private LinearLayout card(LinearLayout parent) {
-        LinearLayout v = vertical(); v.setPadding(dp(18), dp(18), dp(18), dp(18)); v.setBackground(round(CARD, 22));
+        LinearLayout v = vertical(); v.setPadding(dp(18), dp(18), dp(18), dp(18)); v.setBackground(round(CARD, 28));
+        ((GradientDrawable) v.getBackground()).setStroke(dp(1), LINE);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, 0, 0, dp(12)); parent.addView(v, lp); return v;
     }
     private TextView text(String value, float size, int color) {
@@ -590,7 +624,7 @@ public final class MainActivity extends Activity {
     }
     private Button button(String value, Runnable action) {
         Button v = new Button(this); v.setText(value); v.setAllCaps(false); v.setTextSize(14); v.setTextColor(TEXT);
-        v.setBackground(round(LINE, 16)); v.setPadding(dp(12), dp(8), dp(12), dp(8)); v.setMinHeight(dp(48));
+        v.setBackground(round(CARD, 20)); v.setPadding(dp(12), dp(8), dp(12), dp(8)); v.setMinHeight(dp(48));
         v.setStateListAnimator(null); v.setOnClickListener(ignored -> action.run());
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, dp(7), 0, dp(5)); v.setLayoutParams(lp); return v;
     }
@@ -614,7 +648,7 @@ public final class MainActivity extends Activity {
         HorizonView() { super(MainActivity.this); setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO); }
         @Override protected void onSizeChanged(int w, int h, int oldw, int oldh) {
             super.onSizeChanged(w, h, oldw, oldh);
-            if (h > 0) fade = new LinearGradient(0, h * 0.70f, 0, h, Color.TRANSPARENT, Color.rgb(27,59,48), Shader.TileMode.CLAMP);
+            if (h > 0) fade = new LinearGradient(0, h * 0.70f, 0, h, Color.TRANSPARENT, CARD, Shader.TileMode.CLAMP);
         }
         @Override protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
