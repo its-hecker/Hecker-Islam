@@ -31,7 +31,7 @@ public final class ReferenceReadingActivity extends Activity {
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private final Handler main = new Handler(Looper.getMainLooper());
     private SharedPreferences saved;
-    private LinearLayout content;
+    private LinearLayout content, navigation;
     private ScrollView scroll;
     private String section, query = "";
     private int stage = 0, category = -1, chapter = -1;
@@ -54,24 +54,65 @@ public final class ReferenceReadingActivity extends Activity {
         content = Ui.column(this);
         content.setPadding(Ui.dp(this, 19), Ui.dp(this, 22), Ui.dp(this, 19), Ui.dp(this, 35));
         scroll.addView(content);
+        navigation = new LinearLayout(this);
+        navigation.setOrientation(LinearLayout.HORIZONTAL);
+        navigation.setPadding(Ui.dp(this, 10), Ui.dp(this, 8), Ui.dp(this, 10), Ui.dp(this, 11));
+        android.graphics.drawable.GradientDrawable surface = new android.graphics.drawable.GradientDrawable();
+        surface.setColor(Ui.CARD);
+        surface.setCornerRadius(Ui.dp(this, 35));
+        surface.setStroke(Ui.dp(this, 1), Ui.OUTLINE);
+        navigation.setBackground(surface);
+        navigation.setElevation(Ui.dp(this, 10));
+        LinearLayout.LayoutParams navParams = new LinearLayout.LayoutParams(-1, Ui.dp(this, 72));
+        navParams.setMargins(Ui.dp(this, 16), Ui.dp(this, 4), Ui.dp(this, 16), Ui.dp(this, 12));
+        root.addView(navigation, navParams);
         setContentView(root);
+        showNavigation();
         if (!ReferenceLibrary.ready(this)) {
             content.addView(Ui.text(this, "Offline content missing from build", 25, Ui.WHITE, true));
             Ui.space(this, content, 15);
             content.addView(Ui.text(this, "This APK was compiled without its mandatory bundled content. Install a complete standalone release build.", 16, Ui.MUTED, false));
             return;
         }
+        loadSection();
+    }
+    private void showNavigation() {
+        int selected = "quran".equals(section) ? 1 : "azkar".equals(section) ? 2 : 3;
+        Ui.fillNavigation(this, navigation, selected, index -> {
+            if (index >= 1 && index <= 3) {
+                String next = index == 1 ? "quran" : index == 2 ? "azkar" : "hadith";
+                if (!next.equals(section)) {
+                    section = next; stage = 0; chapter = -1; category = -1; query = "";
+                    selectedHadith = null;
+                    showNavigation();
+                    loadSection();
+                }
+            } else {
+                android.content.Intent home = new android.content.Intent(this, IslamDashboardActivity.class);
+                home.putExtra("tab", index);
+                home.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP |
+                              android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(home);
+                overridePendingTransition(0, 0);
+                finish();
+            }
+        });
+    }
+    private void loadSection() {
         try {
             if ("quran".equals(section)) {
-                chapters = ReferenceLibrary.array(this, "quran/chapters.json");
-                verses = ReferenceLibrary.array(this, "quran/quran_uthmani.json");
+                if (chapters == null) chapters = ReferenceLibrary.array(this, "quran/chapters.json");
+                if (verses == null) verses = ReferenceLibrary.array(this, "quran/quran_uthmani.json");
             } else if ("azkar".equals(section)) {
-                azkarCategories = ReferenceLibrary.array(this, "azkar/categories.json");
-                azkarChapters = ReferenceLibrary.array(this, "azkar/chapters.json");
-                azkarItems = ReferenceLibrary.array(this, "azkar/items.json");
-            } else hadithCategories = ReferenceLibrary.array(this, "hadith/categories.json");
+                if (azkarCategories == null) azkarCategories = ReferenceLibrary.array(this, "azkar/categories.json");
+                if (azkarChapters == null) azkarChapters = ReferenceLibrary.array(this, "azkar/chapters.json");
+                if (azkarItems == null) azkarItems = ReferenceLibrary.array(this, "azkar/items.json");
+            } else {
+                if (hadithCategories == null) hadithCategories = ReferenceLibrary.array(this, "hadith/categories.json");
+            }
             draw();
         } catch (Exception ex) {
+            content.removeAllViews();
             content.addView(Ui.text(this, "Cannot load library: " + ex.getMessage(), 16, Ui.MUTED, false));
         }
     }
@@ -290,6 +331,7 @@ public final class ReferenceReadingActivity extends Activity {
             final long stamp = generation;
             String q = query.toLowerCase(Locale.ROOT);
             int cat = category;
+            java.util.Set<Integer> included = hadithDescendants(cat);
             worker.execute(() -> {
                 List<JSONObject> results = new ArrayList<>();
                 String error = null;
@@ -299,7 +341,7 @@ public final class ReferenceReadingActivity extends Activity {
                     while ((line = in.readLine()) != null && results.size() < 60 && !Thread.currentThread().isInterrupted()) {
                         JSONObject hadith = new JSONObject(line);
                         JSONArray categories = hadith.optJSONArray("c");
-                        if (cat != -1 && (categories == null || !contains(categories, cat))) continue;
+                        if (cat != -1 && (categories == null || !containsAny(categories, included))) continue;
                         JSONObject english = hadith.optJSONObject("en");
                         JSONObject arabic = hadith.optJSONObject("ar");
                         String value = (english == null ? "" : english.optString("t") + " " + english.optString("i"))
@@ -340,8 +382,31 @@ public final class ReferenceReadingActivity extends Activity {
             button(bookmarked(key) ? "★ Remove bookmark" : "☆ Bookmark Hadith", () -> bookmark(key));
         }
     }
-    private static boolean contains(JSONArray data, int value) {
-        for (int i = 0; i < data.length(); i++) if (data.optInt(i) == value) return true;
+    /** Parent topics include all nested Hadith leaf-category IDs. */
+    private java.util.Set<Integer> hadithDescendants(int parentId) {
+        java.util.Set<Integer> matches = new java.util.HashSet<>();
+        if (parentId < 0 || hadithCategories == null) return matches;
+        java.util.Map<Integer, Integer> parents = new java.util.HashMap<>();
+        for (int i = 0; i < hadithCategories.length(); i++) {
+            JSONObject c = hadithCategories.optJSONObject(i);
+            if (c != null) parents.put(c.optInt("id"), c.optInt("p", -1));
+        }
+        matches.add(parentId);
+        for (Integer id : parents.keySet()) {
+            int cursor = id;
+            java.util.Set<Integer> seen = new java.util.HashSet<>();
+            while (cursor > 0 && seen.add(cursor)) {
+                if (cursor == parentId) { matches.add(id); break; }
+                Integer next = parents.get(cursor);
+                if (next == null || next == cursor) break;
+                cursor = next;
+            }
+        }
+        return matches;
+    }
+    private static boolean containsAny(JSONArray data, java.util.Set<Integer> allowed) {
+        for (int i = 0; i < data.length(); i++)
+            if (allowed.contains(data.optInt(i))) return true;
         return false;
     }
 }
