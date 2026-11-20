@@ -74,19 +74,19 @@ public final class ShiaDuasActivity extends Activity {
             "https://www.duas.org/Allahumma.htm"),
         new Dua("kumayl", "Dua Kumayl", "دعائے کمیل", "Commonly recited on Thursday nights",
             "", "Full prayer: opens the attributed text at Duas.org.",
-            "https://www.duas.org/kumayl_alt.htm"),
+            "https://fzic.org/library/dua/kumail-1285"),
         new Dua("tawassul", "Dua Tawassul", "دعائے توسل",
             "Seeking nearness to Allah through the Ahlulbayt",
             "", "Full prayer: opens the attributed text at Duas.org.",
-            "https://www.duas.org/tawassul.htm"),
+            "https://fzic.org/library/dua/tawassul-1417"),
         new Dua("nudba", "Dua al-Nudba", "دعائے ندبہ",
             "Commonly recited on Friday mornings",
             "", "Full prayer: opens the attributed text at Duas.org.",
-            "https://www.duas.org/nudba.htm"),
+            "https://fzic.org/library/dua/nudba-1313"),
         new Dua("iftitah", "Dua Iftitah", "دعائے افتتاح",
             "Recited during the nights of Ramadan",
             "", "Full prayer: opens the attributed text at Duas.org.",
-            "https://www.duas.org/iftitah.htm"),
+            "https://fzic.org/library/dua/iftetah-1276"),
         new Dua("simaat", "Dua al-Simat", "دعائے سمات",
             "Commonly recited on Friday evenings",
             "", "Full prayer: opens the attributed text at Duas.org.",
@@ -98,7 +98,7 @@ public final class ShiaDuasActivity extends Activity {
         new Dua("ashura", "Ziyarat Ashura", "زیارت عاشورا",
             "Ziyarat of Imam Husayn (a.s.)",
             "", "Full ziyarat: opens the attributed text at Duas.org.",
-            "https://www.duas.org/ziaratashura-desktop.htm")
+            "https://fzic.org/library/ziyarat/ashura-1435")
     };
 
     private LinearLayout content;
@@ -120,7 +120,12 @@ public final class ShiaDuasActivity extends Activity {
         render();
     }
     private void openSource(Dua dua) {
-        try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(dua.source))); }
+        try {
+            Intent intent = new Intent(this, SourceWebActivity.class);
+            intent.putExtra("title", dua.name);
+            intent.putExtra("url", dua.source);
+            startActivity(intent);
+        }
         catch (ActivityNotFoundException error) {
             new android.app.AlertDialog.Builder(this)
                     .setMessage("No browser is available to open this source.")
@@ -259,6 +264,8 @@ public final class ShiaDuasActivity extends Activity {
         Ui.space(this, content, 15);
         button(favorite(dua.id) ? "★ Remove bookmark" : "☆ Save dua",
                 () -> toggleFavorite(dua));
-        button("Open full source text / translations", () -> openSource(dua));
+        button(dua.source.contains("fzic.org")
+                ? "Read complete Arabic & Urdu translation ›"
+                : "Read full source (online) ›", () -> openSource(dua));
     }
 }
