@@ -16,6 +16,7 @@ final class ReaderSpeech {
     private final Activity activity;
     private TextToSpeech speech;
     private TextView control;
+    private String idleLabel = "▶ Recite • device voice";
     private String pendingText;
     private Locale pendingLanguage;
     private boolean ready, failed, speaking, disposed;
@@ -81,7 +82,12 @@ final class ReaderSpeech {
     }
 
     void attach(TextView view) {
+        attach(view, "▶ Recite • device voice");
+    }
+
+    void attach(TextView view, String label) {
         control = view;
+        idleLabel = label;
         updateControl();
     }
 
@@ -213,7 +219,7 @@ final class ReaderSpeech {
         if (speech != null) { speech.stop(); speech.shutdown(); speech = null; }
     }
     private void updateControl() {
-        if (control != null) control.setText(speaking ? "■ Stop recitation" : "▶ Recite • device voice");
+        if (control != null) control.setText(speaking ? "■ Stop recitation" : idleLabel);
     }
     private void toast(String value) {
         Toast.makeText(activity, value, Toast.LENGTH_LONG).show();
