@@ -499,6 +499,8 @@ public final class IslamDashboardActivity extends Activity {
         Ui.space(this, content, 12);
         tile("Shia Hadith Library", "Al-Kafi, Al-Faqih and Ahlulbayt narrations", () -> launch(ShiaHadithActivity.class));
         tile("Nahj al-Balagha", "Imam Ali’s wisdom • Arabic & Urdu", () -> launch(NahjAlBalaghaActivity.class));
+        tile("Shia Mojzat • معجزات و کرامات", "Urdu stories of Imam Ali, Ghazi Abbas and Bibi Fatima",
+                () -> launch(MojzatActivity.class));
         tile("Azkar & daily remembrance", "Daily supplications and repeat counts", () -> library("azkar"));
         tile("Prayer tracker", "Keep a personal record of five daily prayers",
                 () -> launch(PrayerTrackerActivity.class));
@@ -529,6 +531,8 @@ public final class IslamDashboardActivity extends Activity {
         tile("Tasbeeh counter", "Remembrance and saved counts", () -> launch(TasbeehActivity.class));
         tile("Nahj al-Balagha", "480 wisdom sayings and Urdu reference links", () -> launch(NahjAlBalaghaActivity.class));
         tile("Shia Hadith", "Read Shia source books", () -> launch(ShiaHadithActivity.class));
+        tile("Shia Mojzat • معجزات و کرامات", "Offline Urdu narratives • Sources, bookmarks & recitation",
+                () -> launch(MojzatActivity.class));
         tile("Shia Duas & Ziyarat", "Ahlulbayt supplications, bookmarks and source texts",
                 () -> launch(ShiaDuasActivity.class));
         tile("Offline library", ReferenceLibrary.ready(this)
