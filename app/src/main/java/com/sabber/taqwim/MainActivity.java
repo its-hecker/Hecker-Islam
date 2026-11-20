@@ -25,6 +25,15 @@ public class MainActivity extends OfflineActivity {
         @JavascriptInterface public String palette() {
             return CalendarPalette.json(MainActivity.this);
         }
+
+        /** Sync the Calendar's own saved adjustments to the unified dashboard. */
+        @JavascriptInterface public void saveDateAdjustments(int hijri, int desi) {
+            if (hijri < -2 || hijri > 2 || desi < -2 || desi > 2) return;
+            getSharedPreferences("islam_ui", MODE_PRIVATE).edit()
+                    .putInt("calendar_hijri_adjustment", hijri)
+                    .putInt("calendar_desi_adjustment", desi)
+                    .apply();
+        }
     }
 
     @Override protected void onResume() {
