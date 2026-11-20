@@ -70,7 +70,8 @@ public final class RecitationService extends Service {
         return ("quran:" + number).equals(prefs(context).getString("key", ""));
     }
     public static boolean matchesText(Context context, String words, Locale language) {
-        return words != null && textKey(words.trim(), language).equals(prefs(context).getString("key", ""));
+        return words != null && textKey(words.trim().replaceAll("[ \\t]{2,}", " "), language)
+                .equals(prefs(context).getString("key", ""));
     }
     public static boolean isPlaying(Context context) {
         return prefs(context).getBoolean("playing", false);
