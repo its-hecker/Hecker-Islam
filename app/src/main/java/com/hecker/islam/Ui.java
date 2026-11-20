@@ -21,7 +21,7 @@ final class Ui {
     static int BACKGROUND, CARD, GOLD, WHITE, MUTED, OUTLINE;
     private Ui() {}
     static void applyTheme(Context c) {
-        boolean night = c.getSharedPreferences("islam_ui", Context.MODE_PRIVATE).getBoolean("dark", false);
+        boolean night = c.getSharedPreferences("islam_ui", Context.MODE_PRIVATE).getBoolean("dark", true);
         if (Build.VERSION.SDK_INT >= 31 && c.getSharedPreferences("islam_ui", Context.MODE_PRIVATE).getBoolean("dynamic", true)) {
             BACKGROUND = c.getColor(night ? android.R.color.system_neutral1_900 : android.R.color.system_neutral1_10);
             CARD = c.getColor(night ? android.R.color.system_neutral1_800 : android.R.color.system_neutral1_50);
@@ -37,6 +37,37 @@ final class Ui {
         WHITE = Color.parseColor(night ? "#F0F7EE" : "#173D2E");
         MUTED = Color.parseColor(night ? "#A4BCAF" : "#62766C");
         OUTLINE = Color.parseColor(night ? "#3B5748" : "#DDE8DE");
+    }
+    /** Keep the same floating navigation surface across all library screens. */
+    static void fillNavigation(android.app.Activity activity, LinearLayout nav, int selected,
+                               java.util.function.IntConsumer onSelect) {
+        nav.removeAllViews();
+        String[] labels = {"Today", "Qur'an", "Azkar", "Hadith", "More"};
+        int[] icons = {android.R.drawable.ic_menu_today, android.R.drawable.ic_menu_agenda,
+                android.R.drawable.ic_menu_compass, android.R.drawable.ic_menu_info_details,
+                android.R.drawable.ic_menu_more};
+        for (int i = 0; i < labels.length; i++) {
+            final int index = i;
+            LinearLayout pill = column(activity);
+            pill.setGravity(Gravity.CENTER);
+            GradientDrawable bg = new GradientDrawable();
+            bg.setColor(i == selected ? BACKGROUND : CARD);
+            bg.setCornerRadius(dp(activity, 32));
+            pill.setBackground(bg);
+            android.widget.ImageView image = new android.widget.ImageView(activity);
+            image.setImageResource(icons[i]);
+            image.setColorFilter(i == selected ? GOLD : MUTED);
+            pill.addView(image, new LinearLayout.LayoutParams(dp(activity, 23), dp(activity, 23)));
+            space(activity, pill, 4);
+            TextView label = text(activity, labels[i], 10, i == selected ? WHITE : MUTED, i == selected);
+            label.setGravity(Gravity.CENTER);
+            pill.addView(label);
+            pill.setContentDescription("Open " + labels[i]);
+            pill.setOnClickListener(v -> onSelect.accept(index));
+            LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(0, -1, 1);
+            size.setMargins(dp(activity, 2), 0, dp(activity, 2), 0);
+            nav.addView(pill, size);
+        }
     }
     static int dp(Context c, int px) { return (int) (c.getResources().getDisplayMetrics().density * px + .5f); }
     static LinearLayout column(Context c) { LinearLayout v = new LinearLayout(c); v.setOrientation(LinearLayout.VERTICAL); return v; }
