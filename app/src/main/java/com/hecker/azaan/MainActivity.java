@@ -544,8 +544,11 @@ public final class MainActivity extends Activity {
         stopLocation();
         AlarmScheduler.schedule(this);
         render();
+        LocationLabeler.resolve(this, () -> {
+            if (!destroyed && !isFinishing() && !isDestroyed()) render();
+        }, true);
         refreshPrayerTimes(true);
-        toast("Location updated. Prayer times are recalculated for your coordinates.");
+        toast("Coordinates synced. Finding neighborhood name for your Azaan card…");
     }
 
     private void stopLocation() {
