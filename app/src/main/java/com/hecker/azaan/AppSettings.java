@@ -43,7 +43,7 @@ public final class AppSettings {
     public void method(PrayerCalculator.Method m) { prefs.edit().putString("method", m.name()).apply(); }
     public boolean wilayah() { return prefs.getBoolean("wilayah", true); }
     public void wilayah(boolean value) { prefs.edit().putBoolean("wilayah", value).apply(); }
-    public boolean language(AzaanText.Language l) { return l == AzaanText.Language.ARABIC || prefs.getBoolean("lang_" + l.name(), true); }
+    public boolean language(AzaanText.Language l) { return l == AzaanText.Language.ARABIC || prefs.getBoolean("lang_" + l.name(), false); }
     public void language(AzaanText.Language l, boolean value) { prefs.edit().putBoolean("lang_" + l.name(), value).apply(); }
     public List<AzaanText.Language> languages() {
         List<AzaanText.Language> result = new ArrayList<>();
