@@ -28,14 +28,26 @@ function applyTheme(){
  const dark=S.theme==='dark'||(S.theme==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);
  const colors=SabCalThemes.resolve(S.palette,dark,S.accent);
  Object.entries(colors).forEach(([key,value])=>document.documentElement.style.setProperty('--'+key,value));
+ // Unified mode follows Hecker Islam Settings, while legacy mode retains Calendar themes.
+ let effectiveDark=dark;
+ if(document.documentElement.classList.contains('hecker-ui')&&window.HeckerCalendar){
+  try{
+   const unified=JSON.parse(HeckerCalendar.palette());
+   effectiveDark=!!unified.dark;
+   delete unified.dark;
+   Object.assign(colors,unified);
+   Object.entries(unified).forEach(([key,value])=>document.documentElement.style.setProperty('--'+key,value));
+   document.documentElement.dataset.theme=effectiveDark?'dark':'light';
+  }catch(error){console.warn('Calendar palette unavailable',error);}
+ }
  document.documentElement.dataset.palette=S.palette;
- $('themeButton').innerHTML=icon(dark?'sun':'moon');
+ $('themeButton').innerHTML=icon(effectiveDark?'sun':'moon');
  $('themeButton').setAttribute('aria-label',dark?'Switch to light appearance':'Switch to dark appearance');
  document.querySelectorAll('button[data-theme]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.theme===S.theme)));
  document.querySelectorAll('[data-palette]').forEach(button=>{if(button.tagName==='BUTTON')button.setAttribute('aria-pressed',String(button.dataset.palette===S.palette));});
  $('customAccent').value=S.accent;
  $('customAccent').closest('label').classList.toggle('active',S.palette==='custom');
- if(window.AppTheme){if(AppTheme.setPalette)AppTheme.setPalette(colors.bg,dark);else AppTheme.setDark(dark);}
+ if(window.AppTheme){if(AppTheme.setPalette)AppTheme.setPalette(colors.bg,effectiveDark);else AppTheme.setDark(effectiveDark);}
 }
 function applyTextSize(){
  document.documentElement.style.setProperty('--text-scale',S.textSize/100);
