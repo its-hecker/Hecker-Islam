@@ -140,6 +140,11 @@ public final class ShiaHadithActivity extends Activity {
         reciter.attach(listen);
         listen.setOnClickListener(v -> reciter.reciteFromWeb(web));
         root.addView(listen);
+        TextView speed = Ui.text(this, "Recitation speed • " + reciter.speedLabel() + "  ›", 14, Ui.GOLD, true);
+        speed.setGravity(Gravity.CENTER);
+        speed.setPadding(0, Ui.dp(this, 9), 0, Ui.dp(this, 9));
+        speed.setOnClickListener(v -> reciter.chooseSpeed(speed));
+        root.addView(speed);
         TextView hint=Ui.text(this,
             "Highlight one narration for accurate playback • Android speech voice",
             12,Ui.MUTED,false);
