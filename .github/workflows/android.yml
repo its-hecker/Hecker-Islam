@@ -1,7 +1,7 @@
 name: Android
 on:
   push:
-    branches: [main, "feat/**"]
+    branches: [main, "feat/**", "fix/**"]
   pull_request:
   workflow_dispatch:
 
@@ -15,6 +15,16 @@ jobs:
       ANDROID_SDK_ROOT: ${{ github.workspace }}/.android-sdk
     steps:
       - uses: actions/checkout@v4
+      - name: Embed pinned Arabic muezzin recording (Nizar Al-Qatari)
+        run: python3 tools/fetch_azaan_audio.py
+      - name: Verify muezzin recording exists in APK assets
+        run: test -s app/src/main/assets/azaan/nizar_al_qatari.mp3
+      - name: Bundle full Shia Urdu Qur'an translations (Jawadi and Najafi)
+        run: python3 tools/fetch_shia_quran_translations.py
+      - name: Verify bundled offline catalogs
+        run: |
+          python3 tools/bundle_reference_assets.py --verify
+          python3 -c "import json,pathlib; p=pathlib.Path('app/src/main/assets/reference/quran'); assert all(len(json.loads((p/name).read_text(encoding='utf-8')))==6236 for name in ['ur_jawadi.json','ur_najafi.json'])"
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -33,7 +43,7 @@ jobs:
       - name: Unit tests, lint and APK
         run: gradle --no-daemon testDebugUnitTest lintDebug assembleDebug
       - uses: actions/upload-artifact@v4
-        if: success()
         with:
-          name: hecker-islam-debug-apk
+          name: hecker-islam-standalone-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error

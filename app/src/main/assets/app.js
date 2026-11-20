@@ -22,20 +22,35 @@ try{
  S.textSize=Math.round(clamp(old.textSize,90,160,100)/10)*10;
 }catch(_){}
 let selected=today(),cur=day(selected.getFullYear(),selected.getMonth(),1),activeTab='calendar',events=[],activeDetailId='';
-function save(){try{localStorage.setItem('tt',JSON.stringify(S));}catch(_){}}
+function syncDateAdjustments(){
+ try{if(window.HeckerCalendar&&HeckerCalendar.saveDateAdjustments)HeckerCalendar.saveDateAdjustments(S.h,S.d);}catch(_){}
+}
+function save(){try{localStorage.setItem('tt',JSON.stringify(S));}catch(_){}syncDateAdjustments();}
 function applyTheme(){
  if(S.theme==='system')document.documentElement.removeAttribute('data-theme');else document.documentElement.dataset.theme=S.theme;
  const dark=S.theme==='dark'||(S.theme==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);
  const colors=SabCalThemes.resolve(S.palette,dark,S.accent);
  Object.entries(colors).forEach(([key,value])=>document.documentElement.style.setProperty('--'+key,value));
+ // Unified mode follows Hecker Islam Settings, while legacy mode retains Calendar themes.
+ let effectiveDark=dark;
+ if(document.documentElement.classList.contains('hecker-ui')&&window.HeckerCalendar){
+  try{
+   const unified=JSON.parse(HeckerCalendar.palette());
+   effectiveDark=!!unified.dark;
+   delete unified.dark;
+   Object.assign(colors,unified);
+   Object.entries(unified).forEach(([key,value])=>document.documentElement.style.setProperty('--'+key,value));
+   document.documentElement.dataset.theme=effectiveDark?'dark':'light';
+  }catch(error){console.warn('Calendar palette unavailable',error);}
+ }
  document.documentElement.dataset.palette=S.palette;
- $('themeButton').innerHTML=icon(dark?'sun':'moon');
+ $('themeButton').innerHTML=icon(effectiveDark?'sun':'moon');
  $('themeButton').setAttribute('aria-label',dark?'Switch to light appearance':'Switch to dark appearance');
  document.querySelectorAll('button[data-theme]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.theme===S.theme)));
  document.querySelectorAll('[data-palette]').forEach(button=>{if(button.tagName==='BUTTON')button.setAttribute('aria-pressed',String(button.dataset.palette===S.palette));});
  $('customAccent').value=S.accent;
  $('customAccent').closest('label').classList.toggle('active',S.palette==='custom');
- if(window.AppTheme){if(AppTheme.setPalette)AppTheme.setPalette(colors.bg,dark);else AppTheme.setDark(dark);}
+ if(window.AppTheme){if(AppTheme.setPalette)AppTheme.setPalette(colors.bg,effectiveDark);else AppTheme.setDark(effectiveDark);}
 }
 function applyTextSize(){
  document.documentElement.style.setProperty('--text-scale',S.textSize/100);
@@ -171,4 +186,4 @@ $('grid').addEventListener('keydown',event=>{const button=event.target.closest('
 document.querySelectorAll('dialog').forEach(dialog=>dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}}));
 window.AppUi={back(){if($('dayDialog').open){$('dayDialog').close();return true;}if($('dateDialog').open){$('dateDialog').close();return true;}if($('infoDialog').open){$('infoDialog').close();return true;}if(activeTab!=='calendar'){setTab('calendar');return true;}return false;}};
 const themeMedia=matchMedia('(prefers-color-scheme:dark)');if(themeMedia.addEventListener)themeMedia.addEventListener('change',applyTheme);
-applyTextSize();applyTheme();render();
+syncDateAdjustments();applyTextSize();applyTheme();render();

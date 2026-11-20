@@ -1,0 +1,130 @@
+/* Only active when Settings > Calendar appearance selects the unified default.
+   The original Calendar CSS, calendar logic, events and saved adjustments remain intact. */
+html.hecker-ui {
+    color-scheme: dark;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+html.hecker-ui[data-theme="light"] { color-scheme: light; }
+.hecker-ui body {
+    background: var(--bg);
+    color: var(--ink);
+    font-size: calc(15px * var(--text-scale, 1));
+}
+.hecker-ui .app { max-width: 680px; padding: 0 19px 125px; }
+.hecker-ui .topbar { padding: 22px 0 25px; gap: 8px; }
+.hecker-ui .brand-mark {
+    background: var(--soft);
+    border: 1px solid var(--line);
+    color: var(--accent);
+    border-radius: 18px;
+    height: 48px; width: 48px;
+}
+.hecker-ui .brand strong { font-size: calc(24px * var(--text-scale, 1)); letter-spacing: -.8px; font-weight: 750; }
+.hecker-ui .brand small { font-size: calc(9px * var(--text-scale, 1)); letter-spacing: .6px; }
+.hecker-ui .icon-button { border-radius: 18px; }
+.hecker-ui #themeButton { display: none; }
+.hecker-ui .date-feature {
+    border-radius: 30px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    box-shadow: none;
+    padding: 23px 22px;
+}
+.hecker-ui .eyebrow { color: var(--accent); font-size: calc(10px * var(--text-scale, 1)); letter-spacing: .8px; }
+.hecker-ui .today-button { border-radius: 999px; font-size: calc(11px * var(--text-scale, 1)); padding: 9px 12px; }
+.hecker-ui .gregorian-date { margin-top: 13px; }
+.hecker-ui .gregorian-date>strong { font-size: calc(76px * var(--text-scale, 1)); font-weight: 640; letter-spacing: -3px; }
+.hecker-ui .gregorian-date h1 { font-size: calc(23px * var(--text-scale, 1)); font-weight: 670; }
+.hecker-ui .gregorian-date p { font-size: calc(13px * var(--text-scale, 1)); }
+.hecker-ui .other-dates { gap: 10px; padding-top: 16px; }
+.hecker-ui .other-dates>div { font-size: calc(13px * var(--text-scale, 1)); }
+.hecker-ui .month-toolbar { margin: 28px 0 0; }
+.hecker-ui .month-arrow {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    width: 44px; height: 44px;
+}
+.hecker-ui .month-title { font-size: calc(20px * var(--text-scale, 1)); }
+.hecker-ui .month-subtitle { font-size: calc(11px * var(--text-scale, 1)); margin-bottom: 18px; }
+.hecker-ui .calendar-grid { gap: 5px; }
+.hecker-ui .dow { font-size: calc(10px * var(--text-scale, 1)); }
+.hecker-ui .date-cell {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 17px;
+    min-height: 66px;
+    padding: 6px 1px;
+}
+.hecker-ui .date-cell .g { font-size: calc(17px * var(--text-scale, 1)); font-weight: 650; }
+.hecker-ui .date-cell .h,
+.hecker-ui .date-cell .d { font-size: calc(8px * var(--text-scale, 1)); }
+.hecker-ui .date-cell.is-today { box-shadow: inset 0 0 0 1px var(--accent); }
+.hecker-ui .date-cell.selected {
+    color: var(--bg);
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: none;
+}
+.hecker-ui .date-cell.selected .g,
+.hecker-ui .date-cell.selected .h,
+.hecker-ui .date-cell.selected .d { color: var(--bg); }
+.hecker-ui .calendar-key { flex-wrap: wrap; gap: 9px 16px; font-size: calc(10px * var(--text-scale, 1)); }
+.hecker-ui .section-heading h2 { font-size: calc(18px * var(--text-scale, 1)); font-weight: 690; }
+.hecker-ui .text-button { font-size: calc(12px * var(--text-scale, 1)); }
+.hecker-ui .occasion,
+.hecker-ui .settings-card,
+.hecker-ui .about-row,
+.hecker-ui .quiet-day {
+    border-radius: 25px;
+    border: 1px solid var(--line);
+    background: var(--card);
+}
+.hecker-ui .occasion { padding: 18px; }
+.hecker-ui .occasion-date { border-radius: 16px; width: 53px; height: 53px; }
+.hecker-ui .occasion-text strong { font-size: calc(14px * var(--text-scale, 1)); }
+.hecker-ui .occasion-text small { font-size: calc(11px * var(--text-scale, 1)); }
+.hecker-ui .page-heading h1 { font-size: calc(35px * var(--text-scale, 1)); font-weight: 700; }
+.hecker-ui .page-heading p { font-size: calc(14px * var(--text-scale, 1)); }
+.hecker-ui .setting-heading h2 { font-size: calc(17px * var(--text-scale, 1)); }
+.hecker-ui .setting-heading p { font-size: calc(12px * var(--text-scale, 1)); }
+.hecker-ui .settings-card { padding: 20px; margin: 12px 0; }
+/* Global Hecker Islam Settings owns appearance in unified mode.
+   Calendar-specific date, font and moon adjustment options stay available. */
+.hecker-ui #settingsPane > .settings-card:nth-child(2),
+.hecker-ui #settingsPane > .settings-card:nth-child(3) { display: none; }
+.hecker-ui .bottom-nav {
+    position: fixed;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 32px);
+    max-width: 648px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 38px;
+    padding: 8px;
+    box-shadow: 0 10px 35px #0002;
+    backdrop-filter: blur(18px);
+    gap: 4px;
+}
+.hecker-ui .bottom-nav > button {
+    min-height: 57px;
+    border-radius: 30px;
+    padding: 7px 3px;
+    font-size: calc(11px * var(--text-scale, 1));
+    gap: 4px;
+}
+.hecker-ui .bottom-nav > button[aria-current="page"] {
+    background: var(--soft);
+    color: var(--accent);
+}
+.hecker-ui .bottom-nav .icon { width: 21px; height: 21px; }
+.hecker-ui .sheet { border-radius: 29px; background: var(--card); border-color: var(--line); }
+.hecker-ui .primary-button { border-radius: 28px; }
+@media (max-width: 360px) {
+    .hecker-ui .app { padding-left: 12px; padding-right: 12px; }
+    .hecker-ui .date-cell { min-height: 59px; border-radius: 13px; }
+    .hecker-ui .calendar-grid { gap: 3px; }
+    .hecker-ui .gregorian-date>strong { font-size: calc(65px * var(--text-scale, 1)); }
+}

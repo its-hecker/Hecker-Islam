@@ -1,23 +1,31 @@
-# Hecker Islam — reference feature parity
+# Salat Times 1.7.0 reference parity
 
-Reference: personally supplied Salat Times `ST-261104-v1.7.0-stable-317dffb.apk` (permission to reuse granted by owner).
+User-provided, owner-authorized APK: `ST-261104-v1.7.0-stable-317dffb.apk`.
 
-**What is present on branch `feat/reference-ui-parity`:**
-- New Material 3 Expressive-style home with rounded prayer card, navigation tabs, appearance toggle, prayer schedule, and themed feature shortcuts
-- Existing Hecker Calendar: Gregorian / Hijri / Desi views, religious occasions, themes
-- Existing Azaan app: Ja'fari calculations, alarms, combined announcements, local settings, custom recitations
-- Qibla compass with true-north correction
-- Tasbeeh with persistent counts
-- Qur'an: all 114 chapter metadata, 6,236 original Uthmani verses, surah listing, verse search, bookmarks
-- Azkar: 11 categories, 133 chapters, 287 entries, Arabic/English, repeat counts, references and bookmarks
-- Hadith: 3,574 records, 493 category metadata, search and bookmarks, Arabic/English details and explanations
-- Prayer tracker: five daily prayers and daily local persistence
-- Offline reference-data importer: accepts original APK and the reference-content-pack ZIP, copies only whitelisted catalogs locally
-- Nearby mosques: launches device maps app at the configured coordinates to search for mosques
-- Light/dark theme switch
+## Implemented on `fix/standalone-offline-expressive`
 
-**Content packaging:** the user-provided APK includes 40 offline catalogs. Since binary assets are intentionally kept out of GitHub source, choose "Import offline library" in Hecker Islam and select either the original APK or the reference-content-pack ZIP. The importer validates required content and prevents path traversal. The 65-entry Azaan sound catalog is metadata; the original APK does not embed every audio file in the catalog. Existing Hecker Azaan audio importing is preserved.
+- Hecker's Calendar and Azaan functionality from their established repositories
+- Animated Material-inspired UI: dynamic color, round surfaces, floating bottom bar, tab-press spring, staggered entrance
+- Prayer-time dashboard with countdown
+- Offline Qur'an (114 Surahs, 6,236 verses), Azkar (11 categories, 133 chapters, 287 entries) and Hadith (3,574 entries, 493 categories) readers
+- Bookmarks, search, saved Tasbeeh, daily five-prayer tracking
+- Qibla bearing with smooth device compass movement
+- Nearby mosque search through another installed maps app
+- Light/dark palettes
+- **Bundled reference databases; no app-side ZIP/APK picker or content download**
+  (maintainer must commit the asset pack as described in STANDALONE_BUILD.md)
 
-**Not yet exact:** The reference is a compiled Jetpack Compose APK, not the editable Compose source. A screenshot-perfect port of all settings, animations, reciters, moon/Sun widgets, hijri export, advanced prayer calculations, local backup/restore, mosque satellite maps, notifications and all language options still requires development and runtime tests. This branch is an iterative native implementation, not a claim of full parity.
+## Partial/not yet exact
 
-**Notes:** No third-party executable code is repackaged and no API key has been extracted. Religious text displayed from the provided APK should be proofread against trusted sources before publishing. Keep the owner’s copyright attribution when distributing authorized text, media and branding.
+- Original application is Jetpack Compose; this project's main shell still uses native Android Views rather than the same Compose implementations and motion specs
+- Full original prayer schedule, advanced calculation choices, regional rules, fasting/night-time data
+- Reciter audio catalog metadata is bundled, but some listed remote recordings are not included inside the reference APK
+- Monthly, moon and Sun home widgets, exact launcher and widget previews
+- Detailed map tiles, built-in live routing and satellite search
+- Hijri export and exact customization settings, transitions, fonts, layouts and gestures
+- Full original notifications, multi-language options and encrypted backup/restore
+- All exact per-screen animations and layouts still require runtime inspection and rebuild
+
+The reference assets are copied by permission of the original app owner. The app
+does not include someone else's bundled executable code. Check third-party
+font/audio licensing separately before distributing.

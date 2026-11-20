@@ -54,7 +54,7 @@ public final class PlaybackService extends Service {
         }
         title = (intent.getBooleanExtra("automatic", false) ? "Azaan · " : "Preview · ") + prayer.title;
         Notifications.channels(this);
-        startForeground(Notifications.PLAYBACK_ID, Notifications.playback(this, title, "Preparing Arabic → Urdu → English"));
+        startForeground(Notifications.PLAYBACK_ID, Notifications.playback(this, title, "Preparing Azaan audio"));
         running = true;
         ready = false;
         languages = settings.languages();
@@ -70,7 +70,8 @@ public final class PlaybackService extends Service {
         wake = getSystemService(PowerManager.class).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Azaan:playback");
         wake.acquire(30 * 60_000L);
         handler.postDelayed(timeout, 29 * 60_000L);
-        if (languages.stream().allMatch(l -> !settings.recording(l).isEmpty())) {
+        if (languages.stream().allMatch(l -> !settings.recording(l).isEmpty()
+                || (l == AzaanText.Language.ARABIC && BundledAzaan.available(this)))) {
             playLanguage();
         } else {
             int token = ++generation;
@@ -88,7 +89,8 @@ public final class PlaybackService extends Service {
         tts.setAudioAttributes(attributes);
         tts.setSpeechRate(0.85f);
         for (AzaanText.Language language : languages) {
-            if (!settings.recording(language).isEmpty()) continue;
+            if (!settings.recording(language).isEmpty() ||
+                (language == AzaanText.Language.ARABIC && BundledAzaan.available(this))) continue;
             Voice voice = VoiceSupport.offline(tts, language);
             if (voice == null) { fail("No installed offline " + language.title + " voice. Import a recording or install that voice in Settings."); return; }
             voices.put(language, voice);
@@ -115,7 +117,9 @@ public final class PlaybackService extends Service {
         getSystemService(android.app.NotificationManager.class).notify(Notifications.PLAYBACK_ID,
             Notifications.playback(this, title, language.title + " · " + (languageIndex + 1) + " of " + languages.size()));
         String recording = settings.recording(language);
-        if (recording.isEmpty()) {
+        boolean builtIn = language == AzaanText.Language.ARABIC &&
+                recording.isEmpty() && BundledAzaan.available(this);
+        if (recording.isEmpty() && !builtIn) {
             if (!ready || tts.setVoice(voices.get(language)) == TextToSpeech.ERROR) { fail("Could not select the " + language.title + " voice."); return; }
             phrases = AzaanText.phrases(language, settings.wilayah()); phraseIndex = 0;
             speakNext();
@@ -124,13 +128,19 @@ public final class PlaybackService extends Service {
                 player = new MediaPlayer();
                 player.setAudioAttributes(attributes);
                 player.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK);
-                player.setDataSource(this, Uri.parse(recording));
+                if (builtIn) BundledAzaan.configure(this, player);
+                else player.setDataSource(this, Uri.parse(recording));
                 player.setVolume(settings.volume(), settings.volume());
                 player.setOnPreparedListener(p -> { if (running) p.start(); });
                 player.setOnCompletionListener(p -> { releasePlayer(); languageIndex++; playLanguage(); });
-                player.setOnErrorListener((p, what, extra) -> { fail("Could not play " + language.title + " recording. Import a playable local audio file again."); return true; });
+                player.setOnErrorListener((p, what, extra) -> {
+                    fail("Could not play " + language.title + " recording. Check the bundled audio or selected file.");
+                    return true;
+                });
                 player.prepareAsync();
-            } catch (Exception e) { fail("The " + language.title + " recording is no longer accessible. Import it again."); }
+            } catch (Exception e) {
+                fail("The " + language.title + " recording is unavailable. Check the bundled audio or selected file.");
+            }
         }
     }
 

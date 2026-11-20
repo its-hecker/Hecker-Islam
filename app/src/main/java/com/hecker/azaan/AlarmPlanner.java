@@ -32,6 +32,29 @@ public final class AlarmPlanner {
         events.sort(Comparator.comparing(event -> event.time));
         return events;
     }
+    /**
+     * Provider-aware planning for the app and exact alarms.
+     * Uses the exact same cached times as the UI; a missing cache falls back offline.
+     */
+    public static List<Event> upcoming(android.content.Context context, Instant now,
+                                       AppSettings settings, boolean[] enabled) {
+        if (enabled == null || enabled.length != 3)
+            throw new IllegalArgumentException("Three prayer switches are required.");
+        List<Event> events = new ArrayList<>();
+        LocalDate today = now.atZone(settings.zone()).toLocalDate();
+        for (int day = -1; day <= 3; day++) {
+            Map<Prayer, Instant> times = PrayerTimeProvider.calculate(context,
+                    today.plusDays(day), settings);
+            for (Prayer p : Prayer.values()) {
+                Instant at = times.get(p);
+                if (enabled[p.ordinal()] && at != null && at.isAfter(now))
+                    events.add(new Event(p, at));
+            }
+        }
+        events.sort(Comparator.comparing(event -> event.time));
+        return events;
+    }
+
     public static boolean shouldPlay(long now, long scheduled, boolean enabled,
                                      String eventKey, String lastEventKey) {
         long age = now - scheduled;

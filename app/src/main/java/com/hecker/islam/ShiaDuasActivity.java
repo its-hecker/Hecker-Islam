@@ -1,0 +1,228 @@
+package com.hecker.islam;
+
+import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
+import android.view.Gravity;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.EditText;
+import android.text.TextWatcher;
+import android.text.Editable;
+import java.util.Locale;
+
+/**
+ * Dedicated Ahlulbayt duas catalogue. Short liturgies have an offline reader;
+ * complete long supplications open their attributed original at Duas.org.
+ * Do not label snippets as the full traditional texts.
+ */
+public final class ShiaDuasActivity extends Activity {
+    private static final class Dua {
+        final String id, name, urduName, occasion, arabic, instructions, source;
+        Dua(String id, String name, String urduName, String occasion,
+            String arabic, String instructions, String source) {
+            this.id = id; this.name = name; this.urduName = urduName;
+            this.occasion = occasion; this.arabic = arabic;
+            this.instructions = instructions; this.source = source;
+        }
+        boolean offline() { return !arabic.isEmpty(); }
+    }
+
+    private static final Dua[] DUAS = {
+        new Dua("faraj", "Dua al-Faraj (Allahumma Kun)", "دعائے فرج",
+            "Supplication for Imam al-Mahdi (a.j.)",
+            "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\n"
+            + "اللَّهُمَّ كُنْ لِوَلِيِّكَ الْحُجَّةِ بْنِ الْحَسَنِ، صَلَوَاتُكَ عَلَيْهِ وَعَلَىٰ آبَائِهِ، "
+            + "فِي هَٰذِهِ السَّاعَةِ وَفِي كُلِّ سَاعَةٍ، وَلِيًّا وَحَافِظًا وَقَائِدًا وَنَاصِرًا "
+            + "وَدَلِيلًا وَعَيْنًا، حَتَّىٰ تُسْكِنَهُ أَرْضَكَ طَوْعًا، وَتُمَتِّعَهُ فِيهَا طَوِيلًا.",
+            "Short Arabic supplication, available offline.",
+            "https://www.duas.org/Allahumma.htm"),
+        new Dua("tasbih", "Tasbih of Sayyida Fatima al-Zahra", "تسبیحِ حضرت فاطمہ زہراؑ",
+            "Remembrance after prayers",
+            "اللَّهُ أَكْبَرُ × 34\nالْحَمْدُ لِلَّهِ × 33\nسُبْحَانَ اللَّهِ × 33",
+            "Recite in this order. The counts are part of the practice.",
+            "https://www.duas.org/regularsd.desktop.htm"),
+        new Dua("salawat", "Salawat on Muhammad and Ahlulbayt", "صلوات",
+            "Daily remembrance",
+            "اللَّهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَآلِ مُحَمَّدٍ",
+            "A short form of salawat, available offline.",
+            "https://www.duas.org/Allahumma.htm"),
+        new Dua("kumayl", "Dua Kumayl", "دعائے کمیل", "Commonly recited on Thursday nights",
+            "", "Full prayer: opens the attributed text at Duas.org.",
+            "https://www.duas.org/kumayl_alt.htm"),
+        new Dua("tawassul", "Dua Tawassul", "دعائے توسل",
+            "Seeking nearness to Allah through the Ahlulbayt",
+            "", "Full prayer: opens the attributed text at Duas.org.",
+            "https://www.duas.org/tawassul.htm"),
+        new Dua("nudba", "Dua al-Nudba", "دعائے ندبہ",
+            "Commonly recited on Friday mornings",
+            "", "Full prayer: opens the attributed text at Duas.org.",
+            "https://www.duas.org/nudba.htm"),
+        new Dua("iftitah", "Dua Iftitah", "دعائے افتتاح",
+            "Recited during the nights of Ramadan",
+            "", "Full prayer: opens the attributed text at Duas.org.",
+            "https://www.duas.org/iftitah.htm"),
+        new Dua("simaat", "Dua al-Simat", "دعائے سمات",
+            "Commonly recited on Friday evenings",
+            "", "Full prayer: opens the attributed text at Duas.org.",
+            "https://www.duas.org/simaat-desktop.htm"),
+        new Dua("sabah", "Dua al-Sabah", "دعائے صباح",
+            "Morning supplication attributed to Imam Ali (a.s.)",
+            "", "Full prayer: opens the attributed text at Duas.org.",
+            "https://www.duas.org/mobile/dua-sabah.html"),
+        new Dua("ashura", "Ziyarat Ashura", "زیارت عاشورا",
+            "Ziyarat of Imam Husayn (a.s.)",
+            "", "Full ziyarat: opens the attributed text at Duas.org.",
+            "https://www.duas.org/ziaratashura-desktop.htm")
+    };
+
+    private LinearLayout content;
+    private String search = "";
+    private Dua selected;
+    private boolean favoritesOnly;
+
+    @Override public void onCreate(Bundle state) {
+        super.onCreate(state);
+        render();
+    }
+
+    private boolean favorite(String id) {
+        return getSharedPreferences("shia_duas", MODE_PRIVATE).getBoolean(id, false);
+    }
+    private void toggleFavorite(Dua dua) {
+        getSharedPreferences("shia_duas", MODE_PRIVATE).edit()
+                .putBoolean(dua.id, !favorite(dua.id)).apply();
+        render();
+    }
+    private void openSource(Dua dua) {
+        try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(dua.source))); }
+        catch (ActivityNotFoundException error) {
+            new android.app.AlertDialog.Builder(this)
+                    .setMessage("No browser is available to open this source.")
+                    .setPositiveButton("OK", null).show();
+        }
+    }
+    @Override public void onBackPressed() {
+        if (selected != null) { selected = null; render(); }
+        else super.onBackPressed();
+    }
+    private void render() {
+        Ui.applyTheme(this);
+        getWindow().setStatusBarColor(Ui.BACKGROUND);
+        getWindow().setNavigationBarColor(Ui.BACKGROUND);
+        boolean dark = getSharedPreferences("islam_ui", MODE_PRIVATE).getBoolean("dark", true);
+        getWindow().getDecorView().setSystemUiVisibility(dark ? 0
+                : View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+        LinearLayout root = Ui.column(this);
+        root.setBackgroundColor(Ui.BACKGROUND);
+        Ui.rootInsets(root);
+        ScrollView scrolling = new ScrollView(this);
+        scrolling.setFillViewport(true);
+        root.addView(scrolling, new LinearLayout.LayoutParams(-1, -1));
+        content = Ui.column(this);
+        content.setPadding(Ui.dp(this, 19), Ui.dp(this, 24), Ui.dp(this, 19), Ui.dp(this, 45));
+        scrolling.addView(content);
+        setContentView(root);
+        TextView back = Ui.text(this, "‹  " + (selected == null ? "Hecker Islam" : "Shia Duas"), 16, Ui.GOLD, true);
+        back.setOnClickListener(v -> onBackPressed());
+        content.addView(back);
+        Ui.space(this, content, 21);
+        content.addView(Ui.text(this, selected == null ? "Shia Duas & Ziyarat" : selected.name, 28, Ui.WHITE, true));
+        Ui.space(this, content, 7);
+        content.addView(Ui.text(this, selected == null
+                ? "Supplications from the Ahlulbayt tradition" : selected.urduName,
+                15, Ui.MUTED, false));
+        Ui.space(this, content, 23);
+        if (selected == null) showIndex(); else showDua(selected);
+    }
+    private void button(String label, Runnable action) {
+        LinearLayout panel = Ui.panel(this);
+        TextView text = Ui.text(this, label, 16, Ui.GOLD, true);
+        text.setGravity(Gravity.CENTER);
+        panel.addView(text);
+        panel.setOnClickListener(v -> action.run());
+        content.addView(panel);
+        Ui.space(this, content, 11);
+    }
+    private void showIndex() {
+        EditText filter = new EditText(this);
+        filter.setSingleLine(true);
+        filter.setHint("Search Kumayl, Tawassul, ندبہ…");
+        filter.setText(search);
+        filter.setTextColor(Ui.WHITE);
+        filter.setHintTextColor(Ui.MUTED);
+        filter.setTextSize(15);
+        LinearLayout p = Ui.panel(this);
+        p.addView(filter);
+        content.addView(p);
+        Ui.space(this, content, 9);
+        filter.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                search = s.toString().trim();
+            }
+            @Override public void afterTextChanged(Editable s) { }
+        });
+        button(favoritesOnly ? "★ Showing saved • Show all" : "☆ Show saved duas", () -> {
+            favoritesOnly = !favoritesOnly; render();
+        });
+        content.addView(Ui.text(this,
+                "Offline short duas are marked. Longer supplications open their complete, credited source online.",
+                13, Ui.MUTED, false));
+        Ui.space(this, content, 16);
+        int shown = 0;
+        for (Dua dua : DUAS) {
+            if (favoritesOnly && !favorite(dua.id)) continue;
+            String compare = (dua.name + " " + dua.urduName + " " + dua.occasion).toLowerCase(Locale.ROOT);
+            if (!compare.contains(search.toLowerCase(Locale.ROOT))) continue;
+            shown++;
+            LinearLayout card = Ui.panel(this);
+            card.addView(Ui.text(this, dua.name + "   ›", 19, Ui.WHITE, true));
+            Ui.space(this, card, 6);
+            card.addView(Ui.text(this, dua.urduName, 17, Ui.GOLD, false));
+            Ui.space(this, card, 8);
+            card.addView(Ui.text(this, dua.occasion, 13, Ui.MUTED, false));
+            Ui.space(this, card, 8);
+            card.addView(Ui.text(this, dua.offline() ? "Available offline" : "Read full text online",
+                    12, Ui.MUTED, true));
+            card.setOnClickListener(v -> { selected = dua; render(); });
+            content.addView(card);
+            Ui.space(this, content, 11);
+        }
+        if (shown == 0) content.addView(Ui.text(this, "No matching duas", 15, Ui.MUTED, false));
+        Ui.space(this, content, 12);
+        content.addView(Ui.text(this,
+                "Source: Duas.org (permission for content reuse stated on its About page). Historical attributions do not establish an authentication grade.",
+                12, Ui.MUTED, false));
+    }
+    private void showDua(Dua dua) {
+        content.addView(Ui.text(this, dua.occasion, 15, Ui.MUTED, false));
+        Ui.space(this, content, 16);
+        if (dua.offline()) {
+            LinearLayout panel = Ui.panel(this);
+            TextView original = Ui.text(this, dua.arabic, 25, Ui.WHITE, false);
+            original.setGravity(Gravity.RIGHT);
+            original.setTextDirection(View.TEXT_DIRECTION_RTL);
+            original.setLineSpacing(Ui.dp(this, 11), 1.18f);
+            panel.addView(original);
+            content.addView(panel);
+            Ui.space(this, content, 12);
+        } else {
+            LinearLayout panel = Ui.panel(this);
+            panel.addView(Ui.text(this,
+                    "The complete text is available from the original source. An incomplete excerpt is intentionally not presented as the full prayer.",
+                    15, Ui.WHITE, false));
+            content.addView(panel);
+            Ui.space(this, content, 14);
+        }
+        content.addView(Ui.text(this, dua.instructions, 13, Ui.MUTED, false));
+        Ui.space(this, content, 15);
+        button(favorite(dua.id) ? "★ Remove bookmark" : "☆ Save dua",
+                () -> toggleFavorite(dua));
+        button("Open original text • Duas.org", () -> openSource(dua));
+    }
+}

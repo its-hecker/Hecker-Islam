@@ -13,6 +13,9 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.animation.ValueAnimator;
+import android.transition.Fade;
+import android.transition.TransitionManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.BufferedReader;
@@ -28,13 +31,23 @@ public final class ReferenceReadingActivity extends Activity {
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private final Handler main = new Handler(Looper.getMainLooper());
     private SharedPreferences saved;
-    private LinearLayout content;
+    private LinearLayout content, navigation;
     private ScrollView scroll;
     private String section, query = "";
     private int stage = 0, category = -1, chapter = -1;
     private JSONObject selectedHadith;
+    private android.media.MediaPlayer surahPlayer;
+    private android.speech.tts.TextToSpeech arabicSpeech;
+    private TextView recitationControl;
+    private Runnable recitationTimeout;
+    private boolean audioLoading, audioPlaying;
+    private int recitationSource;
     private long generation = 0;
     private JSONArray chapters, verses, azkarCategories, azkarChapters, azkarItems, hadithCategories;
+    private java.util.Map<Integer, String> urduTranslations;
+    private String loadedUrduEdition, loadingUrduEdition;
+    private boolean urduMissing;
+
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -51,28 +64,72 @@ public final class ReferenceReadingActivity extends Activity {
         content = Ui.column(this);
         content.setPadding(Ui.dp(this, 19), Ui.dp(this, 22), Ui.dp(this, 19), Ui.dp(this, 35));
         scroll.addView(content);
+        navigation = new LinearLayout(this);
+        navigation.setOrientation(LinearLayout.HORIZONTAL);
+        navigation.setPadding(Ui.dp(this, 10), Ui.dp(this, 8), Ui.dp(this, 10), Ui.dp(this, 11));
+        android.graphics.drawable.GradientDrawable surface = new android.graphics.drawable.GradientDrawable();
+        surface.setColor(Ui.CARD);
+        surface.setCornerRadius(Ui.dp(this, 35));
+        surface.setStroke(Ui.dp(this, 1), Ui.OUTLINE);
+        navigation.setBackground(surface);
+        navigation.setElevation(Ui.dp(this, 10));
+        LinearLayout.LayoutParams navParams = new LinearLayout.LayoutParams(-1, Ui.dp(this, 72));
+        navParams.setMargins(Ui.dp(this, 16), Ui.dp(this, 4), Ui.dp(this, 16), Ui.dp(this, 12));
+        root.addView(navigation, navParams);
         setContentView(root);
+        showNavigation();
         if (!ReferenceLibrary.ready(this)) {
-            content.addView(Ui.text(this, "Offline library not installed", 25, Ui.WHITE, true));
+            content.addView(Ui.text(this, "Offline content missing from build", 25, Ui.WHITE, true));
             Ui.space(this, content, 15);
-            content.addView(Ui.text(this, "Import the authorized Salat Times APK or Hecker Islam content pack from the Home screen. Once imported, all reading works offline.", 16, Ui.MUTED, false));
+            content.addView(Ui.text(this, "This APK was compiled without its mandatory bundled content. Install a complete standalone release build.", 16, Ui.MUTED, false));
             return;
         }
+        loadSection();
+    }
+    private void showNavigation() {
+        int selected = "quran".equals(section) ? 1 : "azkar".equals(section) ? 2 : 3;
+        Ui.fillNavigation(this, navigation, selected, index -> {
+            if (index >= 1 && index <= 3) {
+                String next = index == 1 ? "quran" : index == 2 ? "azkar" : "hadith";
+                if (!next.equals(section)) {
+                    section = next; stage = 0; chapter = -1; category = -1; query = "";
+                    selectedHadith = null;
+                    stopAudio();
+                    showNavigation();
+                    loadSection();
+                }
+            } else {
+                android.content.Intent home = new android.content.Intent(this, IslamDashboardActivity.class);
+                home.putExtra("tab", index);
+                home.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP |
+                              android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(home);
+                overridePendingTransition(0, 0);
+                finish();
+            }
+        });
+    }
+    private void loadSection() {
         try {
             if ("quran".equals(section)) {
-                chapters = ReferenceLibrary.array(this, "quran/chapters.json");
-                verses = ReferenceLibrary.array(this, "quran/quran_uthmani.json");
+                if (chapters == null) chapters = ReferenceLibrary.array(this, "quran/chapters.json");
+                if (verses == null) verses = ReferenceLibrary.array(this, "quran/quran_uthmani.json");
             } else if ("azkar".equals(section)) {
-                azkarCategories = ReferenceLibrary.array(this, "azkar/categories.json");
-                azkarChapters = ReferenceLibrary.array(this, "azkar/chapters.json");
-                azkarItems = ReferenceLibrary.array(this, "azkar/items.json");
-            } else hadithCategories = ReferenceLibrary.array(this, "hadith/categories.json");
+                if (azkarCategories == null) azkarCategories = ReferenceLibrary.array(this, "azkar/categories.json");
+                if (azkarChapters == null) azkarChapters = ReferenceLibrary.array(this, "azkar/chapters.json");
+                if (azkarItems == null) azkarItems = ReferenceLibrary.array(this, "azkar/items.json");
+            } else {
+                if (hadithCategories == null) hadithCategories = ReferenceLibrary.array(this, "hadith/categories.json");
+            }
             draw();
+            if ("quran".equals(section)) loadUrduTranslation();
         } catch (Exception ex) {
+            content.removeAllViews();
             content.addView(Ui.text(this, "Cannot load library: " + ex.getMessage(), 16, Ui.MUTED, false));
         }
     }
     @Override public void onBackPressed() {
+        stopAudio();
         if (stage > 0) {
             if ("azkar".equals(section) && stage == 2) stage = 1;
             else stage = 0;
@@ -80,12 +137,19 @@ public final class ReferenceReadingActivity extends Activity {
         } else super.onBackPressed();
     }
     @Override protected void onDestroy() {
+        stopAudio();
         generation++;
         worker.shutdownNow();
         super.onDestroy();
     }
     private void draw() {
+        if (content != null && ValueAnimator.areAnimatorsEnabled()) {
+            Fade fade = new Fade();
+            fade.setDuration(260);
+            TransitionManager.beginDelayedTransition(content, fade);
+        }
         generation++;
+        recitationControl = null;
         content.removeAllViews();
         TextView back = Ui.text(this, "‹  " + (stage == 0 ? "Hecker Islam" : "Back"), 15, Ui.GOLD, true);
         back.setOnClickListener(v -> onBackPressed());
@@ -136,12 +200,13 @@ public final class ReferenceReadingActivity extends Activity {
         if (click != null) p.setOnClickListener(v -> click.run());
         content.addView(p); Ui.space(this, content, 10);
     }
-    private void button(String text, Runnable action) {
+    private TextView button(String text, Runnable action) {
         LinearLayout p = Ui.panel(this);
         TextView t = Ui.text(this, text, 15, Ui.GOLD, true);
         t.setGravity(Gravity.CENTER); p.addView(t);
         p.setOnClickListener(v -> action.run());
         content.addView(p); Ui.space(this, content, 12);
+        return t;
     }
     private String arabicText(String s, int size) {
         TextView t = Ui.text(this, s, size, Ui.WHITE, false);
@@ -155,6 +220,213 @@ public final class ReferenceReadingActivity extends Activity {
     private boolean bookmarked(String key) { return saved.getBoolean(key, false); }
     private void bookmark(String key) { saved.edit().putBoolean(key, !bookmarked(key)).apply(); draw(); }
 
+    private void clearRecitationTimeout() {
+        if (recitationTimeout != null) {
+            main.removeCallbacks(recitationTimeout);
+            recitationTimeout = null;
+        }
+    }
+
+    private void releaseSurahPlayer() {
+        clearRecitationTimeout();
+        android.media.MediaPlayer old = surahPlayer;
+        surahPlayer = null;
+        audioLoading = false;
+        audioPlaying = false;
+        if (old != null) {
+            try { old.release(); }
+            catch (RuntimeException ignored) { }
+        }
+    }
+
+    private void updateRecitationControl() {
+        if (recitationControl == null) return;
+        if (audioLoading) {
+            recitationControl.setText(recitationSource > 1
+                    ? "◌ Trying backup recitation source…" : "◌ Connecting to reciter…");
+        } else if (audioPlaying) {
+            recitationControl.setText("■ Stop • Mishary Alafasy");
+        } else {
+            recitationControl.setText("▶ Listen • Mishary Alafasy");
+        }
+    }
+
+    private void stopAudio() {
+        releaseSurahPlayer();
+        if (arabicSpeech != null) {
+            arabicSpeech.stop();
+            arabicSpeech.shutdown();
+            arabicSpeech = null;
+        }
+        updateRecitationControl();
+    }
+
+    /** Independent HTTPS streams: avoid depending on one occasionally broken CDN. */
+    private static String recitationUrl(int number, int source) {
+        String surah = String.format(Locale.US, "%03d.mp3", number);
+        if (source == 0) return "https://server8.mp3quran.net/afs/" + surah;
+        if (source == 1) return "https://cdn.mp3quran.net/audio/mishary-alafasy/r1/" + surah;
+        return "https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/" + number + ".mp3";
+    }
+
+    private void connectRecitation(int number, int source) {
+        releaseSurahPlayer();
+        if (isFinishing() || isDestroyed() || !"quran".equals(section) || stage != 1) return;
+        if (source >= 3) {
+            updateRecitationControl();
+            android.widget.Toast.makeText(this,
+                    "Unable to reach a recitation server. Check your connection and try again.",
+                    android.widget.Toast.LENGTH_LONG).show();
+            return;
+        }
+        recitationSource = source + 1;
+        audioLoading = true;
+        updateRecitationControl();
+        try {
+            final android.media.MediaPlayer player = new android.media.MediaPlayer();
+            surahPlayer = player;
+            player.setAudioAttributes(new android.media.AudioAttributes.Builder()
+                    .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
+                    .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SPEECH).build());
+            // String data source allows MediaPlayer's HTTP/HTTPS streaming implementation
+            // to follow the remote MP3 URL directly.
+            player.setDataSource(recitationUrl(number, source));
+            player.setOnPreparedListener(prepared -> {
+                if (surahPlayer != prepared || isFinishing() || isDestroyed()) return;
+                clearRecitationTimeout();
+                try {
+                    prepared.start();
+                    audioLoading = false;
+                    audioPlaying = true;
+                    updateRecitationControl();
+                } catch (RuntimeException ex) {
+                    android.util.Log.w("HeckerIslamQuran", "Unable to start stream", ex);
+                    connectRecitation(number, source + 1);
+                }
+            });
+            player.setOnCompletionListener(ended -> {
+                if (surahPlayer == ended) stopAudio();
+            });
+            player.setOnErrorListener((failed, what, extra) -> {
+                if (surahPlayer == failed) {
+                    android.util.Log.w("HeckerIslamQuran",
+                            "Audio source " + (source + 1) + " failed (" + what + "/" + extra + ")");
+                    connectRecitation(number, source + 1);
+                }
+                return true;
+            });
+            player.prepareAsync();
+            recitationTimeout = () -> {
+                if (surahPlayer == player && audioLoading) {
+                    android.util.Log.w("HeckerIslamQuran", "Audio source timed out: " + (source + 1));
+                    connectRecitation(number, source + 1);
+                }
+            };
+            main.postDelayed(recitationTimeout, 12000);
+        } catch (Exception ex) {
+            android.util.Log.w("HeckerIslamQuran", "Cannot prepare audio source", ex);
+            connectRecitation(number, source + 1);
+        }
+    }
+
+    /** Start or stop a recorded Qur'an Surah. The written library remains offline. */
+    private void playSurah() {
+        if (surahPlayer != null || audioLoading) {
+            stopAudio();
+            return;
+        }
+        if (chapter < 1 || chapter > 114) return;
+        stopAudio();
+        connectRecitation(chapter, 0);
+    }
+
+    /** Duas have no licensed studio recordings bundled; use the available Arabic speech voice. */
+    private void speakDua(String arabic) {
+        if (arabic == null || arabic.trim().isEmpty()) return;
+        stopAudio();
+        arabicSpeech = new android.speech.tts.TextToSpeech(this, status -> {
+            if (isFinishing() || arabicSpeech == null) return;
+            if (status != android.speech.tts.TextToSpeech.SUCCESS) {
+                android.widget.Toast.makeText(this, "Arabic voice is not available on this device.",
+                        android.widget.Toast.LENGTH_LONG).show();
+                stopAudio(); return;
+            }
+            int supported = arabicSpeech.setLanguage(java.util.Locale.forLanguageTag("ar-SA"));
+            if (supported == android.speech.tts.TextToSpeech.LANG_MISSING_DATA ||
+                supported == android.speech.tts.TextToSpeech.LANG_NOT_SUPPORTED) {
+                android.widget.Toast.makeText(this,
+                        "Install an Arabic speech voice in Android's Text-to-speech settings.",
+                        android.widget.Toast.LENGTH_LONG).show();
+                stopAudio(); return;
+            }
+            arabicSpeech.setSpeechRate(.80f);
+            arabicSpeech.speak(arabic, android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, "dua-" + System.nanoTime());
+        });
+    }
+    private String urduEdition() {
+        return "najafi".equals(saved.getString("urduEdition", "jawadi")) ? "najafi" : "jawadi";
+    }
+    private String urduTranslator() {
+        return "najafi".equals(urduEdition()) ? "Allama Muhammad Hussain Najafi" : "Allama Zeeshan Haider Jawadi";
+    }
+    private boolean showUrdu() { return saved.getBoolean("showUrdu", true); }
+
+    /** Read pre-bundled text off the UI thread. No account, import, or internet is required. */
+    private void loadUrduTranslation() {
+        if (!"quran".equals(section) || !showUrdu()) return;
+        final String edition = urduEdition();
+        if (edition.equals(loadedUrduEdition) || edition.equals(loadingUrduEdition)) return;
+        loadingUrduEdition = edition;
+        urduMissing = false;
+        worker.execute(() -> {
+            java.util.Map<Integer, String> results = new java.util.HashMap<>();
+            String failure = null;
+            try {
+                JSONArray data = ReferenceLibrary.array(this, "quran/ur_" + edition + ".json");
+                if (data.length() != 6236) throw new java.io.IOException("Incorrect translation verse count");
+                for (int i = 0; i < data.length(); i++) {
+                    JSONArray item = data.getJSONArray(i);
+                    int surah = item.getInt(0), ayah = item.getInt(1);
+                    String translated = item.getString(2);
+                    if (surah < 1 || surah > 114 || ayah < 1 || ayah > 286 || translated.trim().isEmpty())
+                        throw new java.io.IOException("Invalid translated verse");
+                    if (results.put(surah * 1000 + ayah, translated) != null)
+                        throw new java.io.IOException("Duplicate translated verse");
+                }
+            } catch (Exception ex) { failure = ex.getMessage(); }
+            final String message = failure;
+            main.post(() -> {
+                if (isFinishing() || isDestroyed() || !edition.equals(loadingUrduEdition)) return;
+                loadingUrduEdition = null;
+                if (message == null) {
+                    urduTranslations = results;
+                    loadedUrduEdition = edition;
+                    urduMissing = false;
+                } else {
+                    urduTranslations = null;
+                    loadedUrduEdition = null;
+                    urduMissing = true;
+                    android.util.Log.w("HeckerIslamQuran", "Urdu translation unavailable: " + message);
+                }
+                if ("quran".equals(section) && stage == 1 && showUrdu()) draw();
+            });
+        });
+    }
+
+    private void selectUrduTranslator() {
+        final String[] choices = {"علامہ ذیشان حیدر جوادی", "علامہ محمد حسین نجفی"};
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Urdu Qur'an translation")
+                .setSingleChoiceItems(choices, "najafi".equals(urduEdition()) ? 1 : 0,
+                        (dialog, chosen) -> {
+                            saved.edit().putString("urduEdition", chosen == 1 ? "najafi" : "jawadi").apply();
+                            dialog.dismiss();
+                            urduTranslations = null; loadedUrduEdition = null; urduMissing = false;
+                            loadUrduTranslation(); draw();
+                        })
+                .setNegativeButton("Cancel", null).show();
+    }
+
     private void quran() {
         if (stage == 0) {
             search("Search Surah name", () -> { stage = 3; draw(); });
@@ -166,7 +438,7 @@ public final class ReferenceReadingActivity extends Activity {
                 String title = c.optString("name_simple") + "  •  " + c.optString("name_arabic");
                 String subtitle = c.optInt("verses_count") + " verses";
                 card(String.format(Locale.ENGLISH, "%d. %s", id, title), subtitle, () -> {
-                    chapter = id; stage = 1; query = ""; draw();
+                    stopAudio(); chapter = id; stage = 1; query = ""; draw();
                 });
             }
         } else if (stage == 1) {
@@ -175,7 +447,30 @@ public final class ReferenceReadingActivity extends Activity {
                 content.addView(Ui.text(this, c.optString("name_simple") + " • " + c.optString("name_arabic"), 23, Ui.GOLD, true));
                 Ui.space(this, content, 14);
             }
-            button("Search verses", () -> { stage = 2; query = ""; draw(); });
+            button("Search verses", () -> { stage = 2; query = ""; stopAudio(); draw(); });
+            button(showUrdu() ? "اردو ترجمہ ✓ • Hide translation" : "اردو ترجمہ • Show translation", () -> {
+                saved.edit().putBoolean("showUrdu", !showUrdu()).apply();
+                if (showUrdu()) loadUrduTranslation();
+                draw();
+            });
+            if (showUrdu()) {
+                button("Translator: " + urduTranslator() + " • Change", this::selectUrduTranslator);
+                content.addView(Ui.text(this,
+                        "Shia Urdu translation • AlQuran Cloud • Translator credited. Arabic remains the original text.",
+                        12, Ui.MUTED, false));
+                Ui.space(this, content, 12);
+                if (urduTranslations == null) {
+                    content.addView(Ui.text(this,
+                            urduMissing ? "Urdu translation missing from this APK. Install the complete build."
+                                    : "Loading included Urdu translation…",
+                            13, Ui.MUTED, false));
+                    Ui.space(this, content, 12);
+                }
+            }
+            recitationControl = button("▶ Listen • Mishary Alafasy", this::playSurah);
+            updateRecitationControl();
+            content.addView(Ui.text(this, "Recorded reciter playback requires internet. Qur’an text remains available offline.", 12, Ui.MUTED, false));
+            Ui.space(this, content, 16);
             int selected = 0;
             for (int i = 0; i < verses.length(); i++) {
                 JSONObject v = verses.optJSONObject(i);
@@ -189,6 +484,17 @@ public final class ReferenceReadingActivity extends Activity {
                 text.setGravity(Gravity.RIGHT);
                 text.setLineSpacing(Ui.dp(this, 9), 1.17f);
                 p.addView(text);
+                if (showUrdu() && urduTranslations != null && urduEdition().equals(loadedUrduEdition)) {
+                    String translated = urduTranslations.get(chapter * 1000 + num);
+                    if (translated != null) {
+                        Ui.space(this, p, 12);
+                        TextView urdu = Ui.text(this, translated, 18, Ui.MUTED, false);
+                        urdu.setTextDirection(View.TEXT_DIRECTION_RTL);
+                        urdu.setGravity(Gravity.RIGHT);
+                        urdu.setLineSpacing(Ui.dp(this, 6), 1.12f);
+                        p.addView(urdu);
+                    }
+                }
                 Ui.space(this, p, 10);
                 String key = "verse_" + chapter + "_" + num;
                 TextView star = Ui.text(this, bookmarked(key) ? "★ Saved" : "☆ Bookmark", 14, Ui.GOLD, true);
@@ -235,7 +541,7 @@ public final class ReferenceReadingActivity extends Activity {
                 if (o == null || o.optInt("categoryId") != category) continue;
                 int id = o.optInt("id");
                 card(o.optString("en"), o.optString("ar"), () -> {
-                    chapter = id; stage = 2; draw();
+                    chapter = id; stage = 2; stopAudio(); draw();
                 }); shown++;
             }
             if (shown == 0) card("No chapters in this category", null, null);
@@ -255,6 +561,9 @@ public final class ReferenceReadingActivity extends Activity {
                 p.addView(Ui.text(this, "Repeat " + o.optInt("repeat", 1) + " time(s)", 13, Ui.GOLD, true));
                 String ref = o.optJSONObject("ref") == null ? "" : o.optJSONObject("ref").optString("en");
                 if (!ref.isEmpty()) { Ui.space(this, p, 8); p.addView(Ui.text(this, ref, 11, Ui.MUTED, false)); }
+                TextView audio = Ui.text(this, "▶ Listen to Dua • Arabic voice", 14, Ui.GOLD, true);
+                Ui.space(this, p, 12); p.addView(audio);
+                audio.setOnClickListener(v -> speakDua(o.optString("ar")));
                 String key = "dhikr_" + o.optInt("id");
                 TextView mark = Ui.text(this, bookmarked(key) ? "★ Saved" : "☆ Save", 14, Ui.GOLD, true);
                 Ui.space(this, p, 12); p.addView(mark);
@@ -282,6 +591,7 @@ public final class ReferenceReadingActivity extends Activity {
             final long stamp = generation;
             String q = query.toLowerCase(Locale.ROOT);
             int cat = category;
+            java.util.Set<Integer> included = hadithDescendants(cat);
             worker.execute(() -> {
                 List<JSONObject> results = new ArrayList<>();
                 String error = null;
@@ -291,7 +601,7 @@ public final class ReferenceReadingActivity extends Activity {
                     while ((line = in.readLine()) != null && results.size() < 60 && !Thread.currentThread().isInterrupted()) {
                         JSONObject hadith = new JSONObject(line);
                         JSONArray categories = hadith.optJSONArray("c");
-                        if (cat != -1 && (categories == null || !contains(categories, cat))) continue;
+                        if (cat != -1 && (categories == null || !containsAny(categories, included))) continue;
                         JSONObject english = hadith.optJSONObject("en");
                         JSONObject arabic = hadith.optJSONObject("ar");
                         String value = (english == null ? "" : english.optString("t") + " " + english.optString("i"))
@@ -332,8 +642,31 @@ public final class ReferenceReadingActivity extends Activity {
             button(bookmarked(key) ? "★ Remove bookmark" : "☆ Bookmark Hadith", () -> bookmark(key));
         }
     }
-    private static boolean contains(JSONArray data, int value) {
-        for (int i = 0; i < data.length(); i++) if (data.optInt(i) == value) return true;
+    /** Parent topics include all nested Hadith leaf-category IDs. */
+    private java.util.Set<Integer> hadithDescendants(int parentId) {
+        java.util.Set<Integer> matches = new java.util.HashSet<>();
+        if (parentId < 0 || hadithCategories == null) return matches;
+        java.util.Map<Integer, Integer> parents = new java.util.HashMap<>();
+        for (int i = 0; i < hadithCategories.length(); i++) {
+            JSONObject c = hadithCategories.optJSONObject(i);
+            if (c != null) parents.put(c.optInt("id"), c.optInt("p", -1));
+        }
+        matches.add(parentId);
+        for (Integer id : parents.keySet()) {
+            int cursor = id;
+            java.util.Set<Integer> seen = new java.util.HashSet<>();
+            while (cursor > 0 && seen.add(cursor)) {
+                if (cursor == parentId) { matches.add(id); break; }
+                Integer next = parents.get(cursor);
+                if (next == null || next == cursor) break;
+                cursor = next;
+            }
+        }
+        return matches;
+    }
+    private static boolean containsAny(JSONArray data, java.util.Set<Integer> allowed) {
+        for (int i = 0; i < data.length(); i++)
+            if (allowed.contains(data.optInt(i))) return true;
         return false;
     }
 }

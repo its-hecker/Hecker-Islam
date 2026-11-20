@@ -1,0 +1,587 @@
+[
+  {
+    "id": "abazar_halvaji",
+    "nameEn": "Abazar Halvaji",
+    "nameAr": "أبوذر الحلواجي",
+    "path": "Adhan/abazar_alhalvaji.mp3",
+    "sizeBytes": 5118348,
+    "durationMs": 319900,
+    "category": "azan"
+  },
+  {
+    "id": "abdul_basit",
+    "nameEn": "Abdul Basit Abdus-Samad",
+    "nameAr": "عبد الباسط عبد الصمد",
+    "path": "Adhan/adhan_abdul_baset.mp3",
+    "sizeBytes": 1146360,
+    "durationMs": 0,
+    "category": "azan"
+  },
+  {
+    "id": "abdulhamid_barzanji",
+    "nameEn": "Abdulhamid Al-Barzanji",
+    "nameAr": "عبد الحميد البرزنجي",
+    "path": "Adhan/abdulhamid_barznji.mp3",
+    "sizeBytes": 3274312,
+    "durationMs": 204640,
+    "category": "azan"
+  },
+  {
+    "id": "abdulmajid_alsarihi",
+    "nameEn": "Abdulmajid Al-Sarihi",
+    "nameAr": "عبد المجيد الصريحي",
+    "path": "Adhan/abdulmajid_alsarihi.mp3",
+    "sizeBytes": 3328532,
+    "durationMs": 208030,
+    "category": "azan"
+  },
+  {
+    "id": "abdulrahman_alaloosi",
+    "nameEn": "Abdulrahman Al-Aloosi",
+    "nameAr": "عبد الرحمن الآلوسي",
+    "path": "Adhan/abdulrahman_alosi.mp3",
+    "sizeBytes": 2357780,
+    "durationMs": 117890,
+    "category": "azan"
+  },
+  {
+    "id": "abdulrahman_alhindi",
+    "nameEn": "Abdulrahman Al-Hindi",
+    "nameAr": "عبد الرحمن الهندي",
+    "path": "Adhan/abdulrahman_hendi.mp3",
+    "sizeBytes": 3462740,
+    "durationMs": 173140,
+    "category": "azan"
+  },
+  {
+    "id": "abdulrahman_almasoudi",
+    "nameEn": "Abdulrahman Al-Masoudi",
+    "nameAr": "عبد الرحمن المسعودي",
+    "path": "Adhan/abdulrahman_masudi.mp3",
+    "sizeBytes": 3482900,
+    "durationMs": 174140,
+    "category": "azan"
+  },
+  {
+    "id": "ahmad_alhaddad",
+    "nameEn": "Ahmad Al-Haddad",
+    "nameAr": "أحمد الحداد",
+    "path": "Adhan/ahmad_haddad.mp3",
+    "sizeBytes": 2473502,
+    "durationMs": 154590,
+    "category": "azan"
+  },
+  {
+    "id": "ahmad_alnafees_1",
+    "nameEn": "Ahmad Al-Nafees (1)",
+    "nameAr": "أحمد النفيس ١",
+    "path": "Adhan/ahmad_nafis1.mp3",
+    "sizeBytes": 3425613,
+    "durationMs": 214100,
+    "category": "azan"
+  },
+  {
+    "id": "ahmad_alnafees_2",
+    "nameEn": "Ahmad Al-Nafees (2)",
+    "nameAr": "أحمد النفيس ٢",
+    "path": "Adhan/ahmad_nafis2.mp3",
+    "sizeBytes": 3831869,
+    "durationMs": 239490,
+    "category": "azan"
+  },
+  {
+    "id": "ahmad_alnafees_3",
+    "nameEn": "Ahmad Al-Nafees (3)",
+    "nameAr": "أحمد النفيس ٣",
+    "path": "Adhan/ahmad_nafis3.mp3",
+    "sizeBytes": 851716,
+    "durationMs": 212920,
+    "category": "azan"
+  },
+  {
+    "id": "ahmad_alshafei",
+    "nameEn": "Ahmad Al-Shafei",
+    "nameAr": "أحمد الشافعي",
+    "path": "Adhan/ahmad_shafeii.mp3",
+    "sizeBytes": 3858740,
+    "durationMs": 192940,
+    "category": "azan"
+  },
+  {
+    "id": "ahmad_sabah",
+    "nameEn": "Ahmad Sabah",
+    "nameAr": "أحمد صباح",
+    "path": "Adhan/ahmad_sabah.mp3",
+    "sizeBytes": 2392836,
+    "durationMs": 149550,
+    "category": "azan"
+  },
+  {
+    "id": "minshawi_rast",
+    "nameEn": "Al-Minshawi – Rast",
+    "nameAr": "المنشاوي - رست",
+    "path": "Adhan/menshawi_rast.mp3",
+    "sizeBytes": 6047053,
+    "durationMs": 188970,
+    "category": "azan"
+  },
+  {
+    "id": "aleppo",
+    "nameEn": "Aleppo Adhan",
+    "nameAr": "أذان حلب",
+    "path": "Adhan/adhan_halab.mp3",
+    "sizeBytes": 222583,
+    "durationMs": 222560,
+    "category": "azan"
+  },
+  {
+    "id": "egypt_classic",
+    "nameEn": "Egyptian Adhan",
+    "nameAr": "أذان مصري",
+    "path": "Adhan/adhan_egypt.mp3",
+    "sizeBytes": 182720,
+    "durationMs": 182700,
+    "category": "azan"
+  },
+  {
+    "id": "hamad_aldaghiri",
+    "nameEn": "Hamad Al-Daghiri",
+    "nameAr": "حمد الدغيري",
+    "path": "Adhan/hamd_aldaghiri.mp3",
+    "sizeBytes": 3788660,
+    "durationMs": 189430,
+    "category": "azan"
+  },
+  {
+    "id": "ibrahim_alsilawi",
+    "nameEn": "Ibrahim Al-Silawi",
+    "nameAr": "إبراهيم السيلاوي",
+    "path": "Adhan/ebrahim_silawi.mp3",
+    "sizeBytes": 2677466,
+    "durationMs": 167340,
+    "category": "azan"
+  },
+  {
+    "id": "islam_sobhi",
+    "nameEn": "Islam Sobhi",
+    "nameAr": "إسلام صبحي",
+    "path": "Adhan/islam_sobhi.mp3",
+    "sizeBytes": 3461300,
+    "durationMs": 173060,
+    "category": "azan"
+  },
+  {
+    "id": "madinah",
+    "nameEn": "Madinah Adhan",
+    "nameAr": "أذان المدينة",
+    "path": "Adhan/adhan_madina.mp3",
+    "sizeBytes": 95785,
+    "durationMs": 95770,
+    "category": "azan"
+  },
+  {
+    "id": "madinah_1952",
+    "nameEn": "Madinah Adhan (1952)",
+    "nameAr": "أذان المدينة ١٩٥٢",
+    "path": "Adhan/adhan_madina_1952.mp3",
+    "sizeBytes": 764628,
+    "durationMs": 0,
+    "category": "azan"
+  },
+  {
+    "id": "mahmoudpour",
+    "nameEn": "Mahmoudpour",
+    "nameAr": "محمودبور",
+    "path": "Adhan/adhan_mahmoudpour.mp3",
+    "sizeBytes": 5927517,
+    "durationMs": 211700,
+    "category": "azan"
+  },
+  {
+    "id": "majid_pashaei",
+    "nameEn": "Majid Pashaei",
+    "nameAr": "مجيد باشائي",
+    "path": "Adhan/Athan_Majid_Pashaii.mp3",
+    "sizeBytes": 5387304,
+    "durationMs": 224470,
+    "category": "azan"
+  },
+  {
+    "id": "mansour_mohiuddin",
+    "nameEn": "Mansour Mohiuddin",
+    "nameAr": "منصور محيي الدين",
+    "path": "Adhan/mansour_mohialdin.mp3",
+    "sizeBytes": 3948500,
+    "durationMs": 197420,
+    "category": "azan"
+  },
+  {
+    "id": "mansour_salemi",
+    "nameEn": "Mansour Salemi",
+    "nameAr": "منصور سالمي",
+    "path": "Adhan/masnsour_salemi.mp3",
+    "sizeBytes": 4744692,
+    "durationMs": 148270,
+    "category": "azan"
+  },
+  {
+    "id": "mawlana_kurdish",
+    "nameEn": "Mawlana (Kurdish)",
+    "nameAr": "مولانا (كردي)",
+    "path": "Adhan/athan_molana_kurtish.mp3",
+    "sizeBytes": 3006400,
+    "durationMs": 187900,
+    "category": "azan"
+  },
+  {
+    "id": "alafasy_bayati",
+    "nameEn": "Mishary Alafasy – Bayati",
+    "nameAr": "مشاري العفاسي - بياتي",
+    "path": "Adhan/afasi_bayat.mp3",
+    "sizeBytes": 5634945,
+    "durationMs": 176090,
+    "category": "azan"
+  },
+  {
+    "id": "alafasy_hijaz",
+    "nameEn": "Mishary Alafasy – Hijaz",
+    "nameAr": "مشاري العفاسي - حجاز",
+    "path": "Adhan/afasi_hejaz.mp3",
+    "sizeBytes": 5859807,
+    "durationMs": 183120,
+    "category": "azan"
+  },
+  {
+    "id": "alafasy_kurd",
+    "nameEn": "Mishary Alafasy – Kurd",
+    "nameAr": "مشاري العفاسي - كرد",
+    "path": "Adhan/afasi_kord.mp3",
+    "sizeBytes": 4333420,
+    "durationMs": 135420,
+    "category": "azan"
+  },
+  {
+    "id": "alafasy_melodic",
+    "nameEn": "Mishary Alafasy",
+    "nameAr": "مشاري العفاسي",
+    "path": "Adhan/Athan_alafasi_nice.mp3",
+    "sizeBytes": 3839812,
+    "durationMs": 239990,
+    "category": "azan"
+  },
+  {
+    "id": "alafasy_recent",
+    "nameEn": "Mishary Alafasy – New",
+    "nameAr": "مشاري العفاسي - جديد",
+    "path": "Adhan/alafasi_new.mp3",
+    "sizeBytes": 3622890,
+    "durationMs": 226430,
+    "category": "azan"
+  },
+  {
+    "id": "alafasy_saba",
+    "nameEn": "Mishary Alafasy – Saba",
+    "nameAr": "مشاري العفاسي - صبا",
+    "path": "Adhan/afasi_saba.mp3",
+    "sizeBytes": 7884402,
+    "durationMs": 246390,
+    "category": "azan"
+  },
+  {
+    "id": "mohammad_alghazali",
+    "nameEn": "Mohammad Al-Ghazali",
+    "nameAr": "محمد الغزالي",
+    "path": "Adhan/mohammad_alghazali.mp3",
+    "sizeBytes": 3191138,
+    "durationMs": 199440,
+    "category": "azan"
+  },
+  {
+    "id": "mohammad_aljazi",
+    "nameEn": "Mohammad Al-Jazi",
+    "nameAr": "محمد الجازي",
+    "path": "Adhan/mohammad_jazi_abdullah.mp3",
+    "sizeBytes": 3528304,
+    "durationMs": 0,
+    "category": "azan"
+  },
+  {
+    "id": "mohammad_bashir",
+    "nameEn": "Mohammad Bashir",
+    "nameAr": "محمد بشير",
+    "path": "Adhan/mohammad_bashir.mp3",
+    "sizeBytes": 4316660,
+    "durationMs": 215830,
+    "category": "azan"
+  },
+  {
+    "id": "mohammad_qassas_bayati",
+    "nameEn": "Mohammad Qassas – Bayati",
+    "nameAr": "محمد قصاص - بياتي",
+    "path": "Adhan/mohammad_qasas_bayat.mp3",
+    "sizeBytes": 7293407,
+    "durationMs": 227920,
+    "category": "azan"
+  },
+  {
+    "id": "mohammad_sharif",
+    "nameEn": "Mohammad Sharif",
+    "nameAr": "محمد شريف",
+    "path": "Adhan/mohammad_sharif.mp3",
+    "sizeBytes": 4084340,
+    "durationMs": 204220,
+    "category": "azan"
+  },
+  {
+    "id": "mohammad_zahed",
+    "nameEn": "Mohammad Zahed",
+    "nameAr": "محمد زاهد",
+    "path": "Adhan/mohammad_zahed.mp3",
+    "sizeBytes": 905842,
+    "durationMs": 226460,
+    "category": "azan"
+  },
+  {
+    "id": "nasser_alqatami",
+    "nameEn": "Nasser Al-Qatami",
+    "nameAr": "ناصر القطامي",
+    "path": "Adhan/naser_qotami2.mp3",
+    "sizeBytes": 2040078,
+    "durationMs": 127500,
+    "category": "azan"
+  },
+  {
+    "id": "omar_abdullah_kurdi",
+    "nameEn": "Omar Abdullah Al-Kurdi",
+    "nameAr": "عمر عبد الله الكردي",
+    "path": "Adhan/omar_abdullah_kurdi.mp3",
+    "sizeBytes": 4080555,
+    "durationMs": 255030,
+    "category": "azan"
+  },
+  {
+    "id": "omar_alrihal",
+    "nameEn": "Omar Al-Rihal",
+    "nameAr": "عمر الرحال",
+    "path": "Adhan/omar_alrehal.mp3",
+    "sizeBytes": 2712500,
+    "durationMs": 135620,
+    "category": "azan"
+  },
+  {
+    "id": "omar_hisham",
+    "nameEn": "Omar Hisham Al-Arabi",
+    "nameAr": "عمر هشام العربي",
+    "path": "Adhan/omar_hesham.mp3",
+    "sizeBytes": 2743086,
+    "durationMs": 171440,
+    "category": "azan"
+  },
+  {
+    "id": "omar_mahjoub",
+    "nameEn": "Omar Mahjoub",
+    "nameAr": "عمر محجوب",
+    "path": "Adhan/omar_mahjub.mp3",
+    "sizeBytes": 2693300,
+    "durationMs": 134660,
+    "category": "azan"
+  },
+  {
+    "id": "peshawa",
+    "nameEn": "Peshawa",
+    "nameAr": "بيشوا",
+    "path": "Adhan/peshawa.mp3",
+    "sizeBytes": 2652806,
+    "durationMs": 165800,
+    "category": "azan"
+  },
+  {
+    "id": "peshawa_kurdi",
+    "nameEn": "Peshawa (Kurdish)",
+    "nameAr": "بيشوا (كردي)",
+    "path": "Adhan/athanPishawaKordi.mp3",
+    "sizeBytes": 5889900,
+    "durationMs": 184060,
+    "category": "azan"
+  },
+  {
+    "id": "raad_alkurdi",
+    "nameEn": "Raad Al-Kurdi",
+    "nameAr": "رعد الكردي",
+    "path": "Adhan/raad_alkurdi.mp3",
+    "sizeBytes": 4231438,
+    "durationMs": 264460,
+    "category": "azan"
+  },
+  {
+    "id": "raad_alkurdi_2",
+    "nameEn": "Raad Al-Kurdi (2)",
+    "nameAr": "رعد الكردي ٢",
+    "path": "Adhan/raad_kordi.mp3",
+    "sizeBytes": 7526629,
+    "durationMs": 235210,
+    "category": "azan"
+  },
+  {
+    "id": "saad_alghamdi",
+    "nameEn": "Saad Al-Ghamdi",
+    "nameAr": "سعد الغامدي",
+    "path": "Adhan/saad_alghamedi_.mp3",
+    "sizeBytes": 2478260,
+    "durationMs": 123910,
+    "category": "azan"
+  },
+  {
+    "id": "saad_azvit",
+    "nameEn": "Saad Azvit",
+    "nameAr": "سعد أزفيت",
+    "path": "Adhan/saad_azvit.mp3",
+    "sizeBytes": 3844820,
+    "durationMs": 192240,
+    "category": "azan"
+  },
+  {
+    "id": "saad_ramadan",
+    "nameEn": "Saad Ramadan",
+    "nameAr": "سعد رمضان",
+    "path": "Adhan/saad_ramadan.mp3",
+    "sizeBytes": 3519860,
+    "durationMs": 175990,
+    "category": "azan"
+  },
+  {
+    "id": "saleh_almasouri",
+    "nameEn": "Saleh Al-Masouri",
+    "nameAr": "صالح المصوري",
+    "path": "Adhan/alezi_saleh_masuri.mp3",
+    "sizeBytes": 3270968,
+    "durationMs": 204430,
+    "category": "azan"
+  },
+  {
+    "id": "salim_bahanan",
+    "nameEn": "Salim Bahanan",
+    "nameAr": "سالم باهنان",
+    "path": "Adhan/salim_bahanan.mp3",
+    "sizeBytes": 3264980,
+    "durationMs": 163250,
+    "category": "azan"
+  },
+  {
+    "id": "salman_alutaybi",
+    "nameEn": "Salman Al-Utaybi",
+    "nameAr": "سلمان العتيبي",
+    "path": "Adhan/salman_utaybi.mp3",
+    "sizeBytes": 3727380,
+    "durationMs": 232960,
+    "category": "azan"
+  },
+  {
+    "id": "samawati_hijaz",
+    "nameEn": "Samawati – Hijaz",
+    "nameAr": "سماواتي - حجاز",
+    "path": "Adhan/bukan_samawati_hejaz.mp3",
+    "sizeBytes": 3945620,
+    "durationMs": 197280,
+    "category": "azan"
+  },
+  {
+    "id": "shayea_altamimi",
+    "nameEn": "Shayea Al-Tamimi",
+    "nameAr": "شايع التميمي",
+    "path": "Adhan/shayeaa_altamimi.mp3",
+    "sizeBytes": 4251082,
+    "durationMs": 265690,
+    "category": "azan"
+  },
+  {
+    "id": "taqi_almaleki",
+    "nameEn": "Taqi Al-Maleki",
+    "nameAr": "تقي المالكي",
+    "path": "Adhan/taqi_almaleki.mp3",
+    "sizeBytes": 6012980,
+    "durationMs": 300650,
+    "category": "azan"
+  },
+  {
+    "id": "tareq_mohammad",
+    "nameEn": "Tareq Mohammad",
+    "nameAr": "طارق محمد",
+    "path": "Adhan/Azan_Tareq_Mohammad.mp3",
+    "sizeBytes": 4147700,
+    "durationMs": 207380,
+    "category": "azan"
+  },
+  {
+    "id": "wadei_alyamani",
+    "nameEn": "Wadei Al-Yamani",
+    "nameAr": "وديع اليماني",
+    "path": "Adhan/wadia_alyamini.mp3",
+    "sizeBytes": 821101,
+    "durationMs": 205270,
+    "category": "azan"
+  },
+  {
+    "id": "yaqoub_mohammadi",
+    "nameEn": "Yaqoub Mohammadi",
+    "nameAr": "يعقوب محمدي",
+    "path": "Adhan/yaaqub_mohammadi.mp3",
+    "sizeBytes": 757676,
+    "durationMs": 189410,
+    "category": "azan"
+  },
+  {
+    "id": "alsarihi_fajr_rast",
+    "nameEn": "Abdulmajid Al-Sarihi – Rast",
+    "nameAr": "عبد المجيد الصريحي - رست",
+    "path": "Adhan/sarihi_sobh_rast.mp3",
+    "sizeBytes": 8870785,
+    "durationMs": 277210,
+    "category": "fajr"
+  },
+  {
+    "id": "ahmad_altrabelsi_fajr",
+    "nameEn": "Ahmad Al-Trabelsi",
+    "nameAr": "أحمد الطرابلسي",
+    "path": "Fajr/fajr_ahmad_trablesi.mp3",
+    "sizeBytes": 3771683,
+    "durationMs": 235730,
+    "category": "fajr"
+  },
+  {
+    "id": "islam_sobhi_fajr",
+    "nameEn": "Islam Sobhi",
+    "nameAr": "إسلام صبحي",
+    "path": "Fajr/eslam_sobhi_fajr.mp3",
+    "sizeBytes": 5019284,
+    "durationMs": 209140,
+    "category": "fajr"
+  },
+  {
+    "id": "mansour_alzahrani_fajr",
+    "nameEn": "Mansour Al-Zahrani",
+    "nameAr": "منصور الزهراني",
+    "path": "Fajr/sheikh_mansour_zahrani_fajr.mp3",
+    "sizeBytes": 2932628,
+    "durationMs": 183290,
+    "category": "fajr"
+  },
+  {
+    "id": "alafasy_fajr_hijaz",
+    "nameEn": "Mishary Alafasy – Hijaz",
+    "nameAr": "مشاري العفاسي - حجاز",
+    "path": "Adhan/afasi_sobh_hejaz.mp3",
+    "sizeBytes": 7080248,
+    "durationMs": 221260,
+    "category": "fajr"
+  },
+  {
+    "id": "alafasy_fajr_kurd",
+    "nameEn": "Mishary Alafasy – Kurd",
+    "nameAr": "مشاري العفاسي - كرد",
+    "path": "Adhan/afasi_sobh_kord.mp3",
+    "sizeBytes": 5187729,
+    "durationMs": 162120,
+    "category": "fajr"
+  }
+]

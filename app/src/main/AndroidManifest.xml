@@ -8,6 +8,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <!-- Only recorded Quran recitations are streamed; written catalogs stay offline. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <queries><intent><action android:name="android.intent.action.TTS_SERVICE"/></intent></queries>
     <application
@@ -31,6 +33,7 @@
         <activity android:name="com.hecker.islam.QiblaActivity" android:exported="false"/>
         <activity android:name="com.hecker.islam.HomeActivity" android:exported="false"/>
         <activity android:name="com.hecker.islam.ReferenceReadingActivity" android:exported="false"/>
+        <activity android:name="com.hecker.islam.ShiaDuasActivity" android:exported="false"/>
         <activity android:name="com.hecker.islam.PrayerTrackerActivity" android:exported="false"/>
         <activity android:name="com.hecker.islam.TasbeehActivity" android:exported="false"/>
         <receiver android:name="com.hecker.azaan.AlarmReceiver" android:exported="false"/>

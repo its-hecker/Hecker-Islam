@@ -110,7 +110,12 @@ public final class QiblaActivity extends Activity implements SensorEventListener
         SensorManager.getOrientation(rotation, orientation);
         double north = (Math.toDegrees(orientation[0]) + declination + 360) % 360;
         double delta = (bearing - north + 360) % 360;
-        arrow.setRotation((float) delta);
+        float from = arrow.getRotation();
+        float shortest = (float) ((delta - from + 540) % 360 - 180);
+        if (android.animation.ValueAnimator.areAnimatorsEnabled()) {
+            arrow.animate().rotation(from + shortest).setDuration(290)
+                    .setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
+        } else arrow.setRotation((float) delta);
         status.setText(String.format(Locale.ENGLISH,
                 "Turn towards the arrow • %.0f° clockwise from the top of the screen", delta));
     }
