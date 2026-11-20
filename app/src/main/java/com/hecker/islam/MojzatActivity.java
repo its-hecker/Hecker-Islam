@@ -30,9 +30,8 @@ import java.util.Locale;
  * Hadith. Extend app/src/main/assets/mojzat/catalog.json with reviewed texts.
  */
 public final class MojzatActivity extends Activity {
-    private static final String[] FILTERS = {"all", "ali", "abbas", "fatima", "jaffar", "saved"};
-    private static final String[] LABELS = {"سب", "امام علیؑ", "غازی عباسؑ", "بی بی فاطمہؑ",
-            "امام جعفر صادقؑ", "★ محفوظ"};
+    private static final String[] FILTERS = {"all", "ali", "abbas", "fatima", "saved"};
+    private static final String[] LABELS = {"All", "Mola Ali (A.S.)", "Ghazi Abbas (A.S.)", "Bibi Sayyeda (S.A.)", "★ Saved"};
     private JSONArray stories = new JSONArray(), books = new JSONArray();
     private String catalogNote = "", selectedId, filter = "all", keyword = "";
     private LinearLayout cards, content;
@@ -174,6 +173,14 @@ public final class MojzatActivity extends Activity {
         t.setLineSpacing(Ui.dp(this, 6), 1.15f);
         return t;
     }
+    private TextView roman(String value, float size, int color, boolean bold) {
+        TextView t = Ui.text(this, value, size, color, bold);
+        t.setTextDirection(View.TEXT_DIRECTION_LTR);
+        t.setGravity(Gravity.LEFT);
+        t.setLineSpacing(Ui.dp(this, 6), 1.15f);
+        return t;
+    }
+
     private void action(String title, Runnable runner) {
         LinearLayout box = Ui.panel(this);
         TextView text = Ui.text(this, title, 15, Ui.GOLD, true);
@@ -190,17 +197,17 @@ public final class MojzatActivity extends Activity {
         Ui.space(this, content, 17);
         LinearLayout introduction = Ui.panel(this);
         introduction.addView(urdu(
-                "اردو میں مشہور واقعات، کرامات اور مجلسی حکایات — معتبر ماخذ کا لنک اور ہر داستان کی نوعیت کے ساتھ۔",
+                "Roman Urdu stories and traditional Shia devotional narratives, with their sources and verification status.",
                 17, Ui.WHITE, false));
         Ui.space(this, introduction, 9);
         introduction.addView(urdu(
-                "توجہ: عام روایت یا خواب کا بیان، سند کے ساتھ ثابت شدہ حدیث نہیں۔",
+                "Note: a devotional story or dream is not automatically an authenticated hadith.",
                 13, Ui.MUTED, false));
         content.addView(introduction);
         Ui.space(this, content, 18);
         content.addView(Ui.text(this, "مخصوص واقعات", 19, Ui.WHITE, true));
         Ui.space(this, content, 10);
-        for (String id : new String[]{"ali-iran-woodcutter", "abbas-shrine-child", "fatima-sunaran"}) {
+        for (String id : new String[]{"ali-iran-woodcutter", "abbas-ummul-banin", "chat-pat-bibi", "sayyeda-sunaran"}) {
             JSONObject item = find(id);
             if (item != null) featured(item);
         }
@@ -212,7 +219,7 @@ public final class MojzatActivity extends Activity {
         search.setTextColor(Ui.WHITE);
         search.setHintTextColor(Ui.MUTED);
         search.setTextSize(16);
-        search.setHint("تلاش: لکڑہارا، سنارن، عباس...");
+        search.setHint("Search: Lakrihara, Abbas, Sunaran...");
         search.setText(keyword);
         LinearLayout searchPanel = Ui.panel(this);
         searchPanel.addView(search);
@@ -268,13 +275,13 @@ public final class MojzatActivity extends Activity {
             Ui.space(this, content, 9);
         }
         Ui.space(this, content, 7);
-        content.addView(urdu(catalogNote, 13, Ui.MUTED, false));
+        content.addView(roman(catalogNote, 13, Ui.MUTED, false));
     }
     private void featured(JSONObject item) {
         LinearLayout card = Ui.panel(this);
-        card.addView(urdu(item.optString("title"), 19, Ui.WHITE, true));
+        card.addView(roman(item.optString("title"), 19, Ui.WHITE, true));
         Ui.space(this, card, 7);
-        card.addView(urdu(item.optString("subtitle"), 14, Ui.MUTED, false));
+        card.addView(roman(item.optString("subtitle"), 14, Ui.MUTED, false));
         Ui.space(this, card, 9);
         card.addView(Ui.text(this, "مکمل اردو مطالعہ  ›", 14, Ui.GOLD, true));
         card.setOnClickListener(v -> select(item.optString("id")));
@@ -297,12 +304,12 @@ public final class MojzatActivity extends Activity {
             if (!q.isEmpty() && !searchable.contains(q)) continue;
             shown++;
             LinearLayout card = Ui.panel(this);
-            card.addView(urdu((saved(id) ? "★  " : "") + item.optString("title") + "  ›",
+            card.addView(roman((saved(id) ? "★  " : "") + item.optString("title") + "  ›",
                     18, Ui.WHITE, true));
             Ui.space(this, card, 7);
-            card.addView(urdu(item.optString("subtitle"), 14, Ui.MUTED, false));
+            card.addView(roman(item.optString("subtitle"), 14, Ui.MUTED, false));
             Ui.space(this, card, 7);
-            card.addView(urdu(item.optString("label"), 12, Ui.GOLD, false));
+            card.addView(roman(item.optString("label"), 12, Ui.GOLD, false));
             card.setOnClickListener(v -> select(id));
             cards.addView(card);
             Ui.space(this, cards, 10);
@@ -318,22 +325,22 @@ public final class MojzatActivity extends Activity {
         JSONObject item = find(selectedId);
         if (item == null) { selectedId = null; render(); return; }
         String text = item.optString("text");
-        content.addView(urdu(item.optString("title"), 25, Ui.WHITE, true));
+        content.addView(roman(item.optString("title"), 25, Ui.WHITE, true));
         Ui.space(this, content, 10);
-        content.addView(urdu(item.optString("subtitle"), 16, Ui.GOLD, false));
+        content.addView(roman(item.optString("subtitle"), 16, Ui.GOLD, false));
         Ui.space(this, content, 18);
         LinearLayout label = Ui.panel(this);
         label.addView(urdu("نوعیتِ روایت", 13, Ui.GOLD, true));
         Ui.space(this, label, 7);
-        label.addView(urdu(item.optString("label"), 15, Ui.WHITE, false));
+        label.addView(roman(item.optString("label"), 15, Ui.WHITE, false));
         content.addView(label);
         Ui.space(this, content, 13);
 
         LinearLayout reader = Ui.panel(this);
-        TextView title = Ui.text(this, "اردو متن", 13, Ui.GOLD, true);
+        TextView title = Ui.text(this, "Roman Urdu story", 13, Ui.GOLD, true);
         reader.addView(title);
         Ui.space(this, reader, 12);
-        storyText = urdu(text, fontSize, Ui.WHITE, false);
+        storyText = roman(text, fontSize, Ui.WHITE, false);
         reader.addView(storyText);
         content.addView(reader);
         Ui.space(this, content, 12);
@@ -341,12 +348,21 @@ public final class MojzatActivity extends Activity {
         LinearLayout controls = Ui.panel(this);
         controls.addView(Ui.text(this, "سماعت اور مطالعہ", 13, Ui.GOLD, true));
         Ui.space(this, controls, 9);
-        TextView recite = Ui.text(this, "▶ Recite Urdu", 17, Ui.WHITE, true);
+        TextView recite = Ui.text(this, "▶ Recite Roman Urdu", 17, Ui.WHITE, true);
         recite.setGravity(Gravity.CENTER);
         recite.setPadding(0, Ui.dp(this, 10), 0, Ui.dp(this, 10));
         reciter.attach(recite);
-        recite.setOnClickListener(v -> reciter.playOrStop(text, new Locale("ur", "PK")));
+        recite.setOnClickListener(v -> reciter.playOrStop(text, ReaderSpeech.detect(text)));
         controls.addView(recite);
+        Ui.space(this, controls, 10);
+        TextView speed = Ui.text(this, "Recitation speed • " + reciter.speedLabel() + "  ›",
+                15, Ui.GOLD, true);
+        speed.setGravity(Gravity.CENTER);
+        speed.setPadding(0, Ui.dp(this, 10), 0, Ui.dp(this, 10));
+        speed.setOnClickListener(v -> reciter.chooseSpeed(speed));
+        controls.addView(speed);
+        Ui.space(this, controls, 5);
+        controls.addView(roman("Audio uses your Android text-to-speech voice. Roman Urdu pronunciation depends on the installed voice.", 12, Ui.MUTED, false));
         Ui.space(this, controls, 12);
         LinearLayout zoom = new LinearLayout(this);
         zoom.setGravity(Gravity.CENTER);
@@ -359,7 +375,7 @@ public final class MojzatActivity extends Activity {
         large.setPadding(Ui.dp(this, 20), Ui.dp(this, 6), Ui.dp(this, 20), Ui.dp(this, 6));
         large.setOnClickListener(v -> size(2));
         zoom.addView(small);
-        zoom.addView(Ui.text(this, "   فونٹ کا سائز   ", 13, Ui.MUTED, false));
+        zoom.addView(Ui.text(this, "   Font size   ", 13, Ui.MUTED, false));
         zoom.addView(large);
         controls.addView(zoom);
         content.addView(controls);
@@ -376,10 +392,10 @@ public final class MojzatActivity extends Activity {
                     + item.optString("source"));
             startActivity(Intent.createChooser(share, "Share Urdu mojza"));
         });
-        content.addView(urdu("ماخذ: " + item.optString("sourceTitle"), 13, Ui.MUTED, false));
+        content.addView(roman("Source: " + item.optString("sourceTitle"), 13, Ui.MUTED, false));
         Ui.space(this, content, 8);
         content.addView(urdu(
-                "وضاحت: یہ آزادانہ اردو خلاصہ ہے، لفظ بہ لفظ نقل نہیں؛ سند کی جانچ کے لیے اصل ماخذ دیکھیے۔",
+                "Note: This is a Roman Urdu retelling, not a word-for-word transcription or an authenticated historical report.",
                 13, Ui.MUTED, false));
     }
     private void size(int change) {
