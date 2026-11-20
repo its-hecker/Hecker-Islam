@@ -202,6 +202,14 @@ public final class IslamDashboardActivity extends Activity {
                 () -> launch(com.hecker.azaan.MainActivity.class));
         tile("Full Islamic calendar", "Months • Events • Calendar customization",
                 () -> launch(com.sabber.taqwim.MainActivity.class));
+        boolean originalCalendar = getSharedPreferences("islam_ui", MODE_PRIVATE)
+                .getBoolean("calendar_original", false);
+        tile(originalCalendar ? "Calendar appearance: Original" : "Calendar appearance: Hecker Islam",
+                "Hecker Islam is the default • Switch to the preserved original Calendar design", () -> {
+                    getSharedPreferences("islam_ui", MODE_PRIVATE).edit()
+                            .putBoolean("calendar_original", !originalCalendar).apply();
+                    render();
+                });
         tile("Nearby mosques", "Explore mosques with your chosen maps app", this::mosques);
         tile("Qibla compass", "Compass calibrated with device sensors", () -> launch(QiblaActivity.class));
         tile("Prayer tracker", "Your local prayer history", () -> launch(PrayerTrackerActivity.class));
