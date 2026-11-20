@@ -38,15 +38,21 @@ public final class IslamDashboardActivity extends Activity {
     private LinearLayout content, navigation;
     private int page = 0;
     @Override public void onCreate(Bundle state) {
-        super.onCreate(state); render();
+        super.onCreate(state);
+        page = state == null ? getIntent().getIntExtra("tab", 0) : state.getInt("tab", 0);
+        render();
     }
     @Override protected void onResume() { super.onResume(); render(); }
+    @Override protected void onSaveInstanceState(Bundle b) { super.onSaveInstanceState(b); b.putInt("tab", page); }
+    @Override protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent); setIntent(intent); page = intent.getIntExtra("tab", 0); render();
+    }
     private void render() {
         Ui.applyTheme(this);
         getWindow().setStatusBarColor(Ui.BACKGROUND);
         getWindow().setNavigationBarColor(Ui.BACKGROUND);
         getWindow().getDecorView().setSystemUiVisibility(
-                !getSharedPreferences("islam_ui", MODE_PRIVATE).getBoolean("dark", false)
+                !getSharedPreferences("islam_ui", MODE_PRIVATE).getBoolean("dark", true)
                 ? android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
                 : 0);
         LinearLayout root = Ui.column(this);
@@ -208,7 +214,7 @@ public final class IslamDashboardActivity extends Activity {
                         ? "Your complete offline library is already included with Hecker Islam."
                         : "This build is missing assets. Rebuild with the complete offline reference pack.")
                 .setPositiveButton("OK", null).show());
-        boolean dark = getSharedPreferences("islam_ui", MODE_PRIVATE).getBoolean("dark", false);
+        boolean dark = getSharedPreferences("islam_ui", MODE_PRIVATE).getBoolean("dark", true);
         tile(dark ? "Appearance: Dark mode" : "Appearance: Light mode",
                 "Tap to switch between light and dark Material-inspired palettes", () -> {
                     getSharedPreferences("islam_ui", MODE_PRIVATE).edit().putBoolean("dark", !dark).apply();
@@ -233,50 +239,17 @@ public final class IslamDashboardActivity extends Activity {
         content.addView(Ui.text(this, "Hecker Islam • v0.2 alpha", 12, Ui.MUTED, false));
     }
     private void tabs() {
-        String[] labels = {"Today", "Qur'an", "Azkar", "Hadith", "More"};
-        int[] icons = {
-            android.R.drawable.ic_menu_today,
-            android.R.drawable.ic_menu_agenda,
-            android.R.drawable.ic_menu_compass,
-            android.R.drawable.ic_menu_info_details,
-            android.R.drawable.ic_menu_more
-        };
-        for (int i = 0; i < labels.length; i++) {
-            final int position = i;
-            LinearLayout pill = Ui.column(this);
-            pill.setGravity(Gravity.CENTER);
-            GradientDrawable highlight = new GradientDrawable();
-            highlight.setColor(i == page ? Ui.BACKGROUND : Ui.CARD);
-            highlight.setCornerRadius(Ui.dp(this, 32));
-            pill.setBackground(highlight);
-            ImageView icon = new ImageView(this);
-            icon.setImageResource(icons[i]);
-            icon.setColorFilter(i == page ? Ui.GOLD : Ui.MUTED);
-            pill.addView(icon, new LinearLayout.LayoutParams(Ui.dp(this, 23), Ui.dp(this, 23)));
-            Ui.space(this, pill, 4);
-            TextView label = Ui.text(this, labels[i], 10, i == page ? Ui.WHITE : Ui.MUTED, i == page);
-            label.setGravity(Gravity.CENTER);
-            pill.addView(label);
-            pill.setContentDescription("Open " + labels[i]);
-            pill.setOnClickListener(v -> {
-                if (ValueAnimator.areAnimatorsEnabled()) {
-                    v.animate().scaleX(.88f).scaleY(.88f).setDuration(90)
-                        .withEndAction(() -> v.animate().scaleX(1f).scaleY(1f)
-                        .setDuration(240).setInterpolator(new OvershootInterpolator(.75f)).start()).start();
-                }
-                if (position == 1) library("quran");
-                else if (position == 2) library("azkar");
-                else if (position == 3) library("hadith");
-                else { page = position; render(); }
-            });
-            LinearLayout.LayoutParams item = new LinearLayout.LayoutParams(0, -1, 1);
-            item.setMargins(Ui.dp(this, 2), 0, Ui.dp(this, 2), 0);
-            navigation.addView(pill, item);
-        }
+        Ui.fillNavigation(this, navigation, page, index -> {
+            if (index == 1) library("quran");
+            else if (index == 2) library("azkar");
+            else if (index == 3) library("hadith");
+            else { page = index; render(); }
+        });
     }
     private void library(String section) {
         Intent intent = new Intent(this, ReferenceReadingActivity.class);
         intent.putExtra("section", section); startActivity(intent);
+        overridePendingTransition(0, 0);
     }
     private void launch(Class<?> cls) { startActivity(new Intent(this, cls)); }
     private void mosques() {
