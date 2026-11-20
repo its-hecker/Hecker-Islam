@@ -100,6 +100,7 @@ public final class MainActivity extends Activity {
     private TextToSpeech checker;
     private int checkGeneration;
     private Runnable checkTimeout;
+    private final DeviceLocationTracker automaticLocation = new DeviceLocationTracker();
     private LocationManager locationManager;
     private LocationListener locationListener;
     private ProgressDialog locationProgress;
@@ -138,11 +139,19 @@ public final class MainActivity extends Activity {
         render(); handler.removeCallbacks(ticker); handler.post(ticker);
         refreshPrayerTimes(false);
         AlarmScheduler.schedule(this);
+        automaticLocation.start(this, () -> {
+            if (!destroyed && !isFinishing() && !isDestroyed()) render();
+        });
     }
-    @Override protected void onPause() { handler.removeCallbacks(ticker); super.onPause(); }
+    @Override protected void onPause() {
+        automaticLocation.stop();
+        handler.removeCallbacks(ticker);
+        super.onPause();
+    }
     @Override protected void onDestroy() {
         destroyed = true; handler.removeCallbacksAndMessages(null);
         stopLocation();
+        automaticLocation.stop();
         if (checker != null) { checker.shutdown(); checker = null; }
         io.shutdownNow(); super.onDestroy();
     }
@@ -286,7 +295,10 @@ public final class MainActivity extends Activity {
         location.addView(text(settings.city(), 22, TEXT));
         if (settings.configured()) location.addView(text(String.format(Locale.US, "%.4f, %.4f  ·  %s", settings.latitude(), settings.longitude(), settings.zone().getId()), 12, MUTED));
         location.addView(button("Choose city or coordinates", this::locationChoices));
-        location.addView(button("Use current location", this::useLocation));
+        location.addView(button("Use current location · automatic", this::useLocation));
+        if (settings.autoLocation()) location.addView(text(
+                "Automatic location is ON • Updates when the app is open or reopened. Choose a city to turn it off.",
+                12, MUTED));
         location.addView(button(settings.method().title + "  ·  Change Shia method", this::chooseMethod));
         location.addView(button(settings.providerEnabled()
                 ? "Timetable source: AlAdhan (Shia)" : "Timetable source: On-device",
@@ -415,12 +427,14 @@ public final class MainActivity extends Activity {
     }
 
     private void locationChoices() {
-        String[] cities = {"Karachi", "Lahore", "Islamabad", "Rawalpindi", "Faisalabad", "Multan", "Peshawar", "Quetta", "Hyderabad", "Najaf", "Karbala", "Tehran", "Qom", "Enter coordinates…"};
+        String[] cities = {"📍 Use current location (auto-update)", "Karachi", "Lahore", "Islamabad", "Rawalpindi", "Faisalabad", "Multan", "Peshawar", "Quetta", "Hyderabad", "Najaf", "Karbala", "Tehran", "Qom", "Enter coordinates…"};
         double[][] coordinates = {{24.8607,67.0011},{31.5204,74.3587},{33.6844,73.0479},{33.5651,73.0169},{31.4504,73.1350},{30.1575,71.5249},{34.0151,71.5249},{30.1798,66.9750},{25.3960,68.3578},{31.9958,44.3148},{32.6160,44.0249},{35.6892,51.3890},{34.6416,50.8746}};
         new AlertDialog.Builder(this).setTitle("Choose your location").setItems(cities, (d, which) -> {
-            if (which == coordinates.length) { coordinatesDialog(); return; }
-            String zone = which < 9 ? "Asia/Karachi" : which < 11 ? "Asia/Baghdad" : "Asia/Tehran";
-            settings.location(cities[which], coordinates[which][0], coordinates[which][1], ZoneId.of(zone));
+            if (which == 0) { useLocation(); return; }
+            if (which == cities.length - 1) { coordinatesDialog(); return; }
+            int selected = which - 1;
+            String zone = selected < 9 ? "Asia/Karachi" : selected < 11 ? "Asia/Baghdad" : "Asia/Tehran";
+            settings.location(cities[which], coordinates[selected][0], coordinates[selected][1], ZoneId.of(zone));
             AlarmScheduler.schedule(this); render(); refreshPrayerTimes(true);
         }).setNegativeButton("Cancel", null).show();
     }
@@ -540,7 +554,7 @@ public final class MainActivity extends Activity {
         ZoneId zone = fix.getLatitude() >= 23 && fix.getLatitude() <= 38
                 && fix.getLongitude() >= 60 && fix.getLongitude() <= 78
                 ? ZoneId.of("Asia/Karachi") : ZoneId.systemDefault();
-        settings.location("Current location", fix.getLatitude(), fix.getLongitude(), zone);
+        settings.locationFromDevice("Current location", fix.getLatitude(), fix.getLongitude(), zone);
         stopLocation();
         AlarmScheduler.schedule(this);
         render();
@@ -548,7 +562,10 @@ public final class MainActivity extends Activity {
             if (!destroyed && !isFinishing() && !isDestroyed()) render();
         }, true);
         refreshPrayerTimes(true);
-        toast("Coordinates synced. Finding neighborhood name for your Azaan card…");
+        automaticLocation.start(this, () -> {
+            if (!destroyed && !isFinishing() && !isDestroyed()) render();
+        });
+        toast("Automatic location enabled. Neighborhood updates when you move and reopen the app.");
     }
 
     private void stopLocation() {
