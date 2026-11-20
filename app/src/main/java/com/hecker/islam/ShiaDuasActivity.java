@@ -105,10 +105,16 @@ public final class ShiaDuasActivity extends Activity {
     private String search = "";
     private Dua selected;
     private boolean favoritesOnly;
+    private ReaderSpeech reciter;
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
+        reciter = new ReaderSpeech(this);
         render();
+    }
+    @Override protected void onDestroy() {
+        if (reciter != null) reciter.destroy();
+        super.onDestroy();
     }
 
     private boolean favorite(String id) {
@@ -133,7 +139,7 @@ public final class ShiaDuasActivity extends Activity {
         }
     }
     @Override public void onBackPressed() {
-        if (selected != null) { selected = null; render(); }
+        if (selected != null) { reciter.stop(); selected = null; render(); }
         else super.onBackPressed();
     }
     private void render() {
@@ -215,7 +221,7 @@ public final class ShiaDuasActivity extends Activity {
             Ui.space(this, card, 8);
             card.addView(Ui.text(this, dua.offline() ? "Available offline" : "Read full text online",
                     12, Ui.MUTED, true));
-            card.setOnClickListener(v -> { selected = dua; render(); });
+            card.setOnClickListener(v -> { reciter.stop(); selected = dua; render(); });
             content.addView(card);
             Ui.space(this, content, 11);
         }
@@ -259,6 +265,32 @@ public final class ShiaDuasActivity extends Activity {
             translation.addView(text);
             content.addView(translation);
             Ui.space(this, content, 12);
+        }
+        if (dua.offline()) {
+            LinearLayout audioPanel = Ui.panel(this);
+            audioPanel.addView(Ui.text(this, "RECITATION", 12, Ui.GOLD, true));
+            Ui.space(this, audioPanel, 10);
+            TextView arabicRecite = Ui.text(this, "▶ Recite Arabic", 16, Ui.WHITE, true);
+            arabicRecite.setPadding(0, Ui.dp(this, 9), 0, Ui.dp(this, 9));
+            arabicRecite.setOnClickListener(v -> reciter.playOrStop(dua.arabic, new Locale("ar")));
+            reciter.attach(arabicRecite);
+            audioPanel.addView(arabicRecite);
+            if (!dua.urduTranslation.isEmpty()) {
+                Ui.space(this, audioPanel, 9);
+                TextView urduRecite = Ui.text(this, "▶ Recite Urdu translation", 16, Ui.GOLD, true);
+                urduRecite.setPadding(0, Ui.dp(this, 9), 0, Ui.dp(this, 9));
+                urduRecite.setOnClickListener(v ->
+                    reciter.speak(dua.urduTranslation, new Locale("ur", "PK")));
+                audioPanel.addView(urduRecite);
+            }
+            Ui.space(this, audioPanel, 8);
+            audioPanel.addView(Ui.text(this,
+                "Uses Android speech voices; it is not a recorded human reciter.",
+                12, Ui.MUTED, false));
+            content.addView(audioPanel);
+            Ui.space(this, content, 12);
+        } else {
+            button("▶ Open complete dua & recite", () -> openSource(dua));
         }
         content.addView(Ui.text(this, dua.instructions, 13, Ui.MUTED, false));
         Ui.space(this, content, 15);
