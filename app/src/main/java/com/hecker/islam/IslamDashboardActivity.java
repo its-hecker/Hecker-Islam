@@ -146,8 +146,8 @@ public final class IslamDashboardActivity extends Activity {
             if (cfg.configured()) {
                 Instant now = Instant.now(), nextAt = null; Prayer nextPrayer = null;
                 for (int d = 0; d < 3; d++) {
-                    Map<Prayer, Instant> times = PrayerCalculator.calculate(date.plusDays(d),
-                            cfg.latitude(), cfg.longitude(), cfg.method(), cfg.offsets());
+                    Map<Prayer, Instant> times = com.hecker.azaan.PrayerTimeProvider.calculate(
+                            this, date.plusDays(d), cfg);
                     for (Prayer p : Prayer.values()) {
                         Instant t = times.get(p);
                         if (t != null && t.isAfter(now) && (nextAt == null || t.isBefore(nextAt))) {
@@ -167,6 +167,12 @@ public final class IslamDashboardActivity extends Activity {
         Ui.space(this, featured, 7);
         featured.addView(Ui.text(this, upcoming, 15, Ui.MUTED, false));
         Ui.space(this, featured, 10);
+        if (cfg.configured()) {
+            featured.addView(Ui.text(this,
+                    com.hecker.azaan.PrayerTimeProvider.status(this, date, cfg),
+                    12, Ui.MUTED, false));
+            Ui.space(this, featured, 8);
+        }
         featured.addView(Ui.text(this, cfg.active() ? "● Azaan enabled" : "○ Configure Azaan", 13, Ui.GOLD, true));
         featured.setOnClickListener(v -> launch(com.hecker.azaan.MainActivity.class));
         content.addView(featured);
