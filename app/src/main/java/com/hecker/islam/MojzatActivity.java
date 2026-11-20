@@ -295,7 +295,7 @@ public final class MojzatActivity extends Activity {
         TextView recite = Ui.text(this, "▶ Recite in Urdu", 17, Ui.WHITE, true);
         recite.setGravity(Gravity.CENTER);
         recite.setPadding(0, Ui.dp(this, 10), 0, Ui.dp(this, 10));
-        reciter.attach(recite);
+        reciter.attach(recite, "▶ Recite in Urdu");
         recite.setOnClickListener(v -> reciter.playOrStop(recitationText, new Locale("ur", "PK")));
         controls.addView(recite);
         Ui.space(this, controls, 10);
