@@ -44,6 +44,10 @@ public final class ReferenceReadingActivity extends Activity {
     private int recitationSource;
     private long generation = 0;
     private JSONArray chapters, verses, azkarCategories, azkarChapters, azkarItems, hadithCategories;
+    private java.util.Map<Integer, String> urduTranslations;
+    private String loadedUrduEdition, loadingUrduEdition;
+    private boolean urduMissing;
+
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -118,6 +122,7 @@ public final class ReferenceReadingActivity extends Activity {
                 if (hadithCategories == null) hadithCategories = ReferenceLibrary.array(this, "hadith/categories.json");
             }
             draw();
+            if ("quran".equals(section)) loadUrduTranslation();
         } catch (Exception ex) {
             content.removeAllViews();
             content.addView(Ui.text(this, "Cannot load library: " + ex.getMessage(), 16, Ui.MUTED, false));
@@ -358,6 +363,70 @@ public final class ReferenceReadingActivity extends Activity {
             arabicSpeech.speak(arabic, android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, "dua-" + System.nanoTime());
         });
     }
+    private String urduEdition() {
+        return "najafi".equals(saved.getString("urduEdition", "jawadi")) ? "najafi" : "jawadi";
+    }
+    private String urduTranslator() {
+        return "najafi".equals(urduEdition()) ? "Allama Muhammad Hussain Najafi" : "Allama Zeeshan Haider Jawadi";
+    }
+    private boolean showUrdu() { return saved.getBoolean("showUrdu", true); }
+
+    /** Read pre-bundled text off the UI thread. No account, import, or internet is required. */
+    private void loadUrduTranslation() {
+        if (!"quran".equals(section) || !showUrdu()) return;
+        final String edition = urduEdition();
+        if (edition.equals(loadedUrduEdition) || edition.equals(loadingUrduEdition)) return;
+        loadingUrduEdition = edition;
+        urduMissing = false;
+        worker.execute(() -> {
+            java.util.Map<Integer, String> results = new java.util.HashMap<>();
+            String failure = null;
+            try {
+                JSONArray data = ReferenceLibrary.array(this, "quran/ur_" + edition + ".json");
+                if (data.length() != 6236) throw new java.io.IOException("Incorrect translation verse count");
+                for (int i = 0; i < data.length(); i++) {
+                    JSONArray item = data.getJSONArray(i);
+                    int surah = item.getInt(0), ayah = item.getInt(1);
+                    String translated = item.getString(2);
+                    if (surah < 1 || surah > 114 || ayah < 1 || ayah > 286 || translated.trim().isEmpty())
+                        throw new java.io.IOException("Invalid translated verse");
+                    if (results.put(surah * 1000 + ayah, translated) != null)
+                        throw new java.io.IOException("Duplicate translated verse");
+                }
+            } catch (Exception ex) { failure = ex.getMessage(); }
+            final String message = failure;
+            main.post(() -> {
+                if (isFinishing() || isDestroyed() || !edition.equals(loadingUrduEdition)) return;
+                loadingUrduEdition = null;
+                if (message == null) {
+                    urduTranslations = results;
+                    loadedUrduEdition = edition;
+                    urduMissing = false;
+                } else {
+                    urduTranslations = null;
+                    loadedUrduEdition = null;
+                    urduMissing = true;
+                    android.util.Log.w("HeckerIslamQuran", "Urdu translation unavailable: " + message);
+                }
+                if ("quran".equals(section) && stage == 1 && showUrdu()) draw();
+            });
+        });
+    }
+
+    private void selectUrduTranslator() {
+        final String[] choices = {"علامہ ذیشان حیدر جوادی", "علامہ محمد حسین نجفی"};
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Urdu Qur'an translation")
+                .setSingleChoiceItems(choices, "najafi".equals(urduEdition()) ? 1 : 0,
+                        (dialog, chosen) -> {
+                            saved.edit().putString("urduEdition", chosen == 1 ? "najafi" : "jawadi").apply();
+                            dialog.dismiss();
+                            urduTranslations = null; loadedUrduEdition = null; urduMissing = false;
+                            loadUrduTranslation(); draw();
+                        })
+                .setNegativeButton("Cancel", null).show();
+    }
+
     private void quran() {
         if (stage == 0) {
             search("Search Surah name", () -> { stage = 3; draw(); });
@@ -379,6 +448,25 @@ public final class ReferenceReadingActivity extends Activity {
                 Ui.space(this, content, 14);
             }
             button("Search verses", () -> { stage = 2; query = ""; stopAudio(); draw(); });
+            button(showUrdu() ? "اردو ترجمہ ✓ • Hide translation" : "اردو ترجمہ • Show translation", () -> {
+                saved.edit().putBoolean("showUrdu", !showUrdu()).apply();
+                if (showUrdu()) loadUrduTranslation();
+                draw();
+            });
+            if (showUrdu()) {
+                button("Translator: " + urduTranslator() + " • Change", this::selectUrduTranslator);
+                content.addView(Ui.text(this,
+                        "Shia Urdu translation • AlQuran Cloud • Translator credited. Arabic remains the original text.",
+                        12, Ui.MUTED, false));
+                Ui.space(this, content, 12);
+                if (urduTranslations == null) {
+                    content.addView(Ui.text(this,
+                            urduMissing ? "Urdu translation missing from this APK. Install the complete build."
+                                    : "Loading included Urdu translation…",
+                            13, Ui.MUTED, false));
+                    Ui.space(this, content, 12);
+                }
+            }
             recitationControl = button("▶ Listen • Mishary Alafasy", this::playSurah);
             updateRecitationControl();
             content.addView(Ui.text(this, "Recorded reciter playback requires internet. Qur’an text remains available offline.", 12, Ui.MUTED, false));
@@ -396,6 +484,17 @@ public final class ReferenceReadingActivity extends Activity {
                 text.setGravity(Gravity.RIGHT);
                 text.setLineSpacing(Ui.dp(this, 9), 1.17f);
                 p.addView(text);
+                if (showUrdu() && urduTranslations != null && urduEdition().equals(loadedUrduEdition)) {
+                    String translated = urduTranslations.get(chapter * 1000 + num);
+                    if (translated != null) {
+                        Ui.space(this, p, 12);
+                        TextView urdu = Ui.text(this, translated, 18, Ui.MUTED, false);
+                        urdu.setTextDirection(View.TEXT_DIRECTION_RTL);
+                        urdu.setGravity(Gravity.RIGHT);
+                        urdu.setLineSpacing(Ui.dp(this, 6), 1.12f);
+                        p.addView(urdu);
+                    }
+                }
                 Ui.space(this, p, 10);
                 String key = "verse_" + chapter + "_" + num;
                 TextView star = Ui.text(this, bookmarked(key) ? "★ Saved" : "☆ Bookmark", 14, Ui.GOLD, true);
