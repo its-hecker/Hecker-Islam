@@ -21,9 +21,14 @@ final class ReaderSpeech {
     private boolean ready, failed, speaking, disposed;
     private int requestId;
     private volatile String lastUtteranceId;
+    private static final float[] SPEEDS = {0.65f, 0.80f, 1.00f, 1.20f, 1.40f, 1.60f};
+    private static final String[] SPEED_LABELS = {"0.65x • Very slow", "0.80x • Slow", "1.00x • Normal", "1.20x • Fast", "1.40x • Faster", "1.60x • Very fast"};
+    private float speed;
 
     ReaderSpeech(Activity activity) {
         this.activity = activity;
+        speed = activity.getSharedPreferences("islam_reader", Activity.MODE_PRIVATE).getFloat("tts_speed", 1.00f);
+        if (speed < 0.65f || speed > 1.60f) speed = 1.00f;
         speech = new TextToSpeech(activity.getApplicationContext(), status -> {
             if (disposed) return;
             ready = status == TextToSpeech.SUCCESS;
@@ -46,6 +51,33 @@ final class ReaderSpeech {
                 updateControl();
             }
         });
+    }
+
+    String speedLabel() {
+        return String.format(Locale.ENGLISH, "%.2fx", speed);
+    }
+
+    /** Shared, persistent speed for dua, hadith and mojzat speech. */
+    void chooseSpeed(TextView indicator) {
+        int selected = 2;
+        for (int i = 0; i < SPEEDS.length; i++) {
+            if (Math.abs(SPEEDS[i] - speed) < 0.011f) { selected = i; break; }
+        }
+        new android.app.AlertDialog.Builder(activity)
+                .setTitle("Recitation speed")
+                .setSingleChoiceItems(SPEED_LABELS, selected, (dialog, which) -> {
+                    // Restart recitation manually after changing rate so already queued chunks
+                    // do not continue at their previous speed.
+                    stop();
+                    speed = SPEEDS[which];
+                    activity.getSharedPreferences("islam_reader", Activity.MODE_PRIVATE)
+                            .edit().putFloat("tts_speed", speed).apply();
+                    if (speech != null && ready) speech.setSpeechRate(speed);
+                    if (indicator != null) indicator.setText("Recitation speed • " + speedLabel() + "  ›");
+                    dialog.dismiss();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     void attach(TextView view) {
@@ -87,7 +119,7 @@ final class ReaderSpeech {
                     + " speech voice in your phone's text-to-speech settings.");
             return;
         }
-        speech.setSpeechRate(0.90f);
+        speech.setSpeechRate(speed);
         // Avoid Android's per-utterance text limit. Prefer complete lines/sentences.
         int chunkSize = Math.min(2800, TextToSpeech.getMaxSpeechInputLength() - 100);
         int pos = 0, part = 0;
