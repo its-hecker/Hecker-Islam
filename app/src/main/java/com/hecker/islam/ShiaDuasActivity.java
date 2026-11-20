@@ -283,6 +283,11 @@ public final class ShiaDuasActivity extends Activity {
                     reciter.speak(dua.urduTranslation, new Locale("ur", "PK")));
                 audioPanel.addView(urduRecite);
             }
+            Ui.space(this, audioPanel, 9);
+            TextView speed = Ui.text(this, "Recitation speed • " + reciter.speedLabel() + "  ›", 15, Ui.GOLD, true);
+            speed.setPadding(0, Ui.dp(this, 10), 0, Ui.dp(this, 10));
+            speed.setOnClickListener(v -> reciter.chooseSpeed(speed));
+            audioPanel.addView(speed);
             Ui.space(this, audioPanel, 8);
             audioPanel.addView(Ui.text(this,
                 "Uses Android speech voices; it is not a recorded human reciter.",
