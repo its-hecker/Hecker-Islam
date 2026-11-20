@@ -15,6 +15,10 @@ jobs:
       ANDROID_SDK_ROOT: ${{ github.workspace }}/.android-sdk
     steps:
       - uses: actions/checkout@v4
+      - name: Embed pinned Arabic muezzin recording (Nizar Al-Qatari)
+        run: python3 tools/fetch_azaan_audio.py
+      - name: Verify muezzin recording exists in APK assets
+        run: test -s app/src/main/assets/azaan/nizar_al_qatari.mp3
       - name: Verify bundled offline catalogs
         run: python3 tools/bundle_reference_assets.py --verify
       - uses: actions/setup-java@v4
