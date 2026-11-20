@@ -86,7 +86,7 @@ final class ReaderSpeech {
             int end = Math.min(text.length(), pos + chunkSize);
             if (end < text.length()) {
                 int boundary = Math.max(text.lastIndexOf('۔', end - 1),
-                    Math.max(text.lastIndexOf('.', end - 1), text.lastIndexOf('\\n', end - 1)));
+                    Math.max(text.lastIndexOf('.', end - 1), text.lastIndexOf((char) 10, end - 1)));
                 if (boundary > pos + chunkSize / 2) end = boundary + 1;
             }
             String piece = text.substring(pos, end).trim();
