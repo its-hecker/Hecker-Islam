@@ -8,7 +8,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class NahjWisdom {
     private NahjWisdom() { }
     public static final String COLLECTION = "https://al-islam.org/nahjul-balagha-part-2-letters-and-sayings";
-    public static final String URDU_BOOK = "https://www.duas.org/nahjulbalagha.htm";
+    public static final String URDU_BOOK = "https://nehjulbalagah.com/category/hikmat/";
     public static final class Quote {
         public final int number;
         public final String arabic, urdu;
