@@ -24,6 +24,12 @@ public final class NahjAlBalaghaActivity extends Activity {
     @Override public void onBackPressed() {
         if (selected != -1) { selected = -1; render(); } else super.onBackPressed();
     }
+    private void readUrdu(int number) {
+        Intent intent = new Intent(this, SourceWebActivity.class);
+        intent.putExtra("title", "نہج البلاغہ • حکمت " + number);
+        intent.putExtra("url", "https://nehjulbalagah.com/hikmat/hikmat-" + number + "/");
+        startActivity(intent);
+    }
     private void source(String url) {
         try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); }
         catch (Exception error) {
@@ -59,10 +65,10 @@ public final class NahjAlBalaghaActivity extends Activity {
         content.addView(Ui.text(this, "نہج البلاغہ • کلماتِ قصار • Imam Ali (a.s.)", 17, Ui.GOLD, false));
         Ui.space(this, content, 16);
         if (selected > 0) { detail(); return; }
-        content.addView(Ui.text(this, "Index of 480 numbered wisdom sayings. Selected sayings include readable Arabic and original Urdu meanings offline; the remaining entries link to the complete source.", 14, Ui.MUTED, false));
+        content.addView(Ui.text(this, "480 numbered wisdom sayings, each with a complete Urdu reading page inside the app (internet required). Selected Arabic verses and Urdu meanings are also available offline.", 14, Ui.MUTED, false));
         Ui.space(this, content, 15);
         button("Read complete Arabic and English source", () -> source(NahjWisdom.COLLECTION));
-        button("Find complete Urdu book / translation", () -> source(NahjWisdom.URDU_BOOK));
+        button("Browse full Urdu wisdom collection", () -> source(NahjWisdom.URDU_BOOK));
         EditText find = new EditText(this);
         find.setSingleLine(true);
         find.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
@@ -88,7 +94,7 @@ public final class NahjAlBalaghaActivity extends Activity {
             NahjWisdom.Quote quote = NahjWisdom.find(number);
             LinearLayout panel=Ui.panel(this);
             panel.addView(Ui.text(this, "Wisdom " + number +
-                (quote == null ? "  •  Read at source  ›" : "  •  Urdu available  ›"),
+                (quote == null ? "  •  Read in Urdu  ›" : "  •  Offline + full Urdu  ›"),
                 16, Ui.GOLD, true));
             if (quote != null) {
                 Ui.space(this,panel,8);
@@ -124,9 +130,10 @@ public final class NahjAlBalaghaActivity extends Activity {
             urdu.setLineSpacing(Ui.dp(this,7),1.12f);
             translation.addView(urdu); content.addView(translation);
         } else {
-            content.addView(Ui.text(this, "This numbered saying is part of the complete source collection. An offline Urdu rendering has not yet been verified for this entry; open the linked original or Urdu edition below.", 16, Ui.MUTED, false));
+            content.addView(Ui.text(this, "Read this saying in complete Urdu through the in-app source reader. An offline version is not yet bundled for this entry.", 16, Ui.MUTED, false));
         }
         Ui.space(this,content,16);
+        button("Read this complete saying in Urdu ›", () -> readUrdu(selected));
         button("Read in full source • Al-Islam.org", () -> source(NahjWisdom.COLLECTION));
         button("Urdu reference • Nahj al-Balagha", () -> source(NahjWisdom.URDU_BOOK));
     }
