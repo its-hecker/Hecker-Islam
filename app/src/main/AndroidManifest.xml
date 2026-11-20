@@ -36,6 +36,7 @@
         <activity android:name="com.hecker.islam.ShiaDuasActivity" android:exported="false"/>
         <activity android:name="com.hecker.islam.ShiaHadithActivity" android:exported="false"/>
         <activity android:name="com.hecker.islam.NahjAlBalaghaActivity" android:exported="false"/>
+        <activity android:name="com.hecker.islam.SourceWebActivity" android:exported="false"/>
         <activity android:name="com.hecker.islam.PrayerTrackerActivity" android:exported="false"/>
         <activity android:name="com.hecker.islam.TasbeehActivity" android:exported="false"/>
         <receiver android:name="com.hecker.azaan.AlarmReceiver" android:exported="false"/>
