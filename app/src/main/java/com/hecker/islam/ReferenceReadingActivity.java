@@ -36,12 +36,13 @@ public final class ReferenceReadingActivity extends Activity {
     private String section, query = "";
     private int stage = 0, category = -1, chapter = -1;
     private JSONObject selectedHadith;
-    private android.media.MediaPlayer surahPlayer;
-    private android.speech.tts.TextToSpeech arabicSpeech;
     private TextView recitationControl, quranSpeedControl;
-    private Runnable recitationTimeout;
-    private boolean audioLoading, audioPlaying;
-    private int recitationSource;
+    private final android.content.BroadcastReceiver recitationUpdates =
+            new android.content.BroadcastReceiver() {
+                @Override public void onReceive(android.content.Context context, android.content.Intent intent) {
+                    updateRecitationControl();
+                }
+            };
     private long generation = 0;
     private JSONArray chapters, verses, azkarCategories, azkarChapters, azkarItems, hadithCategories;
     private java.util.Map<Integer, String> urduTranslations;
@@ -55,6 +56,14 @@ public final class ReferenceReadingActivity extends Activity {
         if ("hadith".equals(section)) { startActivity(new android.content.Intent(this, ShiaHadithActivity.class)); finish(); return; }
         if (!"quran".equals(section) && !"azkar".equals(section) && !"hadith".equals(section))
             section = "quran";
+        if (state != null) {
+            stage = state.getInt("reader_stage", 0);
+            chapter = state.getInt("reader_chapter", -1);
+            category = state.getInt("reader_category", -1);
+        } else if ("quran".equals(section) && getIntent().getBooleanExtra("resume_recitation", false)) {
+            chapter = RecitationService.currentSurah(this);
+            if (chapter >= 1 && chapter <= 114) stage = 1;
+        }
         saved = getSharedPreferences("islam_library", MODE_PRIVATE);
         Ui.applyTheme(this);
         LinearLayout root = Ui.column(this);
@@ -130,6 +139,12 @@ public final class ReferenceReadingActivity extends Activity {
             content.addView(Ui.text(this, "Cannot load library: " + ex.getMessage(), 16, Ui.MUTED, false));
         }
     }
+    @Override protected void onSaveInstanceState(Bundle state) {
+        super.onSaveInstanceState(state);
+        state.putInt("reader_stage", stage);
+        state.putInt("reader_chapter", chapter);
+        state.putInt("reader_category", category);
+    }
     @Override public void onBackPressed() {
         stopAudio();
         if (stage > 0) {
@@ -138,8 +153,21 @@ public final class ReferenceReadingActivity extends Activity {
             selectedHadith = null; query = ""; draw();
         } else super.onBackPressed();
     }
+    @android.annotation.SuppressLint("UnspecifiedRegisterReceiverFlag")
+    @Override protected void onStart() {
+        super.onStart();
+        android.content.IntentFilter filter = new android.content.IntentFilter(RecitationService.STATE_CHANGED);
+        if (android.os.Build.VERSION.SDK_INT >= 33)
+            registerReceiver(recitationUpdates, filter, android.content.Context.RECEIVER_NOT_EXPORTED);
+        else registerReceiver(recitationUpdates, filter);
+        updateRecitationControl();
+    }
+    @Override protected void onStop() {
+        unregisterReceiver(recitationUpdates);
+        super.onStop();
+    }
     @Override protected void onDestroy() {
-        stopAudio();
+        // Deliberately leave playback running if the screen locks or Activity is destroyed.
         generation++;
         worker.shutdownNow();
         super.onDestroy();
@@ -222,131 +250,26 @@ public final class ReferenceReadingActivity extends Activity {
     private boolean bookmarked(String key) { return saved.getBoolean(key, false); }
     private void bookmark(String key) { saved.edit().putBoolean(key, !bookmarked(key)).apply(); draw(); }
 
-    private void clearRecitationTimeout() {
-        if (recitationTimeout != null) {
-            main.removeCallbacks(recitationTimeout);
-            recitationTimeout = null;
-        }
-    }
-
-    private void releaseSurahPlayer() {
-        clearRecitationTimeout();
-        android.media.MediaPlayer old = surahPlayer;
-        surahPlayer = null;
-        audioLoading = false;
-        audioPlaying = false;
-        if (old != null) {
-            try { old.release(); }
-            catch (RuntimeException ignored) { }
-        }
-    }
-
+    /** The player lives in RecitationService, not in this Activity. */
     private void updateRecitationControl() {
         if (recitationControl == null) return;
-        if (audioLoading) {
-            recitationControl.setText(recitationSource > 1
-                    ? "◌ Trying backup recitation source…" : "◌ Connecting to reciter…");
-        } else if (audioPlaying) {
-            recitationControl.setText("■ Stop • Mishary Alafasy");
+        if (RecitationService.matchesQuran(this, chapter)) {
+            recitationControl.setText(RecitationService.isLoading(this)
+                    ? "◌ Connecting to reciter…"
+                    : RecitationService.isPlaying(this)
+                    ? "Ⅱ Pause • Mishary Alafasy" : "▶ Resume • Mishary Alafasy");
         } else {
             recitationControl.setText("▶ Listen • Mishary Alafasy");
         }
     }
-
     private void stopAudio() {
-        releaseSurahPlayer();
-        if (arabicSpeech != null) {
-            arabicSpeech.stop();
-            arabicSpeech.shutdown();
-            arabicSpeech = null;
-        }
+        RecitationService.stop(this);
         updateRecitationControl();
     }
-
-    /** Independent HTTPS streams: avoid depending on one occasionally broken CDN. */
-    private static String recitationUrl(int number, int source) {
-        String surah = String.format(Locale.US, "%03d.mp3", number);
-        if (source == 0) return "https://server8.mp3quran.net/afs/" + surah;
-        if (source == 1) return "https://cdn.mp3quran.net/audio/mishary-alafasy/r1/" + surah;
-        return "https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/" + number + ".mp3";
-    }
-
-    private void connectRecitation(int number, int source) {
-        releaseSurahPlayer();
-        if (isFinishing() || isDestroyed() || !"quran".equals(section) || stage != 1) return;
-        if (source >= 3) {
-            updateRecitationControl();
-            android.widget.Toast.makeText(this,
-                    "Unable to reach a recitation server. Check your connection and try again.",
-                    android.widget.Toast.LENGTH_LONG).show();
-            return;
-        }
-        recitationSource = source + 1;
-        audioLoading = true;
-        updateRecitationControl();
-        try {
-            final android.media.MediaPlayer player = new android.media.MediaPlayer();
-            surahPlayer = player;
-            player.setAudioAttributes(new android.media.AudioAttributes.Builder()
-                    .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
-                    .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SPEECH).build());
-            // String data source allows MediaPlayer's HTTP/HTTPS streaming implementation
-            // to follow the remote MP3 URL directly.
-            player.setDataSource(recitationUrl(number, source));
-            player.setOnPreparedListener(prepared -> {
-                if (surahPlayer != prepared || isFinishing() || isDestroyed()) return;
-                clearRecitationTimeout();
-                try {
-                    prepared.start();
-                    try {
-                        prepared.setPlaybackParams(new android.media.PlaybackParams().setSpeed(quranSpeed()));
-                    } catch (RuntimeException unsupported) {
-                        android.util.Log.w("HeckerIslamQuran", "Playback speed unsupported on this device", unsupported);
-                    }
-                    audioLoading = false;
-                    audioPlaying = true;
-                    updateRecitationControl();
-                } catch (RuntimeException ex) {
-                    android.util.Log.w("HeckerIslamQuran", "Unable to start stream", ex);
-                    connectRecitation(number, source + 1);
-                }
-            });
-            player.setOnCompletionListener(ended -> {
-                if (surahPlayer == ended) stopAudio();
-            });
-            player.setOnErrorListener((failed, what, extra) -> {
-                if (surahPlayer == failed) {
-                    android.util.Log.w("HeckerIslamQuran",
-                            "Audio source " + (source + 1) + " failed (" + what + "/" + extra + ")");
-                    connectRecitation(number, source + 1);
-                }
-                return true;
-            });
-            player.prepareAsync();
-            recitationTimeout = () -> {
-                if (surahPlayer == player && audioLoading) {
-                    android.util.Log.w("HeckerIslamQuran", "Audio source timed out: " + (source + 1));
-                    connectRecitation(number, source + 1);
-                }
-            };
-            main.postDelayed(recitationTimeout, 12000);
-        } catch (Exception ex) {
-            android.util.Log.w("HeckerIslamQuran", "Cannot prepare audio source", ex);
-            connectRecitation(number, source + 1);
-        }
-    }
-
-    /** Start or stop a recorded Qur'an Surah. The written library remains offline. */
     private void playSurah() {
-        if (surahPlayer != null || audioLoading) {
-            stopAudio();
-            return;
-        }
         if (chapter < 1 || chapter > 114) return;
-        stopAudio();
-        connectRecitation(chapter, 0);
+        RecitationService.toggleQuran(this, chapter, quranSpeed());
     }
-
     private static final float[] QURAN_SPEEDS = {0.75f, 1.00f, 1.25f, 1.50f, 2.00f};
     private float quranSpeed() {
         float value = saved.getFloat("quran_playback_speed", 1.0f);
@@ -366,44 +289,16 @@ public final class ReferenceReadingActivity extends Activity {
                 .setSingleChoiceItems(options, selected, (dialog, choice) -> {
                     float newRate = QURAN_SPEEDS[choice];
                     saved.edit().putFloat("quran_playback_speed", newRate).apply();
+                    RecitationService.speed(this, newRate);
                     if (quranSpeedControl != null)
                         quranSpeedControl.setText("Playback speed • " + quranSpeedLabel() + "  ›");
-                    if (surahPlayer != null && audioPlaying) {
-                        try {
-                            surahPlayer.setPlaybackParams(new android.media.PlaybackParams().setSpeed(newRate));
-                        } catch (RuntimeException ex) {
-                            android.widget.Toast.makeText(this,
-                                    "This device cannot change the playback speed of this stream.",
-                                    android.widget.Toast.LENGTH_SHORT).show();
-                        }
-                    }
                     dialog.dismiss();
                 })
                 .setNegativeButton("Cancel", null).show();
     }
-
-    /** Duas have no licensed studio recordings bundled; use the available Arabic speech voice. */
     private void speakDua(String arabic) {
         if (arabic == null || arabic.trim().isEmpty()) return;
-        stopAudio();
-        arabicSpeech = new android.speech.tts.TextToSpeech(this, status -> {
-            if (isFinishing() || arabicSpeech == null) return;
-            if (status != android.speech.tts.TextToSpeech.SUCCESS) {
-                android.widget.Toast.makeText(this, "Arabic voice is not available on this device.",
-                        android.widget.Toast.LENGTH_LONG).show();
-                stopAudio(); return;
-            }
-            int supported = arabicSpeech.setLanguage(java.util.Locale.forLanguageTag("ar-SA"));
-            if (supported == android.speech.tts.TextToSpeech.LANG_MISSING_DATA ||
-                supported == android.speech.tts.TextToSpeech.LANG_NOT_SUPPORTED) {
-                android.widget.Toast.makeText(this,
-                        "Install an Arabic speech voice in Android's Text-to-speech settings.",
-                        android.widget.Toast.LENGTH_LONG).show();
-                stopAudio(); return;
-            }
-            arabicSpeech.setSpeechRate(.80f);
-            arabicSpeech.speak(arabic, android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, "dua-" + System.nanoTime());
-        });
+        RecitationService.toggleText(this, arabic, Locale.forLanguageTag("ar-SA"), 0.80f);
     }
     private String urduEdition() {
         return "najafi".equals(saved.getString("urduEdition", "jawadi")) ? "najafi" : "jawadi";
@@ -480,7 +375,8 @@ public final class ReferenceReadingActivity extends Activity {
                 String title = c.optString("name_simple") + "  •  " + c.optString("name_arabic");
                 String subtitle = c.optInt("verses_count") + " verses";
                 card(String.format(Locale.ENGLISH, "%d. %s", id, title), subtitle, () -> {
-                    stopAudio(); chapter = id; stage = 1; query = ""; draw();
+                    if (!RecitationService.matchesQuran(this, id)) stopAudio();
+                    chapter = id; stage = 1; query = ""; draw();
                 });
             }
         } else if (stage == 1) {

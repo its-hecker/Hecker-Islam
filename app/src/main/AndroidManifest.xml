@@ -50,6 +50,8 @@
                 <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED"/>
             </intent-filter>
         </receiver>
+        <service android:name="com.hecker.islam.RecitationService" android:exported="false"
+            android:foregroundServiceType="mediaPlayback"/>
         <service android:name="com.hecker.azaan.PlaybackService" android:exported="false"
             android:foregroundServiceType="mediaPlayback"/>
     </application>
