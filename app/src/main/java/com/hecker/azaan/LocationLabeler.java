@@ -23,10 +23,7 @@ public final class LocationLabeler {
     public static void resolve(Context context, Runnable onResolved, boolean force) {
         Context app = context.getApplicationContext();
         AppSettings settings = new AppSettings(app);
-        if (!settings.configured()) return;
-        String stored = settings.city();
-        if (!force && !"Current location".equalsIgnoreCase(stored)
-                && !"My location".equalsIgnoreCase(stored)) return;
+        if (!settings.configured() || !settings.autoLocation()) return;
         SharedPreferences prefs = app.getSharedPreferences("azaan", Context.MODE_PRIVATE);
         long now = System.currentTimeMillis();
         if (!force && now - prefs.getLong("last_reverse_geocode", 0) < RETRY_DELAY_MS) return;
@@ -44,9 +41,8 @@ public final class LocationLabeler {
                 // Don't overwrite a location selected after this request began.
                 if (Math.abs(lat - latest.latitude()) > .00001
                         || Math.abs(lon - latest.longitude()) > .00001
-                        || (!"Current location".equalsIgnoreCase(latest.city())
-                        && !"My location".equalsIgnoreCase(latest.city()))) return;
-                latest.location(label, lat, lon, latest.zone());
+                        || !latest.autoLocation()) return;
+                latest.locationFromDevice(label, lat, lon, latest.zone());
                 if (onResolved != null) new Handler(Looper.getMainLooper()).post(onResolved);
             } catch (Exception ignored) {
                 // Device geocoding can be unavailable. Coordinates remain authoritative.
