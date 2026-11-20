@@ -91,8 +91,8 @@ html.hecker-ui[data-theme="light"] { color-scheme: light; }
 .hecker-ui .settings-card { padding: 20px; margin: 12px 0; }
 /* Global Hecker Islam Settings owns appearance in unified mode.
    Calendar-specific date, font and moon adjustment options stay available. */
-.hecker-ui #settingsPane > .settings-card:nth-of-type(1),
-.hecker-ui #settingsPane > .settings-card:nth-of-type(2) { display: none; }
+.hecker-ui #settingsPane > .settings-card:nth-child(2),
+.hecker-ui #settingsPane > .settings-card:nth-child(3) { display: none; }
 .hecker-ui .bottom-nav {
     position: fixed;
     bottom: 12px;
