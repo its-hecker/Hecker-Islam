@@ -135,8 +135,9 @@ public final class MainActivity extends Activity {
     }
     @Override protected void onResume() {
         super.onResume();
-        AlarmScheduler.schedule(this);
         render(); handler.removeCallbacks(ticker); handler.post(ticker);
+        refreshPrayerTimes(false);
+        AlarmScheduler.schedule(this);
     }
     @Override protected void onPause() { handler.removeCallbacks(ticker); super.onPause(); }
     @Override protected void onDestroy() {
@@ -144,6 +145,13 @@ public final class MainActivity extends Activity {
         stopLocation();
         if (checker != null) { checker.shutdown(); checker = null; }
         io.shutdownNow(); super.onDestroy();
+    }
+
+    private void refreshPrayerTimes(boolean force) {
+        if (!settings.configured() || !settings.providerEnabled()) return;
+        PrayerTimeProvider.refreshAsync(this, force, () -> {
+            if (!destroyed && !isFinishing()) render();
+        });
     }
 
     private void render() {
@@ -204,7 +212,9 @@ public final class MainActivity extends Activity {
         TextView caption = text("Hasten to the best of deeds", 13, MUTED); caption.setGravity(Gravity.CENTER); hero.addView(caption);
         gap(hero, 20);
         countdown = text("", 20, TEXT); countdown.setGravity(Gravity.CENTER); hero.addView(countdown);
-        TextView method = text(settings.configured() ? settings.city() + "  ·  " + settings.method().title : "Set your location to see prayer times", 12, MUTED);
+        TextView method = text(settings.configured()
+                ? settings.city() + "  ·  " + PrayerTimeProvider.status(this, renderedDate, settings)
+                : "Set your location to see prayer times", 12, MUTED);
         method.setGravity(Gravity.CENTER); hero.addView(method); gap(hero, 6);
         updateCountdown();
         gap(body, 24);
@@ -215,7 +225,7 @@ public final class MainActivity extends Activity {
             gap(body, 12);
         }
         Map<Prayer, Instant> times = settings.configured()
-            ? PrayerCalculator.calculate(renderedDate, settings.latitude(), settings.longitude(), settings.method(), settings.offsets()) : null;
+            ? PrayerTimeProvider.calculate(this, renderedDate, settings) : null;
         for (Prayer prayer : Prayer.values()) {
             LinearLayout row = card(body);
             LinearLayout line = horizontal(); line.setGravity(Gravity.CENTER_VERTICAL);
@@ -277,9 +287,34 @@ public final class MainActivity extends Activity {
         if (settings.configured()) location.addView(text(String.format(Locale.US, "%.4f, %.4f  ·  %s", settings.latitude(), settings.longitude(), settings.zone().getId()), 12, MUTED));
         location.addView(button("Choose city or coordinates", this::locationChoices));
         location.addView(button("Use current location", this::useLocation));
-        location.addView(button(settings.method().title + "  ·  Change method", this::chooseMethod));
+        location.addView(button(settings.method().title + "  ·  Change Shia method", this::chooseMethod));
+        location.addView(button(settings.providerEnabled()
+                ? "Timetable source: AlAdhan (Shia)" : "Timetable source: On-device",
+                () -> new AlertDialog.Builder(this)
+                        .setTitle("Prayer-time provider")
+                        .setSingleChoiceItems(new String[]{
+                                "AlAdhan API • Ja'fari or Tehran (internet + offline cache)",
+                                "On-device astronomical calculation (offline)"
+                        }, settings.providerEnabled() ? 0 : 1,
+                        (d, selected) -> {
+                            settings.providerEnabled(selected == 0);
+                            d.dismiss();
+                            AlarmScheduler.schedule(this);
+                            render();
+                            if (selected == 0) refreshPrayerTimes(true);
+                        })
+                        .setNegativeButton("Cancel", null).show()));
+        if (settings.providerEnabled() && settings.configured()) {
+            location.addView(button("Refresh prayer times from AlAdhan", () -> {
+                toast("Refreshing the Shia prayer timetable…");
+                refreshPrayerTimes(true);
+            }));
+        }
         location.addView(button("Adjust prayer times", this::offsetDialog));
-        location.addView(text("Location stays fixed until you update it. Times are calculated on your phone. Compare with your local Shia timetable.", 12, MUTED));
+        location.addView(text(settings.configured()
+                ? PrayerTimeProvider.status(this, LocalDate.now(settings.zone()), settings)
+                : "Choose a location first", 13, GOLD));
+        location.addView(text("The AlAdhan provider uses your selected coordinates to request Ja'fari (Qom) or Tehran times. Cached days work offline; otherwise on-device estimates are shown. Compare with your local Shia mosque timetable.", 12, MUTED));
         gap(body, 8);
         LinearLayout playback = card(body); label(playback, "PLAYBACK ORDER"); gap(playback, 12);
         playback.addView(text("1  Arabic azaan", 18, TEXT));
@@ -339,14 +374,14 @@ public final class MainActivity extends Activity {
         body.addView(text("Azaan 1.0 · by Hecker", 15, GOLD));
         body.addView(text("No account. No ads. No analytics. Your location and recordings stay on this device. Location is used only when you request it.", 12, MUTED));
         body.addView(button("Calculation & text sources", () -> new AlertDialog.Builder(this).setTitle("Sources")
-            .setMessage("Ja‘fari (Qom): Fajr 16°, Maghrib 4°. Tehran: Fajr 17.7°, Maghrib 4.5°. Dhuhr includes a default +1 minute margin. All calculated times round upward to the next minute. No high latitude substitute times are assumed.\n\nSolar equations: praytimes.org/docs/calculation\nParameters: praytimes.org/docs/methods\nAzaan and optional testimony: sistani.org/english/book/48/2228/\n\nTranslations are provided to explain the meaning and follow the supplied reference text.")
+            .setMessage("Default for Pakistan: AlAdhan (api.aladhan.com) with Ja'fari / Shia Ithna-Ashari method 0, based on the Leva Institute of Qom. The Tehran selection uses AlAdhan method 7. The University of Islamic Sciences Karachi method 1 is NOT the Ja'fari method. When offline the app uses the original local calculations, and clearly labels fallback times. Your saved per-prayer minute adjustments apply to both sources.\n\nAlAdhan receives the selected coordinates when syncing. Local Shia mosque timetables may differ; verify significant differences before relying on notifications.\n\nSource: aladhan.com/prayer-times-api\nOffline formula: praytimes.org/docs/calculation\nAzaan and optional testimony: sistani.org/english/book/48/2228/")
             .setPositiveButton("Close", null).show()));
     }
 
     private void updateCountdown() {
         if (countdown == null) return;
         if (!settings.configured()) { countdown.setText("Your day, in prayer."); return; }
-        List<AlarmPlanner.Event> events = AlarmPlanner.upcoming(Instant.now(), settings.zone(), settings.latitude(), settings.longitude(), settings.method(), settings.offsets(), new boolean[]{true, true, true});
+        List<AlarmPlanner.Event> events = AlarmPlanner.upcoming(this, Instant.now(), settings, new boolean[]{true, true, true});
         if (events.isEmpty()) { countdown.setText("Check a local prayer timetable"); return; }
         AlarmPlanner.Event next = events.get(0);
         long seconds = Math.max(0, Duration.between(Instant.now(), next.time).getSeconds());
@@ -360,7 +395,7 @@ public final class MainActivity extends Activity {
         if (!settings.active()) return "Automatic azaan is off. You can preview anytime.";
         if (!AlarmScheduler.exactAllowed(this)) return "Paused: allow Alarms & reminders to restore alerts.";
         if (!Notifications.allowed(this)) return "Paused: allow notifications to restore alerts.";
-        List<AlarmPlanner.Event> events = AlarmPlanner.upcoming(Instant.now(), settings.zone(), settings.latitude(), settings.longitude(), settings.method(), settings.offsets(), settings.enabled());
+        List<AlarmPlanner.Event> events = AlarmPlanner.upcoming(this, Instant.now(), settings, settings.enabled());
         if (events.isEmpty()) return "No upcoming enabled alerts. Check prayer switches and your local timetable.";
         AlarmPlanner.Event e = events.get(0);
         return "Next alert: " + e.prayer.title + " · " + e.time.atZone(settings.zone()).format(DateTimeFormatter.ofPattern("EEE h:mm a", Locale.ENGLISH));
@@ -386,7 +421,7 @@ public final class MainActivity extends Activity {
             if (which == coordinates.length) { coordinatesDialog(); return; }
             String zone = which < 9 ? "Asia/Karachi" : which < 11 ? "Asia/Baghdad" : "Asia/Tehran";
             settings.location(cities[which], coordinates[which][0], coordinates[which][1], ZoneId.of(zone));
-            AlarmScheduler.schedule(this); render();
+            AlarmScheduler.schedule(this); render(); refreshPrayerTimes(true);
         }).setNegativeButton("Cancel", null).show();
     }
     private void coordinatesDialog() {
@@ -400,14 +435,14 @@ public final class MainActivity extends Activity {
         dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             try {
                 settings.location(name.getText().toString(), Double.parseDouble(lat.getText().toString()), Double.parseDouble(lon.getText().toString()), ZoneId.of(zone.getText().toString().trim()));
-                AlarmScheduler.schedule(this); dialog.dismiss(); render();
+                AlarmScheduler.schedule(this); dialog.dismiss(); render(); refreshPrayerTimes(true);
             } catch (Exception e) { toast("Enter valid coordinates and an IANA time zone, such as Asia/Karachi."); }
         })); dialog.show();
     }
     private void chooseMethod() {
         PrayerCalculator.Method[] methods = PrayerCalculator.Method.values();
         new AlertDialog.Builder(this).setTitle("Prayer calculation").setSingleChoiceItems(new String[]{methods[0].title, methods[1].title}, settings.method().ordinal(), (d, which) -> {
-            settings.method(methods[which]); AlarmScheduler.schedule(this); d.dismiss(); render();
+            settings.method(methods[which]); AlarmScheduler.schedule(this); d.dismiss(); render(); refreshPrayerTimes(true);
         }).setNegativeButton("Cancel", null).show();
     }
     private void offsetDialog() {
@@ -442,8 +477,12 @@ public final class MainActivity extends Activity {
         locationListener = new LocationListener() {
             @Override public void onLocationChanged(Location location) {
                 if (destroyed) return;
-                settings.location("Current location", location.getLatitude(), location.getLongitude(), ZoneId.systemDefault());
-                stopLocation(); AlarmScheduler.schedule(MainActivity.this); render();
+                // Pakistan must not accidentally use a foreign/device VPN time zone.
+                ZoneId selectedZone = location.getLatitude() >= 23 && location.getLatitude() <= 38
+                        && location.getLongitude() >= 60 && location.getLongitude() <= 78
+                        ? ZoneId.of("Asia/Karachi") : ZoneId.systemDefault();
+                settings.location("Current location", location.getLatitude(), location.getLongitude(), selectedZone);
+                stopLocation(); AlarmScheduler.schedule(MainActivity.this); render(); refreshPrayerTimes(true);
                 toast("Location saved using time zone " + settings.zone().getId() + ". Change it if needed.");
             }
             @Override public void onStatusChanged(String p, int status, Bundle extras) {}
