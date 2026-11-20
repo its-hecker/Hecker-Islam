@@ -310,11 +310,14 @@ public final class MainActivity extends Activity {
         playback.addView(text("Uses your phone’s alarm volume and Do Not Disturb rules. Test with the screen locked before relying on alerts.", 12, MUTED));
         gap(body, 8);
         LinearLayout voices = card(body); label(voices, "VOICES & RECORDINGS"); gap(voices, 10);
-        voices.addView(text("Use installed offline speech voices, or import your preferred reciter and translations. No reciter recording is bundled.", 13, MUTED));
+        voices.addView(text("Arabic: full Nizar Al-Qatari muezzin recording plays offline by default. Optional translations use installed speech voices or your own recordings.", 13, MUTED));
         for (AzaanText.Language language : AzaanText.Language.values()) {
             gap(voices, 16);
             voices.addView(text(language.title, 17, TEXT));
-            voices.addView(text(settings.recording(language).isEmpty() ? "Installed offline speech voice" : settings.recordingName(language), 12, MUTED));
+            voices.addView(text(settings.recording(language).isEmpty() ?
+                    (language == AzaanText.Language.ARABIC && BundledAzaan.available(this)
+                        ? "Nizar Al-Qatari • complete Arabic recitation • offline"
+                        : "Installed offline speech voice") : settings.recordingName(language), 12, MUTED));
             voices.addView(button("Choose audio · " + language.title, () -> recordingOptions(language)));
         }
         voices.addView(button("Check audio setup", () -> checkAudio(false)));
@@ -461,7 +464,8 @@ public final class MainActivity extends Activity {
     }
 
     private void recordingOptions(AzaanText.Language language) {
-        new AlertDialog.Builder(this).setTitle(language.title).setItems(new String[]{"Import a complete audio recording", "Use an installed offline speech voice"}, (d, which) -> {
+        new AlertDialog.Builder(this).setTitle(language.title).setItems(new String[]{"Import a complete audio recording",
+                language == AzaanText.Language.ARABIC ? "Use built-in Nizar Al-Qatari recitation" : "Use an installed offline speech voice"}, (d, which) -> {
             if (which == 1) { settings.recording(language, "", ""); render(); return; }
             importLanguage = language;
             Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("audio/*").addCategory(Intent.CATEGORY_OPENABLE);
@@ -528,7 +532,10 @@ public final class MainActivity extends Activity {
         boolean needSpeech = false;
         for (AzaanText.Language language : languages) {
             String recording = settings.recording(language);
-            if (recording.isEmpty()) { needSpeech = true; continue; }
+            if (recording.isEmpty()) {
+                if (language == AzaanText.Language.ARABIC && BundledAzaan.available(this)) continue;
+                needSpeech = true; continue;
+            }
             try (FileInputStream ignored = new FileInputStream(new File(Uri.parse(recording).getPath()))) { }
             catch (Exception e) { audioResult(activate, "Reimport the " + language.title + " recording."); return; }
         }
@@ -539,7 +546,9 @@ public final class MainActivity extends Activity {
             if (checkTimeout != null) handler.removeCallbacks(checkTimeout);
             String error = status == TextToSpeech.SUCCESS ? null : "Install a speech engine or import recordings in Settings.";
             if (error == null) for (AzaanText.Language language : languages) {
-                if (settings.recording(language).isEmpty() && VoiceSupport.offline(checker, language) == null) {
+                if (settings.recording(language).isEmpty() &&
+                    !(language == AzaanText.Language.ARABIC && BundledAzaan.available(this)) &&
+                    VoiceSupport.offline(checker, language) == null) {
                     error = "Install an offline " + language.title + " voice, or import a recording for that language."; break;
                 }
             }
