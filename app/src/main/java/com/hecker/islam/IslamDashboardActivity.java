@@ -40,6 +40,9 @@ import java.util.concurrent.Executors;
 public final class IslamDashboardActivity extends Activity {
     private LinearLayout content, navigation;
     private TextView nextAzaanCountdown;
+    private TextView wisdomText, wisdomReference;
+    private int currentWisdom = -1;
+    private long wisdomChangedAt;
     private Instant nextAzaanInstant;
     private LocalDate renderedCalendarDay;
     private final Handler clock = new Handler(Looper.getMainLooper());
@@ -53,6 +56,7 @@ public final class IslamDashboardActivity extends Activity {
                 render(); return;
             }
             updateCountdown();
+            if (wisdomText != null && android.os.SystemClock.elapsedRealtime() - wisdomChangedAt > 90_000) rotateWisdom();
             clock.postDelayed(this, 15_000);
         }
     };
@@ -82,6 +86,8 @@ public final class IslamDashboardActivity extends Activity {
         clock.removeCallbacks(clockTick);
         nextAzaanCountdown = null;
         nextAzaanInstant = null;
+        wisdomText = null;
+        wisdomReference = null;
         Ui.applyTheme(this);
         getWindow().setStatusBarColor(Ui.BACKGROUND);
         getWindow().setNavigationBarColor(Ui.BACKGROUND);
@@ -140,6 +146,13 @@ public final class IslamDashboardActivity extends Activity {
         line.setGravity(Gravity.CENTER_VERTICAL);
         TextView heading = Ui.text(this, "HECKER ISLAM", 14, Ui.GOLD, true);
         line.addView(heading, new LinearLayout.LayoutParams(0, Ui.dp(this, 40), 1));
+        TextView info = Ui.text(this, "ⓘ", 25, Ui.GOLD, false);
+        info.setGravity(Gravity.CENTER); info.setContentDescription("App information and credits");
+        info.setOnClickListener(v -> new AlertDialog.Builder(this)
+                .setTitle("About Hecker Islam")
+                .setMessage("Developed by Syed Ali Raza Kazmi\n\nSpecial Credits to Sabber Kazmi")
+                .setPositiveButton("Close", null).show());
+        line.addView(info, new LinearLayout.LayoutParams(Ui.dp(this, 48), Ui.dp(this, 48)));
         TextView settings = Ui.text(this, "⚙", 26, Ui.WHITE, false);
         settings.setGravity(Gravity.CENTER); settings.setContentDescription("Open settings");
         settings.setOnClickListener(v -> { page = 4; render(); });
@@ -412,6 +425,32 @@ public final class IslamDashboardActivity extends Activity {
         Ui.space(this, content, 12);
     }
 
+    private void rotateWisdom() {
+        if (wisdomText == null || wisdomReference == null) return;
+        currentWisdom = NahjWisdom.randomOtherThan(currentWisdom);
+        NahjWisdom.Quote quote = NahjWisdom.QUOTES[currentWisdom];
+        wisdomText.setText(quote.urdu);
+        wisdomReference.setText("Nahj al-Balagha • Wisdom " + quote.number + " • اردو مفہوم");
+        wisdomChangedAt = android.os.SystemClock.elapsedRealtime();
+    }
+    private void wisdomCard() {
+        LinearLayout card = Ui.panel(this);
+        card.addView(Ui.text(this, "WISDOM FROM IMAM ALI (A.S.)", 12, Ui.GOLD, true));
+        Ui.space(this, card, 12);
+        wisdomText = Ui.text(this, "", 19, Ui.WHITE, false);
+        wisdomText.setTextDirection(View.TEXT_DIRECTION_RTL);
+        wisdomText.setGravity(Gravity.RIGHT);
+        wisdomText.setLineSpacing(Ui.dp(this, 5), 1.12f);
+        card.addView(wisdomText);
+        Ui.space(this, card, 12);
+        wisdomReference = Ui.text(this, "", 12, Ui.MUTED, false);
+        card.addView(wisdomReference);
+        rotateWisdom();
+        card.setContentDescription("Rotating wisdom from Nahj al-Balagha. Tap to open the collection.");
+        card.setOnClickListener(v -> launch(NahjAlBalaghaActivity.class));
+        content.addView(card);
+        Ui.space(this, content, 13);
+    }
     private void today() {
         renderedCalendarDay = LocalDate.now();
         AppSettings cfg = new AppSettings(this);
@@ -422,6 +461,7 @@ public final class IslamDashboardActivity extends Activity {
 
         dateDashboard(renderedCalendarDay);
         azaanDashboard(cfg);
+        wisdomCard();
 
         Ui.space(this, content, 10);
         content.addView(Ui.text(this, "Explore", 23, Ui.WHITE, true));
@@ -444,7 +484,8 @@ public final class IslamDashboardActivity extends Activity {
         Ui.space(this, content, 8);
         content.addView(Ui.text(this, "More to explore", 19, Ui.WHITE, true));
         Ui.space(this, content, 12);
-        tile("Hadith Library", "Browse and save Hadith", () -> library("hadith"));
+        tile("Shia Hadith Library", "Al-Kafi, Al-Faqih and Ahlulbayt narrations", () -> launch(ShiaHadithActivity.class));
+        tile("Nahj al-Balagha", "Imam Ali’s wisdom • Arabic & Urdu", () -> launch(NahjAlBalaghaActivity.class));
         tile("Azkar & daily remembrance", "Daily supplications and repeat counts", () -> library("azkar"));
         tile("Prayer tracker", "Keep a personal record of five daily prayers",
                 () -> launch(PrayerTrackerActivity.class));
@@ -473,10 +514,12 @@ public final class IslamDashboardActivity extends Activity {
         tile("Qibla compass", "Compass calibrated with device sensors", () -> launch(QiblaActivity.class));
         tile("Prayer tracker", "Your local prayer history", () -> launch(PrayerTrackerActivity.class));
         tile("Tasbeeh counter", "Remembrance and saved counts", () -> launch(TasbeehActivity.class));
+        tile("Nahj al-Balagha", "480 wisdom sayings and Urdu reference links", () -> launch(NahjAlBalaghaActivity.class));
+        tile("Shia Hadith", "Read Shia source books", () -> launch(ShiaHadithActivity.class));
         tile("Shia Duas & Ziyarat", "Ahlulbayt supplications, bookmarks and source texts",
                 () -> launch(ShiaDuasActivity.class));
         tile("Offline library", ReferenceLibrary.ready(this)
-                ? "Qur'an, Hadith, Azkar and city catalogs included, ready offline"
+                ? "Qur'an, Azkar and city catalogs are available offline"
                 : "Developer build incomplete: embedded content missing",
                 () -> new AlertDialog.Builder(this)
                 .setMessage(ReferenceLibrary.ready(this)
@@ -502,7 +545,7 @@ public final class IslamDashboardActivity extends Activity {
         rowTitle("Content status");
         content.addView(Ui.text(this,
                 ReferenceLibrary.ready(this)
-                ? "✓ Offline Qur'an, Azkar and Hadith catalogs installed"
+                ? "✓ Qur'an and Azkar available offline • Shia Hadith uses online sources"
                 : "Offline data pack not yet imported", 14, Ui.MUTED, false));
         Ui.space(this, content, 16);
         content.addView(Ui.text(this, "Hecker Islam • v0.2 alpha", 12, Ui.MUTED, false));
@@ -511,11 +554,12 @@ public final class IslamDashboardActivity extends Activity {
         Ui.fillNavigation(this, navigation, page, index -> {
             if (index == 1) library("quran");
             else if (index == 2) library("azkar");
-            else if (index == 3) library("hadith");
+            else if (index == 3) launch(ShiaHadithActivity.class);
             else { page = index; render(); }
         });
     }
     private void library(String section) {
+        if ("hadith".equals(section)) { launch(ShiaHadithActivity.class); return; }
         Intent intent = new Intent(this, ReferenceReadingActivity.class);
         intent.putExtra("section", section); startActivity(intent);
         overridePendingTransition(0, 0);
