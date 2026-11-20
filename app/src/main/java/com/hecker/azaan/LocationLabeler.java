@@ -57,19 +57,20 @@ public final class LocationLabeler {
     private static String displayName(Address address) {
         String city = first(address.getLocality(), address.getSubAdminArea());
         String area = first(address.getSubLocality(), address.getFeatureName());
-        if (area != null && (!area.matches(".*[0-9]{5,}.*"))
+        if (area != null && !area.isEmpty() && (!area.matches(".*[0-9]{5,}.*"))
                 && (city == null || !area.equalsIgnoreCase(city))
                 && area.length() <= 65) {
             return city == null ? area : area + ", " + city;
         }
         if (city != null) return city;
-        return first(address.getAdminArea(), address.getCountryName(), "");
+        String fallback = first(address.getAdminArea(), address.getCountryName());
+        return fallback == null ? "" : fallback;
     }
 
     private static String first(String... values) {
         for (String value : values) {
             if (value != null && !value.trim().isEmpty()) return value.trim();
         }
-        return "";
+        return null;
     }
 }
