@@ -178,8 +178,10 @@ public final class IslamDashboardActivity extends Activity {
         tile("Prayer tracker", "Mark your five daily prayers",
                 () -> launch(PrayerTrackerActivity.class));
         rowTitle("Read & reflect");
-        tile("The Holy Qur'an", "Offline 114 Surahs, Arabic Uthmani text",
+        tile("The Holy Qur'an", "114 Surahs with Shia Urdu translations • Jawadi & Najafi",
                 () -> library("quran"));
+        tile("Shia Duas & Ziyarat", "Kumayl • Tawassul • Nudba • Faraj • Ziyarat Ashura",
+                () -> launch(ShiaDuasActivity.class));
         tile("Azkar and Duas", "Daily supplications with translations and repeat counts",
                 () -> library("azkar"));
         tile("Hadith", "Search 3,574 Hadith, read and bookmark",
@@ -214,6 +216,8 @@ public final class IslamDashboardActivity extends Activity {
         tile("Qibla compass", "Compass calibrated with device sensors", () -> launch(QiblaActivity.class));
         tile("Prayer tracker", "Your local prayer history", () -> launch(PrayerTrackerActivity.class));
         tile("Tasbeeh counter", "Remembrance and saved counts", () -> launch(TasbeehActivity.class));
+        tile("Shia Duas & Ziyarat", "Ahlulbayt supplications, bookmarks and source texts",
+                () -> launch(ShiaDuasActivity.class));
         tile("Offline library", ReferenceLibrary.ready(this)
                 ? "Qur'an, Hadith, Azkar and city catalogs included, ready offline"
                 : "Developer build incomplete: embedded content missing",
