@@ -47,10 +47,6 @@ public final class MojzatActivity extends Activity {
         b.putString("mojzat_story", selectedId);
         b.putInt("mojzat_font_size", fontSize);
     }
-    @Override protected void onPause() {
-        if (reciter != null) reciter.stop();
-        super.onPause();
-    }
     @Override protected void onDestroy() {
         if (reciter != null) reciter.destroy();
         super.onDestroy();
