@@ -39,6 +39,7 @@ import java.util.concurrent.Executors;
  */
 public final class IslamDashboardActivity extends Activity {
     private LinearLayout content, navigation;
+    private final com.hecker.azaan.DeviceLocationTracker automaticLocation = new com.hecker.azaan.DeviceLocationTracker();
     private TextView nextAzaanCountdown;
     private TextView wisdomText, wisdomReference;
     private int currentWisdom = -1;
@@ -70,6 +71,9 @@ public final class IslamDashboardActivity extends Activity {
         super.onResume();
         render();
         AppSettings times = new AppSettings(this);
+        automaticLocation.start(this, () -> {
+            if (!isFinishing() && !isDestroyed() && page == 0) render();
+        });
         com.hecker.azaan.LocationLabeler.resolveIfNeeded(this, () -> {
             if (!isFinishing() && !isDestroyed() && page == 0) render();
         });
@@ -79,8 +83,16 @@ public final class IslamDashboardActivity extends Activity {
             });
         }
     }
-    @Override protected void onPause() { clock.removeCallbacks(clockTick); super.onPause(); }
-    @Override protected void onDestroy() { clock.removeCallbacks(clockTick); super.onDestroy(); }
+    @Override protected void onPause() {
+        automaticLocation.stop();
+        clock.removeCallbacks(clockTick);
+        super.onPause();
+    }
+    @Override protected void onDestroy() {
+        automaticLocation.stop();
+        clock.removeCallbacks(clockTick);
+        super.onDestroy();
+    }
     @Override protected void onSaveInstanceState(Bundle b) { super.onSaveInstanceState(b); b.putInt("tab", page); }
     @Override protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent); setIntent(intent); page = intent.getIntExtra("tab", 0); render();
@@ -346,7 +358,9 @@ public final class IslamDashboardActivity extends Activity {
             LinearLayout place = Ui.panel(this);
             place.setPadding(Ui.dp(this, 14), Ui.dp(this, 11),
                     Ui.dp(this, 14), Ui.dp(this, 11));
-            place.addView(Ui.text(this, "📍  YOUR CURRENT PRAYER LOCATION", 10, Ui.GOLD, true));
+            place.addView(Ui.text(this, cfg.autoLocation()
+                    ? "📍  AUTOMATIC PRAYER LOCATION" : "📍  SELECTED PRAYER LOCATION",
+                    10, Ui.GOLD, true));
             Ui.space(this, place, 5);
             String resolved = cfg.city();
             if ("Current location".equalsIgnoreCase(resolved)
@@ -499,7 +513,7 @@ public final class IslamDashboardActivity extends Activity {
         Ui.space(this, content, 12);
         tile("Shia Hadith Library", "Al-Kafi, Al-Faqih and Ahlulbayt narrations", () -> launch(ShiaHadithActivity.class));
         tile("Nahj al-Balagha", "Imam Ali’s wisdom • Arabic & Urdu", () -> launch(NahjAlBalaghaActivity.class));
-        tile("Shia Mojzat • معجزات و کرامات", "Urdu stories of Imam Ali, Ghazi Abbas and Bibi Fatima",
+        tile("Mola Ali Mojza • معجزہ مولا علیؑ", "Mola Mushkil Kusha • Urdu and Roman Urdu",
                 () -> launch(MojzatActivity.class));
         tile("Azkar & daily remembrance", "Daily supplications and repeat counts", () -> library("azkar"));
         tile("Prayer tracker", "Keep a personal record of five daily prayers",
@@ -531,7 +545,7 @@ public final class IslamDashboardActivity extends Activity {
         tile("Tasbeeh counter", "Remembrance and saved counts", () -> launch(TasbeehActivity.class));
         tile("Nahj al-Balagha", "480 wisdom sayings and Urdu reference links", () -> launch(NahjAlBalaghaActivity.class));
         tile("Shia Hadith", "Read Shia source books", () -> launch(ShiaHadithActivity.class));
-        tile("Shia Mojzat • معجزات و کرامات", "Offline Urdu narratives • Sources, bookmarks & recitation",
+        tile("Mola Ali Mojza • معجزہ مولا علیؑ", "Urdu & Roman Urdu • Source, bookmark & recitation",
                 () -> launch(MojzatActivity.class));
         tile("Shia Duas & Ziyarat", "Ahlulbayt supplications, bookmarks and source texts",
                 () -> launch(ShiaDuasActivity.class));
