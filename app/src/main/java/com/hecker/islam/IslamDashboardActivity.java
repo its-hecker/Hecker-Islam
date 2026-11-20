@@ -70,6 +70,9 @@ public final class IslamDashboardActivity extends Activity {
         super.onResume();
         render();
         AppSettings times = new AppSettings(this);
+        com.hecker.azaan.LocationLabeler.resolveIfNeeded(this, () -> {
+            if (!isFinishing() && !isDestroyed() && page == 0) render();
+        });
         if (times.configured() && times.providerEnabled()) {
             com.hecker.azaan.PrayerTimeProvider.refreshAsync(this, false, () -> {
                 if (!isFinishing() && !isDestroyed()) render();
@@ -148,10 +151,7 @@ public final class IslamDashboardActivity extends Activity {
         line.addView(heading, new LinearLayout.LayoutParams(0, Ui.dp(this, 40), 1));
         TextView info = Ui.text(this, "ⓘ", 25, Ui.GOLD, false);
         info.setGravity(Gravity.CENTER); info.setContentDescription("App information and credits");
-        info.setOnClickListener(v -> new AlertDialog.Builder(this)
-                .setTitle("About Hecker Islam")
-                .setMessage("Developed by Syed Ali Raza Kazmi\n\nSpecial Credits to Sabber Kazmi")
-                .setPositiveButton("Close", null).show());
+        info.setOnClickListener(v -> AboutHeckerDialog.show(this));
         line.addView(info, new LinearLayout.LayoutParams(Ui.dp(this, 48), Ui.dp(this, 48)));
         TextView settings = Ui.text(this, "⚙", 26, Ui.WHITE, false);
         settings.setGravity(Gravity.CENTER); settings.setContentDescription("Open settings");
@@ -342,9 +342,22 @@ public final class IslamDashboardActivity extends Activity {
                 name.setText("Check prayer settings");
                 nextAzaanCountdown.setText("Prayer times could not be calculated");
             }
-            Ui.space(this, card, 12);
-            card.addView(Ui.text(this,
-                    cfg.city() + "  ·  " + PrayerTimeProvider.status(this, prayerDay, cfg),
+            Ui.space(this, card, 14);
+            LinearLayout place = Ui.panel(this);
+            place.setPadding(Ui.dp(this, 14), Ui.dp(this, 11),
+                    Ui.dp(this, 14), Ui.dp(this, 11));
+            place.addView(Ui.text(this, "📍  YOUR CURRENT PRAYER LOCATION", 10, Ui.GOLD, true));
+            Ui.space(this, place, 5);
+            String resolved = cfg.city();
+            if ("Current location".equalsIgnoreCase(resolved)
+                    || "My location".equalsIgnoreCase(resolved)) {
+                resolved = String.format(Locale.US, "GPS • %.4f, %.4f",
+                        cfg.latitude(), cfg.longitude());
+            }
+            place.addView(Ui.text(this, resolved, 16, Ui.WHITE, true));
+            card.addView(place);
+            Ui.space(this, card, 9);
+            card.addView(Ui.text(this, PrayerTimeProvider.status(this, prayerDay, cfg),
                     12, Ui.MUTED, false));
         } else {
             Ui.space(this, card, 12);
@@ -460,8 +473,8 @@ public final class IslamDashboardActivity extends Activity {
         Ui.space(this, content, 22);
 
         dateDashboard(renderedCalendarDay);
-        azaanDashboard(cfg);
         wisdomCard();
+        azaanDashboard(cfg);
 
         Ui.space(this, content, 10);
         content.addView(Ui.text(this, "Explore", 23, Ui.WHITE, true));
