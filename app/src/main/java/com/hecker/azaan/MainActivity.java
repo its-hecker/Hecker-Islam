@@ -461,38 +461,93 @@ public final class MainActivity extends Activity {
         })); dialog.show();
     }
 
+    /** Use a recent device fix immediately, then listen for a fresh fix from
+     * both available providers. Permission is foreground-only.
+     */
     private void useLocation() {
         if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST); return;
+            requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST);
+            return;
         }
         locationManager = getSystemService(LocationManager.class);
-        String provider = null;
-        boolean precise = checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-        if (precise && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) provider = LocationManager.GPS_PROVIDER;
-        else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) provider = LocationManager.NETWORK_PROVIDER;
-        if (provider == null) { toast("Turn on location, or choose a city manually."); return; }
-        locationProgress = ProgressDialog.show(this, "Finding your location", "Waiting for a fresh location. You can also choose a city manually.", true, true);
+        if (locationManager == null) {
+            toast("Location service is unavailable. Choose a city manually.");
+            return;
+        }
+        boolean precise = checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED;
+        boolean network = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        boolean gps = precise && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        if (!network && !gps) {
+            new AlertDialog.Builder(this).setTitle("Location is turned off")
+                .setMessage("Turn on device location, or choose a city manually.")
+                .setPositiveButton("Location settings", (d,w) ->
+                    open(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)))
+                .setNegativeButton("Choose city", (d,w) -> locationChoices()).show();
+            return;
+        }
+        Location recent = null;
+        for (String source : new String[]{LocationManager.NETWORK_PROVIDER, LocationManager.GPS_PROVIDER}) {
+            if (source.equals(LocationManager.NETWORK_PROVIDER) && !network) continue;
+            if (source.equals(LocationManager.GPS_PROVIDER) && !gps) continue;
+            try {
+                Location fix = locationManager.getLastKnownLocation(source);
+                if (fix != null && (recent == null || fix.getTime() > recent.getTime())) recent = fix;
+            } catch (SecurityException ignored) { }
+        }
+        if (recent != null && Math.abs(System.currentTimeMillis() - recent.getTime()) <= 10 * 60_000L) {
+            saveCurrentLocation(recent);
+            return;
+        }
+        locationProgress = ProgressDialog.show(this, "Finding your location",
+            "Checking network and GPS. You may also select your city manually.", true, true);
         locationProgress.setOnCancelListener(d -> stopLocation());
         locationListener = new LocationListener() {
-            @Override public void onLocationChanged(Location location) {
-                if (destroyed) return;
-                // Pakistan must not accidentally use a foreign/device VPN time zone.
-                ZoneId selectedZone = location.getLatitude() >= 23 && location.getLatitude() <= 38
-                        && location.getLongitude() >= 60 && location.getLongitude() <= 78
-                        ? ZoneId.of("Asia/Karachi") : ZoneId.systemDefault();
-                settings.location("Current location", location.getLatitude(), location.getLongitude(), selectedZone);
-                stopLocation(); AlarmScheduler.schedule(MainActivity.this); render(); refreshPrayerTimes(true);
-                toast("Location saved using time zone " + settings.zone().getId() + ". Change it if needed.");
+            @Override public void onLocationChanged(Location fix) {
+                if (!destroyed && locationListener != null) saveCurrentLocation(fix);
             }
-            @Override public void onStatusChanged(String p, int status, Bundle extras) {}
-            @Override public void onProviderEnabled(String p) {}
-            @Override public void onProviderDisabled(String p) {}
+            @Override public void onStatusChanged(String provider, int status, Bundle extras) { }
+            @Override public void onProviderEnabled(String provider) { }
+            @Override public void onProviderDisabled(String provider) { }
         };
-        try { locationManager.requestSingleUpdate(provider, locationListener, Looper.getMainLooper()); }
-        catch (SecurityException e) { stopLocation(); toast("Location permission is unavailable. Choose a city manually."); return; }
-        handler.postDelayed(() -> { if (locationListener != null) { stopLocation(); toast("No fresh location received. Try outdoors or choose a city."); } }, 30_000);
+        try {
+            // Network location is often available indoors when GPS cannot fix.
+            if (network) locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                0L, 0f, locationListener, Looper.getMainLooper());
+            if (gps) locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                0L, 0f, locationListener, Looper.getMainLooper());
+        } catch (SecurityException error) {
+            stopLocation();
+            toast("Location permission is unavailable. Choose a city manually.");
+            return;
+        }
+        handler.postDelayed(() -> {
+            if (locationListener != null && !destroyed) {
+                stopLocation();
+                new AlertDialog.Builder(this).setTitle("Could not find your location")
+                    .setMessage("Check that Location is on and Google Location Accuracy is enabled. " +
+                        "Try outdoors, or choose your city for reliable prayer times.")
+                    .setPositiveButton("Choose city", (d,w) -> locationChoices())
+                    .setNegativeButton("Retry", (d,w) -> useLocation()).show();
+            }
+        }, 20_000L);
     }
+
+    private void saveCurrentLocation(Location fix) {
+        if (fix == null || destroyed) return;
+        ZoneId zone = fix.getLatitude() >= 23 && fix.getLatitude() <= 38
+                && fix.getLongitude() >= 60 && fix.getLongitude() <= 78
+                ? ZoneId.of("Asia/Karachi") : ZoneId.systemDefault();
+        settings.location("Current location", fix.getLatitude(), fix.getLongitude(), zone);
+        stopLocation();
+        AlarmScheduler.schedule(this);
+        render();
+        refreshPrayerTimes(true);
+        toast("Location updated. Prayer times are recalculated for your coordinates.");
+    }
+
     private void stopLocation() {
         if (locationManager != null && locationListener != null) {
             try { locationManager.removeUpdates(locationListener); } catch (SecurityException ignored) { }
