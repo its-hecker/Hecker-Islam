@@ -41,6 +41,7 @@ public final class RecitationService extends Service {
     private static final int NOTIFICATION_ID = 4207;
     private static final String TAG = "HeckerRecitation";
 
+    private static volatile RecitationService live;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private SharedPreferences state;
     private String key = "", kind = "", text = "", localeTag = "ar", title = "";
@@ -74,10 +75,10 @@ public final class RecitationService extends Service {
                 .equals(prefs(context).getString("key", ""));
     }
     public static boolean isPlaying(Context context) {
-        return prefs(context).getBoolean("playing", false);
+        return live != null && live.playing;
     }
     public static boolean isLoading(Context context) {
-        return prefs(context).getBoolean("loading", false);
+        return live != null && live.loading;
     }
     public static boolean hasPlayback(Context context) {
         return !prefs(context).getString("key", "").isEmpty();
@@ -125,6 +126,7 @@ public final class RecitationService extends Service {
     @Override public void onCreate() {
         super.onCreate();
         state = prefs(this);
+        live = this;
         audio = getSystemService(AudioManager.class);
         PowerManager manager = getSystemService(PowerManager.class);
         speechWake = manager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "HeckerIslam:recitation");
@@ -490,6 +492,7 @@ public final class RecitationService extends Service {
             saveState();
         }
         releaseResources();
+        if (live == this) live = null;
         super.onDestroy();
     }
     @Override public IBinder onBind(Intent intent) { return null; }
