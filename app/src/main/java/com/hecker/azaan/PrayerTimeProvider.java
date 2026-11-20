@@ -43,6 +43,7 @@ public final class PrayerTimeProvider {
     private static final long RETRY_MS = 20 * 60 * 1000L;
     private static final ExecutorService NETWORK = Executors.newSingleThreadExecutor();
     private static final AtomicBoolean FETCHING = new AtomicBoolean(false);
+    private static final java.util.List<Runnable> CALLBACKS = new java.util.ArrayList<>();
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
     private PrayerTimeProvider() { }
 
@@ -132,6 +133,10 @@ public final class PrayerTimeProvider {
         Context app = context.getApplicationContext();
         AppSettings settings = new AppSettings(app);
         if (!usesRemote(settings)) return;
+        if (FETCHING.get()) {
+            if (onFinish != null) synchronized (CALLBACKS) { CALLBACKS.add(onFinish); }
+            return;
+        }
         long now = System.currentTimeMillis();
         SharedPreferences prefs = store(app);
         String key = signature(settings);
@@ -142,7 +147,11 @@ public final class PrayerTimeProvider {
                 && hasProviderTimes(app, LocalDate.now(settings.zone()).plusMonths(1).withDayOfMonth(1), settings))
             return;
         if (!force && !mismatched && now - prefs.getLong("last_attempt", 0) < RETRY_MS) return;
-        if (!FETCHING.compareAndSet(false, true)) return;
+        if (!FETCHING.compareAndSet(false, true)) {
+            if (onFinish != null) synchronized (CALLBACKS) { CALLBACKS.add(onFinish); }
+            return;
+        }
+        if (onFinish != null) synchronized (CALLBACKS) { CALLBACKS.add(onFinish); }
         NETWORK.execute(() -> {
             boolean changed = false;
             try {
@@ -159,7 +168,12 @@ public final class PrayerTimeProvider {
             } finally {
                 FETCHING.set(false);
                 if (changed) AlarmScheduler.schedule(app);
-                if (onFinish != null) MAIN.post(onFinish);
+                java.util.List<Runnable> callbacks;
+                synchronized (CALLBACKS) {
+                    callbacks = new java.util.ArrayList<>(CALLBACKS);
+                    CALLBACKS.clear();
+                }
+                for (Runnable callback : callbacks) MAIN.post(callback);
             }
         });
     }
