@@ -139,6 +139,7 @@ public final class ReferenceReadingActivity extends Activity {
             selectedHadith = null; query = ""; draw();
         } else super.onBackPressed();
     }
+    @android.annotation.SuppressLint("UnspecifiedRegisterReceiverFlag")
     @Override protected void onStart() {
         super.onStart();
         android.content.IntentFilter filter = new android.content.IntentFilter(RecitationService.STATE_CHANGED);
