@@ -17,12 +17,23 @@ public final class AppSettings {
         try { return ZoneId.of(prefs.getString("zone", ZoneId.systemDefault().getId())); }
         catch (Exception e) { return ZoneId.systemDefault(); }
     }
+    /** True only when the user explicitly opted into automatic device location. */
+    public boolean autoLocation() { return prefs.getBoolean("auto_location", false); }
+    /** Choosing a city or entering coordinates disables automatic tracking. */
     public void location(String city, double lat, double lon, ZoneId zone) {
+        saveLocation(city, lat, lon, zone, false);
+    }
+    /** A GPS/network fix or its resolved neighborhood must keep automatic mode enabled. */
+    public void locationFromDevice(String city, double lat, double lon, ZoneId zone) {
+        saveLocation(city, lat, lon, zone, true);
+    }
+    private void saveLocation(String city, double lat, double lon, ZoneId zone, boolean automatic) {
         if (!Double.isFinite(lat) || lat < -90 || lat > 90 || !Double.isFinite(lon) || lon < -180 || lon > 180)
             throw new IllegalArgumentException("Enter a valid latitude and longitude.");
         prefs.edit().putString("city", city.trim().isEmpty() ? "My location" : city.trim())
             .putLong("lat", Double.doubleToLongBits(lat)).putLong("lon", Double.doubleToLongBits(lon))
-            .putString("zone", zone.getId()).putBoolean("configured", true).apply();
+            .putString("zone", zone.getId()).putBoolean("configured", true)
+            .putBoolean("auto_location", automatic).apply();
     }
     public boolean active() { return prefs.getBoolean("active", false); }
     public void active(boolean value) { prefs.edit().putBoolean("active", value).apply(); }

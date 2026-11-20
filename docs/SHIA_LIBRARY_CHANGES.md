@@ -6,7 +6,11 @@ This change is based on `fix/standalone-offline-expressive`, not the old one-fil
 - Requests foreground coarse/fine permission, and uses an existing fix if it is younger than ten minutes.
 - Falls back to parallel network/GPS listeners, with a twenty-second timeout and choices to retry or select a city.
 - Recalculates the prayer times and reschedules alerts after a new fix.
-- Location is only requested by the user; the app does not request background location.
+- The initial Azan city picker includes **Use current location (auto-update)** above the manual city list.
+- Device location and manually chosen cities are separate persisted modes: geocoding no longer disables automatic tracking, while choosing a city or coordinates disables it.
+- After opt-in, the dashboard checks the recent fix on each return and listens for movement while visible (300 m minimum change; network location preferred to save battery). Prayer alerts are recalculated after significant movement.
+- The current neighborhood is reverse-geocoded where the Android geocoder supports it; otherwise coordinates are shown. Precise neighborhood names depend on available providers and location accuracy.
+- Foreground location only: no background permission or continuous tracking while the app is closed. Changes appear while the app is open or when it is reopened.
 - Test on-device with Location enabled and disabled, approximate/precise permission, indoors, and outside Pakistan.
 
 ## Shia duas

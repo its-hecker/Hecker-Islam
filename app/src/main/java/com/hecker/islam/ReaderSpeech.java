@@ -1,63 +1,49 @@
 package com.hecker.islam;
 
 import android.app.Activity;
-import android.speech.tts.TextToSpeech;
-import android.speech.tts.UtteranceProgressListener;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Build;
 import android.webkit.WebView;
 import android.widget.TextView;
 import android.widget.Toast;
 import org.json.JSONTokener;
 import java.util.Locale;
 
-/** Speech controls shared by Shia dua and hadith readers. Uses the device TTS
- * engine (not a human reciter recording) and never ships page content to another service.
+/** UI controls for the foreground recitation service.
+ * Playback deliberately outlives an Activity, tab switch or screen lock.
  */
 final class ReaderSpeech {
     private final Activity activity;
-    private TextToSpeech speech;
     private TextView control;
-    private String pendingText;
-    private Locale pendingLanguage;
-    private boolean ready, failed, speaking, disposed;
-    private int requestId;
-    private volatile String lastUtteranceId;
+    private String idleLabel = "▶ Recite • device voice";
+    private String lastWebText;
+    private Locale lastWebLanguage;
+    private boolean disposed;
     private static final float[] SPEEDS = {0.65f, 0.80f, 1.00f, 1.20f, 1.40f, 1.60f};
     private static final String[] SPEED_LABELS = {"0.65x • Very slow", "0.80x • Slow", "1.00x • Normal", "1.20x • Fast", "1.40x • Faster", "1.60x • Very fast"};
     private float speed;
 
+    private final BroadcastReceiver stateChanged = new BroadcastReceiver() {
+        @Override public void onReceive(Context context, Intent intent) { updateControl(); }
+    };
+
+    @android.annotation.SuppressLint("UnspecifiedRegisterReceiverFlag")
     ReaderSpeech(Activity activity) {
         this.activity = activity;
-        speed = activity.getSharedPreferences("islam_reader", Activity.MODE_PRIVATE).getFloat("tts_speed", 1.00f);
+        speed = activity.getSharedPreferences("islam_reader", Activity.MODE_PRIVATE)
+                .getFloat("tts_speed", 1.00f);
         if (speed < 0.65f || speed > 1.60f) speed = 1.00f;
-        speech = new TextToSpeech(activity.getApplicationContext(), status -> {
-            if (disposed) return;
-            ready = status == TextToSpeech.SUCCESS;
-            failed = !ready;
-            if (ready && speech != null) {
-                speech.setOnUtteranceProgressListener(new UtteranceProgressListener() {
-                    @Override public void onStart(String utteranceId) { }
-                    @Override public void onDone(String utteranceId) { complete(utteranceId); }
-                    @Override public void onError(String utteranceId) { complete(utteranceId); }
-                });
-            }
-            if (ready && pendingText != null) {
-                String text = pendingText;
-                Locale language = pendingLanguage;
-                pendingText = null;
-                speakNow(text, language);
-            } else if (failed) {
-                pendingText = null;
-                toast("Speech engine unavailable. Install or enable Android text-to-speech.");
-                updateControl();
-            }
-        });
+        IntentFilter filter = new IntentFilter(RecitationService.STATE_CHANGED);
+        if (Build.VERSION.SDK_INT >= 33)
+            activity.registerReceiver(stateChanged, filter, Context.RECEIVER_NOT_EXPORTED);
+        else activity.registerReceiver(stateChanged, filter);
     }
 
-    String speedLabel() {
-        return String.format(Locale.ENGLISH, "%.2fx", speed);
-    }
+    String speedLabel() { return String.format(Locale.ENGLISH, "%.2fx", speed); }
 
-    /** Shared, persistent speed for dua, hadith and mojzat speech. */
     void chooseSpeed(TextView indicator) {
         int selected = 2;
         for (int i = 0; i < SPEEDS.length; i++) {
@@ -66,91 +52,45 @@ final class ReaderSpeech {
         new android.app.AlertDialog.Builder(activity)
                 .setTitle("Recitation speed")
                 .setSingleChoiceItems(SPEED_LABELS, selected, (dialog, which) -> {
-                    // Restart recitation manually after changing rate so already queued chunks
-                    // do not continue at their previous speed.
-                    stop();
                     speed = SPEEDS[which];
                     activity.getSharedPreferences("islam_reader", Activity.MODE_PRIVATE)
                             .edit().putFloat("tts_speed", speed).apply();
-                    if (speech != null && ready) speech.setSpeechRate(speed);
-                    if (indicator != null) indicator.setText("Recitation speed • " + speedLabel() + "  ›");
+                    RecitationService.speed(activity, speed);
+                    if (indicator != null)
+                        indicator.setText("Recitation speed • " + speedLabel() + "  ›");
                     dialog.dismiss();
                 })
-                .setNegativeButton("Cancel", null)
-                .show();
+                .setNegativeButton("Cancel", null).show();
     }
 
-    void attach(TextView view) {
+    void attach(TextView view) { attach(view, "▶ Recite • device voice"); }
+    void attach(TextView view, String label) {
         control = view;
+        idleLabel = label;
         updateControl();
     }
-
-    void playOrStop(String text, Locale locale) {
-        if (speaking) { stop(); return; }
-        speak(text, locale);
-    }
-
-    void speak(String text, Locale locale) {
-        if (disposed || text == null || text.trim().isEmpty()) {
-            toast("No recitable text is available here.");
-            return;
+    void playOrStop(String words, Locale language) { speak(words, language); }
+    void speak(String words, Locale language) {
+        if (disposed || words == null || words.trim().isEmpty()) {
+            toast("No recitable text is available here."); return;
         }
-        stop();
-        String clean = text.trim().replaceAll("[ \\t]{2,}", " ");
-        if (failed) {
-            toast("Android text-to-speech is not available on this device.");
-            return;
-        }
-        if (!ready) {
-            pendingText = clean;
-            pendingLanguage = locale;
-            if (control != null) control.setText("Preparing voice…");
-            return;
-        }
-        speakNow(clean, locale);
-    }
-
-    private void speakNow(String text, Locale locale) {
-        if (disposed || speech == null) return;
-        int result = speech.setLanguage(locale);
-        if (result == TextToSpeech.LANG_NOT_SUPPORTED
-                || result == TextToSpeech.LANG_MISSING_DATA) {
-            toast("Install an " + locale.getDisplayLanguage(Locale.ENGLISH)
-                    + " speech voice in your phone's text-to-speech settings.");
-            return;
-        }
-        speech.setSpeechRate(speed);
-        // Avoid Android's per-utterance text limit. Prefer complete lines/sentences.
-        int chunkSize = Math.min(2800, TextToSpeech.getMaxSpeechInputLength() - 100);
-        int pos = 0, part = 0;
-        while (pos < text.length()) {
-            int end = Math.min(text.length(), pos + chunkSize);
-            if (end < text.length()) {
-                int boundary = Math.max(text.lastIndexOf('۔', end - 1),
-                    Math.max(text.lastIndexOf('.', end - 1), text.lastIndexOf((char) 10, end - 1)));
-                if (boundary > pos + chunkSize / 2) end = boundary + 1;
-            }
-            String piece = text.substring(pos, end).trim();
-            if (!piece.isEmpty()) {
-                String id = "hecker-reader-" + (++requestId);
-                lastUtteranceId = id;
-                speech.speak(piece, part == 0 ? TextToSpeech.QUEUE_FLUSH : TextToSpeech.QUEUE_ADD,
-                        null, id);
-            }
-            pos = end;
-            part++;
-        }
-        speaking = part > 0;
+        RecitationService.toggleText(activity, words, language, speed);
         updateControl();
     }
-
+    void stop() {
+        RecitationService.stop(activity);
+        updateControl();
+    }
     /**
-     * Read highlighted text first. Otherwise read the main article / reading
-     * area, avoiding headers and navigation; selected text lets a user target
-     * a single hadith or paragraph in a large source collection.
+     * Read selected text first, or article content. Repeated tapping pauses or
+     * resumes the same selection instead of resetting to its first sentence.
      */
     void reciteFromWeb(WebView web) {
-        if (speaking) { stop(); return; }
+        if (lastWebText != null && lastWebLanguage != null
+                && RecitationService.matchesText(activity, lastWebText, lastWebLanguage)) {
+            speak(lastWebText, lastWebLanguage);
+            return;
+        }
         if (web == null) { toast("Open a dua or hadith first."); return; }
         final String javascript =
             "(function() { try {"
@@ -165,24 +105,26 @@ final class ReaderSpeech {
             if (disposed || activity.isFinishing() || activity.isDestroyed()) return;
             try {
                 Object parsed = new JSONTokener(raw).nextValue();
-                if (!(parsed instanceof String)) { toast("Page text is not ready. Try selecting a passage."); return; }
-                String text = ((String) parsed).trim();
-                if (text.length() < 4) {
-                    toast("Highlight the text you want to recite and try again.");
-                    return;
+                if (!(parsed instanceof String)) {
+                    toast("Page text is not ready. Try selecting a passage."); return;
                 }
-                Locale language = detect(text);
-                speak(text, language);
+                String words = ((String) parsed).trim();
+                if (words.length() < 4) {
+                    toast("Highlight the text you want to recite and try again."); return;
+                }
+                lastWebText = words;
+                lastWebLanguage = detect(words);
+                speak(words, lastWebLanguage);
             } catch (Exception e) {
                 toast("Unable to read the web page. Try selecting a passage.");
             }
         });
     }
 
-    static Locale detect(String text) {
+    static Locale detect(String words) {
         int urdu = 0, arabic = 0, latin = 0;
-        for (int i = 0; i < Math.min(text.length(), 5000); i++) {
-            char c = text.charAt(i);
+        for (int i = 0; i < Math.min(words.length(), 5000); i++) {
+            char c = words.charAt(i);
             if (c == 'ٹ' || c == 'ڈ' || c == 'ڑ' || c == 'ں' || c == 'ے' || c == 'ھ') urdu += 5;
             else if (c >= 0x0600 && c <= 0x06ff) arabic++;
             else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) latin++;
@@ -191,31 +133,18 @@ final class ReaderSpeech {
         if (arabic > latin / 2) return new Locale("ar");
         return Locale.ENGLISH;
     }
-
-    private void complete(String id) {
-        if (disposed || !id.equals(lastUtteranceId)) return;
-        activity.runOnUiThread(() -> {
-            if (disposed || !id.equals(lastUtteranceId)) return;
-            speaking = false;
-            updateControl();
-        });
-    }
-
-    void stop() {
-        lastUtteranceId = null;
-        pendingText = null;
-        speaking = false;
-        if (speech != null) speech.stop();
-        updateControl();
+    private void updateControl() {
+        if (control == null) return;
+        boolean active = RecitationService.hasPlayback(activity);
+        control.setText(active && RecitationService.isLoading(activity) ? "◌ Preparing recitation…"
+                : active && RecitationService.isPlaying(activity) ? "Ⅱ Pause recitation"
+                : active ? "▶ Resume recitation" : idleLabel);
     }
     void destroy() {
+        if (disposed) return;
         disposed = true;
-        if (speech != null) { speech.stop(); speech.shutdown(); speech = null; }
+        activity.unregisterReceiver(stateChanged);
+        control = null;
     }
-    private void updateControl() {
-        if (control != null) control.setText(speaking ? "■ Stop recitation" : "▶ Recite • device voice");
-    }
-    private void toast(String value) {
-        Toast.makeText(activity, value, Toast.LENGTH_LONG).show();
-    }
+    private void toast(String value) { Toast.makeText(activity, value, Toast.LENGTH_LONG).show(); }
 }
