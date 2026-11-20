@@ -22,6 +22,8 @@ The catalog lives at `app/src/main/assets/mojzat/catalog.json`. The old 8 entrie
 
 `ReaderSpeech` provides a persistent, shared speed selector with **0.65x, 0.80x, 1.00x, 1.20x, 1.40x and 1.60x**. It is available in Mojzat, Shia Duas, Shia Hadith and sourced web readers. Changing speed stops queued speech; tapping Recite starts playback at the selected speed. The setting is stored in `islam_reader` preferences, key `tts_speed`.
 
+For recorded Qur'an audio (Mishary Alafasy), the Qur'an reader separately supports **0.75x, 1.00x, 1.25x, 1.50x and 2.00x**, stored in `islam_library` preferences under `quran_playback_speed`. It updates the Android MediaPlayer stream when supported and saves the choice for later sessions.
+
 ## Religious and historical status
 
 Popular majlis stories, dreams and miracle retellings should not be represented as authenticated hadith or independently established historical facts. The Janab-e-Sayyeda entry is incomplete relative to the pictured book, and the exact Ghazi Abbas miracle requested remains unlocated. Do not treat customary niyaz details as compulsory religious rulings.
