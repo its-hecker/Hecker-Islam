@@ -42,7 +42,16 @@ public final class IslamDashboardActivity extends Activity {
         page = state == null ? getIntent().getIntExtra("tab", 0) : state.getInt("tab", 0);
         render();
     }
-    @Override protected void onResume() { super.onResume(); render(); }
+    @Override protected void onResume() {
+        super.onResume();
+        render();
+        AppSettings times = new AppSettings(this);
+        if (times.configured() && times.providerEnabled()) {
+            com.hecker.azaan.PrayerTimeProvider.refreshAsync(this, false, () -> {
+                if (!isFinishing() && !isDestroyed()) render();
+            });
+        }
+    }
     @Override protected void onSaveInstanceState(Bundle b) { super.onSaveInstanceState(b); b.putInt("tab", page); }
     @Override protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent); setIntent(intent); page = intent.getIntExtra("tab", 0); render();
