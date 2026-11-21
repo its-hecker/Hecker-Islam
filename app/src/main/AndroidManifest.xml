@@ -45,6 +45,7 @@
         <activity android:name="com.hecker.islam.HomeActivity" android:exported="false"/>
         <activity android:name="com.hecker.islam.ReferenceReadingActivity" android:exported="false"/>
         <activity android:name="com.hecker.islam.ShiaDuasActivity" android:exported="false"/>
+        <activity android:name="com.hecker.islam.DailyZiaraatActivity" android:exported="false"/>
         <activity android:name="com.hecker.islam.ShiaHadithActivity" android:exported="false"/>
         <activity android:name="com.hecker.islam.NahjAlBalaghaActivity" android:exported="false"/>
         <activity android:name="com.hecker.islam.MojzatActivity" android:exported="false"/>
