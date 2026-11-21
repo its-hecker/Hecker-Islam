@@ -13,6 +13,13 @@ This change is based on `fix/standalone-offline-expressive`, not the old one-fil
 - Foreground location only: no background permission or continuous tracking while the app is closed. Changes appear while the app is open or when it is reopened.
 - Test on-device with Location enabled and disabled, approximate/precise permission, indoors, and outside Pakistan.
 
+## Daily Ziaraat (Saturday–Friday)
+- A dedicated **Daily Ziaraat** screen is accessible in **Shia Duas**. It highlights the current weekday using the device's local calendar and lists the readings for every day.
+- Nine traditional readings are bundled offline for seven days: Saturday (Prophet Muhammad), Sunday (Imam Ali and Sayyida Fatima), Monday (Imam Hasan and Imam Hussain), Tuesday (Imams Sajjad, Baqir and Sadiq), Wednesday (Imams Kazim, Reza, Jawad and Hadi), Thursday (Imam Hasan al-Askari), Friday (Imam Mahdi).
+- Each entry has Arabic text, a **newly written Urdu translation**, adjustable device text-to-speech recitation in Arabic or Urdu, bookmarking and a source link.
+- The Arabic wording is cross-checked against *Mafatih al-Jinan* weekday Ziaraat listed at https://www.ahkaam.org/ziyaraat and https://www.duas.org/week.htm. A textual variation may exist between publications; compare the linked traditional source. Urdu translations are explanatory renderings, not copied translations.
+- These devotional readings are optional and do not form part of the obligatory prayers. The complete catalog ships in `assets/ziaraat/daily.json`, checked by `tools/verify_daily_ziaraat.py` in CI.
+
 ## After Namaz Ziaraat
 - Adds an offline **After Namaz Ziaraat** shortcut and four reader entries: all three together, Imam Husayn/Hazrat Abbas, Imam Reza, and Imam-e-Zamana.
 - Each entry has complete Arabic salutations and a carefully written Urdu rendering, selectable Arabic and Urdu device-voice recitation, speed controls and bookmarks.
