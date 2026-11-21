@@ -23,6 +23,12 @@ import java.util.Locale;
  * Editorial content is loaded from assets/ziaraat/daily.json.
  */
 public final class DailyZiaraatActivity extends Activity {
+    public static final String EXTRA_OPEN_TODAY = "open_today_ziyarat";
+
+    /** Android Calendar indexes Sunday as 1 and Saturday as 7. */
+    public static String labelForDate(java.time.LocalDate date) {
+        return DAY_LABELS[(date.getDayOfWeek().getValue() % 7) + 1];
+    }
     private static final String[] EN_DAYS = {"", "Sunday", "Monday", "Tuesday",
             "Wednesday", "Thursday", "Friday", "Saturday"};
     private static final String[] UR_DAYS = {"", "اتوار", "پیر", "منگل",
@@ -33,6 +39,7 @@ public final class DailyZiaraatActivity extends Activity {
             "Imam Mahdi (a.j.)", "Prophet Muhammad (s.a.w.w.)"};
     private final JSONArray[] byDay = new JSONArray[8];
     private JSONObject selected;
+    private boolean focusToday;
     private ReaderSpeech reciter;
     private LinearLayout content;
 
@@ -40,6 +47,15 @@ public final class DailyZiaraatActivity extends Activity {
         super.onCreate(state);
         reciter = new ReaderSpeech(this);
         readCatalog();
+        focusToday = getIntent().getBooleanExtra(EXTRA_OPEN_TODAY, false);
+        if (focusToday) {
+            int today = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
+            // Open the reading immediately if only one Ziyarat exists for this day.
+            // For days with multiple readings, present today's choices instead.
+            if (byDay[today].length() == 1) {
+                selected = byDay[today].optJSONObject(0);
+            }
+        }
         render();
     }
 
@@ -172,7 +188,8 @@ public final class DailyZiaraatActivity extends Activity {
         content.addView(todayCard);
         Ui.space(this, content, 14);
 
-        for (int offset = 0; offset < 7; offset++) {
+        int daysToShow = focusToday ? 1 : 7;
+        for (int offset = 0; offset < daysToShow; offset++) {
             int day = ((today - 1 + offset) % 7) + 1;
             LinearLayout heading = Ui.panel(this);
             heading.addView(text((day == today ? "●  " : "") +
@@ -196,6 +213,12 @@ public final class DailyZiaraatActivity extends Activity {
                 Ui.space(this, content, 9);
             }
             Ui.space(this, content, 8);
+        }
+        if (focusToday) {
+            addButton(content, "Browse all seven days  ›", () -> {
+                focusToday = false;
+                render();
+            });
         }
         content.addView(text("Source: Mafatih al-Jinan daily ziaraat; Arabic checked against " +
                 "Duas.org and Ahkaam.org. Urdu meanings are prepared for this app. " +
