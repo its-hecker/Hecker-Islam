@@ -21,7 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 /**
- * Mola Ali's traditional woodcutter narrative in Urdu and Roman Urdu.
+ * Traditional devotional narratives for Mola Ali (A.S.) and Bibi Fatima (S.A.).
  * A devotional retelling is not represented as an authenticated hadith.
  */
 public final class MojzatActivity extends Activity {
@@ -39,6 +39,10 @@ public final class MojzatActivity extends Activity {
         if (state != null) {
             selectedId = state.getString("mojzat_story");
             fontSize = state.getInt("mojzat_font_size", 20);
+        } else {
+            // Dashboard shortcuts can open a specific story without skipping the catalog.
+            String requested = getIntent().getStringExtra("mojzat_story");
+            if (requested != null && find(requested) != null) selectedId = requested;
         }
         render();
     }
@@ -179,6 +183,8 @@ public final class MojzatActivity extends Activity {
         content.addView(Ui.text(this, "Mojzat • Ahlulbayt (A.S.)", 30, Ui.WHITE, true));
         Ui.space(this, content, 5);
         content.addView(urdu("معجزاتِ اہلِ بیت علیہم السلام", 23, Ui.GOLD, true));
+        Ui.space(this, content, 9);
+        content.addView(urdu("معجزۂ جناب سیدہ طاہرہؑ اور مولا علیؑ", 17, Ui.MUTED, false));
         Ui.space(this, content, 17);
         LinearLayout introduction = Ui.panel(this);
         introduction.addView(roman(
