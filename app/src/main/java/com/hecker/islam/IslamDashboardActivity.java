@@ -299,7 +299,32 @@ public final class IslamDashboardActivity extends Activity {
                 card.addView(Ui.text(this, "No upcoming occasion listed.", 14, Ui.MUTED, false));
             }
         }
-        Ui.space(this, card, 12);
+        // Keep the calendar card's existing tap action, but give today's
+        // Ziyarat a separate accessible tap target inside the same card.
+        Ui.space(this, card, 18);
+        LinearLayout ziyaratShortcut = Ui.column(this);
+        ziyaratShortcut.setPadding(Ui.dp(this, 15), Ui.dp(this, 14),
+                Ui.dp(this, 15), Ui.dp(this, 14));
+        GradientDrawable ziyaratBackground = new GradientDrawable();
+        ziyaratBackground.setColor(mix(Ui.CARD, Ui.GOLD, .10f));
+        ziyaratBackground.setCornerRadius(Ui.dp(this, 18));
+        ziyaratBackground.setStroke(Ui.dp(this, 1), mix(Ui.OUTLINE, Ui.GOLD, .24f));
+        ziyaratShortcut.setBackground(ziyaratBackground);
+        ziyaratShortcut.addView(eyebrow("TODAY'S ZIYARAT"));
+        Ui.space(this, ziyaratShortcut, 8);
+        String ziyaratName = DailyZiaraatActivity.labelForDate(date);
+        ziyaratShortcut.addView(Ui.text(this, ziyaratName + "  ›", 17, Ui.WHITE, true));
+        Ui.space(this, ziyaratShortcut, 5);
+        ziyaratShortcut.addView(Ui.text(this,
+                "Read today's ziyarat in Arabic & Urdu", 13, Ui.MUTED, false));
+        ziyaratShortcut.setContentDescription("Read today's Ziyarat: " + ziyaratName);
+        ziyaratShortcut.setOnClickListener(v -> {
+            Intent intent = new Intent(this, DailyZiaraatActivity.class);
+            intent.putExtra(DailyZiaraatActivity.EXTRA_OPEN_TODAY, true);
+            startActivity(intent);
+        });
+        card.addView(ziyaratShortcut);
+        Ui.space(this, card, 15);
         card.addView(Ui.text(this, "Open full calendar  ›", 13, Ui.GOLD, true));
         card.setContentDescription("Open Islamic calendar with today's dates and occasions");
         card.setOnClickListener(v -> launch(com.sabber.taqwim.MainActivity.class));
