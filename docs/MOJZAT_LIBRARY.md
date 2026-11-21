@@ -1,25 +1,30 @@
-# Hecker Islam — Mola Ali Mojza reader
+# Hecker Islam — Mojzat reader
 
-## Current offline content
+## Shipped catalog
 
-Only **Mola Mushkil Kusha (A.S.) aur Iran ka Lakrihara** remains in the shipped catalog at `app/src/main/assets/mojzat/catalog.json`. Previously listed stories about Hazrat Abbas and Bibi Fatima are no longer included in this section, nor are their categories or source links.
+The app currently includes two traditional devotional narratives in `app/src/main/assets/mojzat/catalog.json`:
 
-The narrative follows the woodcutter of Iran, his daughter, burnt firewood, stones, precious jewels, royal necklace, imprisonment and reunion. It is a traditional majlis/devotional retelling, **not an authenticated hadith or a proven historical report**. The source link is preserved for context.
+- **Mola Ali (A.S.) — Iran ka Lakrihara:** Urdu and Roman Urdu presentations.
+- **Bibi Fatima (S.A.) — معجزۂ جناب سیدہ طاہرہ:** an original Urdu retelling based on user-provided screenshots of non-consecutive scanned pages. Since some pages were not supplied, this is NOT a verbatim or complete transcription and does not claim a verified religious chain of narration.
 
-## Reading and voice
+These are majlisi/traditional stories, **not authenticated hadith**. The image-based Fatima retelling has no external URL because the visible Scribd address was incomplete; the source is described as user-provided scanned excerpts rather than a fabricated link.
 
-- Choose **اردو** or **Roman Urdu** using the two reading buttons inside the story. Urdu is the default; the selection persists.
-- Both scripts are included offline. The Urdu adaptation is a retelling rather than a verbatim source transcription.
-- Recitation always reads **Urdu script with the installed Urdu Android text-to-speech voice**, even when the Roman Urdu display is selected. This avoids handing Latin-script transliteration to an English voice, which mispronounces Urdu words.
-- The device must have an Urdu TTS voice installed and enabled for speech to work. Unsupported devices show a voice-installation message; the app does not claim to bundle a human narration.
-- Recitation speed is shared with Dua and Hadith reading and persists in `islam_reader/tts_speed`: 0.65x, 0.80x, 1.00x, 1.20x, 1.40x and 1.60x.
-- Font-size adjustment, bookmarking, source link, sharing and the app's bottom navigation remain.
+## Reader features
 
-## QA checklist
+- The Mola Ali story retains the Urdu/Roman Urdu selector; Bibi Fatima is Urdu-only.
+- Urdu text is laid out right-to-left with adjustable text size.
+- Recitation uses device Urdu text-to-speech from the shared foreground playback service. An installed Urdu TTS voice is required. Recitation speed is adjustable.
+- Bookmarking and sharing work for both entries; the original Mola Ali source link is preserved.
 
-1. Open Mojzaat from the dashboard and More. Confirm only the Mola Ali card appears.
-2. Open the story, switch Urdu ↔ Roman Urdu, exit and re-enter. Verify the language selection persists.
-3. Confirm Urdu RTL layout, both full story scripts, font controls, bookmarks, share text and source link.
-4. Test recitation on a device with an Urdu TTS voice, then one without it. Verify the installed voice is used and no silent English fallback mispronounces the Urdu text.
-5. Confirm speech speed persists across Mojzaat, Duas and Hadith.
-6. Run `gradle testDebugUnitTest lintDebug assembleDebug` through the Android workflow and install the built APK.
+## Related changes
+
+- The Quran reader can speak the selected bundled Shia Urdu translation for a Surah using Urdu TTS, with pause/resume and the same speed picker. Arabic recitation remains Mishary Alafasy's streamed recording.
+- The dashboard Nahj al-Balagha wisdom card can generate a vertical quote image and share it through WhatsApp; users choose **My Status** in the WhatsApp share flow.
+
+## QA
+
+1. Confirm both Mojzat cards appear and render in the correct scripts.
+2. Test Urdu narration with a device that has an Urdu voice and verify pause/resume while the screen is off.
+3. Open a Surah, enable Urdu translation and tap **Listen • اردو ترجمہ**. Confirm changing the Urdu translator changes the text to be spoken.
+4. Share a dashboard wisdom quote to WhatsApp and select **My Status**, checking the story image and reference number.
+5. Run `gradle testDebugUnitTest lintDebug assembleDebug` and install the resulting APK.
