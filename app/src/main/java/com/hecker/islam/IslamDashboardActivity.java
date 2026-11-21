@@ -113,6 +113,7 @@ public final class IslamDashboardActivity extends Activity {
         wisdomText = null;
         wisdomReference = null;
         Ui.applyTheme(this);
+        NahjWisdom.initialize(this);
         getWindow().setStatusBarColor(Ui.BACKGROUND);
         getWindow().setNavigationBarColor(Ui.BACKGROUND);
         getWindow().getDecorView().setSystemUiVisibility(
@@ -599,11 +600,14 @@ public final class IslamDashboardActivity extends Activity {
             return;
         }
         NahjWisdom.Quote quote = NahjWisdom.QUOTES[currentWisdom];
-        int quoteLength = quote.urdu.codePointCount(0, quote.urdu.length());
+        String display = quote.displayText();
+        int quoteLength = display.codePointCount(0, display.length());
         wisdomText.setTextSize(TypedValue.COMPLEX_UNIT_SP,
-                quoteLength > 105 ? 16f : quoteLength > 73 ? 17f : 18f);
-        wisdomText.setText(quote.urdu);
-        wisdomReference.setText("نہج البلاغہ • اردو مفہوم");
+                quoteLength > 105 ? 15f : quoteLength > 73 ? 17f : 18f);
+        wisdomText.setText(display);
+        wisdomReference.setText(quote.hasUrdu()
+                ? "نہج البلاغہ • اردو مفہوم"
+                : "نہج البلاغہ • اصل عربی • مکمل مطالعہ کے لیے کھولیں");
         // First render of older installations: initialize once, then persist.
         // On later launches the saved epoch lets us rotate immediately if due.
         if (wisdomChangedAt <= 0L) {
@@ -666,6 +670,10 @@ public final class IslamDashboardActivity extends Activity {
         wisdomText.setTextDirection(View.TEXT_DIRECTION_RTL);
         wisdomText.setGravity(Gravity.RIGHT);
         wisdomText.setLineSpacing(Ui.dp(this, 2), 1.06f);
+        // A few maxims are long essays. Show their first lines on the dashboard;
+        // tapping the card always opens the complete 480-saying Arabic reader.
+        wisdomText.setMaxLines(5);
+        wisdomText.setEllipsize(android.text.TextUtils.TruncateAt.END);
         card.addView(wisdomText);
         Ui.space(this, card, 6);
 
