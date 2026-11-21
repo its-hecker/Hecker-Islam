@@ -338,8 +338,7 @@ public final class MainActivity extends Activity {
         }));
         playback.addView(text("Arabic always plays first. Each translation reads the complete azaan in the same order and repetition counts.", 12, MUTED));
         gap(playback, 16);
-        playback.addView(toggle("Include testimony to Imam Ali’s wilayah", settings.wilayah(), v -> settings.wilayah(v)));
-        playback.addView(text("Optional devotional testimony. This switch changes the text and synthesized speech; imported recordings play as recorded.", 12, MUTED));
+        playback.addView(text("Aliyyun Waliullah testimony is included in this app’s recitation preset. Imported recordings retain their original wording. In Sistani’s rulings, this is a recommended devotional testimony rather than a formal part of Adhan.", 12, MUTED));
         gap(playback, 16);
         TextView volumeLabel = text("Playback volume · " + Math.round(settings.volume() * 100) + "%", 15, TEXT);
         playback.addView(volumeLabel);
