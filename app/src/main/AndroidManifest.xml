@@ -11,7 +11,10 @@
     <!-- Only recorded Quran recitations are streamed; written catalogs stay offline. -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
-    <queries><intent><action android:name="android.intent.action.TTS_SERVICE"/></intent></queries>
+    <queries>
+        <intent><action android:name="android.intent.action.TTS_SERVICE"/></intent>
+        <package android:name="com.whatsapp"/>
+    </queries>
     <application
         android:label="Hecker Islam"
         android:icon="@drawable/ic_azaan"
