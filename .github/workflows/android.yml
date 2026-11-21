@@ -25,6 +25,7 @@ jobs:
         run: |
           python3 tools/bundle_reference_assets.py --verify
           python3 tools/verify_daily_ziaraat.py
+          python3 tools/verify_nahj_wisdom.py
           python3 -c "import json,pathlib; p=pathlib.Path('app/src/main/assets/reference/quran'); assert all(len(json.loads((p/name).read_text(encoding='utf-8')))==6236 for name in ['ur_jawadi.json','ur_najafi.json'])"
       - uses: actions/setup-java@v4
         with:
