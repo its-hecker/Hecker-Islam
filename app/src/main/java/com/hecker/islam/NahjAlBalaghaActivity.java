@@ -12,15 +12,19 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-/** Numbered index of all 480 maxims; selected sourced sayings read offline.
- * Full original and Urdu reference collections are accessible via links.
+/** Complete 480 numbered Arabic maxims, with original Urdu summaries where available.
+ * Untranslated entries link to their full Urdu reference online.
  */
 public final class NahjAlBalaghaActivity extends Activity {
     private LinearLayout content;
     private int page, selected = -1;
     private static final int PAGE_SIZE = 30;
 
-    @Override public void onCreate(Bundle state) { super.onCreate(state); render(); }
+    @Override public void onCreate(Bundle state) {
+        super.onCreate(state);
+        NahjWisdom.initialize(this);
+        render();
+    }
     @Override public void onBackPressed() {
         if (selected != -1) { selected = -1; render(); } else super.onBackPressed();
     }
@@ -65,7 +69,7 @@ public final class NahjAlBalaghaActivity extends Activity {
         content.addView(Ui.text(this, "نہج البلاغہ • کلماتِ قصار • Imam Ali (a.s.)", 17, Ui.GOLD, false));
         Ui.space(this, content, 16);
         if (selected > 0) { detail(); return; }
-        content.addView(Ui.text(this, "480 numbered wisdom sayings, each with a complete Urdu reading page inside the app (internet required). Selected Arabic verses and Urdu meanings are also available offline.", 14, Ui.MUTED, false));
+        content.addView(Ui.text(this, "All 480 numbered classical Arabic wisdom sayings are available offline. Original brief Urdu meanings are included for selected entries; tap an entry to read its full Arabic and open its Urdu source online.", 14, Ui.MUTED, false));
         Ui.space(this, content, 15);
         button("Read complete Arabic and English source", () -> source(NahjWisdom.COLLECTION));
         button("Browse full Urdu wisdom collection", () -> source(NahjWisdom.URDU_BOOK));
@@ -94,14 +98,18 @@ public final class NahjAlBalaghaActivity extends Activity {
             NahjWisdom.Quote quote = NahjWisdom.find(number);
             LinearLayout panel=Ui.panel(this);
             panel.addView(Ui.text(this, "Wisdom " + number +
-                (quote == null ? "  •  Read in Urdu  ›" : "  •  Offline + full Urdu  ›"),
+                (quote == null ? "  •  Read in Urdu ›"
+                        : quote.hasUrdu() ? "  •  Arabic and Urdu offline ›"
+                        : "  •  Arabic offline · Urdu online ›"),
                 16, Ui.GOLD, true));
             if (quote != null) {
                 Ui.space(this,panel,8);
-                TextView urdu=Ui.text(this,quote.urdu,17,Ui.WHITE,false);
-                urdu.setTextDirection(View.TEXT_DIRECTION_RTL);
-                urdu.setGravity(Gravity.RIGHT);
-                panel.addView(urdu);
+                TextView excerpt=Ui.text(this,quote.displayText(),16,Ui.WHITE,false);
+                excerpt.setMaxLines(3);
+                excerpt.setEllipsize(android.text.TextUtils.TruncateAt.END);
+                excerpt.setTextDirection(View.TEXT_DIRECTION_RTL);
+                excerpt.setGravity(Gravity.RIGHT);
+                panel.addView(excerpt);
             }
             panel.setOnClickListener(v -> { selected=number; render(); });
             content.addView(panel); Ui.space(this,content,9);
@@ -121,14 +129,21 @@ public final class NahjAlBalaghaActivity extends Activity {
             ar.setGravity(Gravity.RIGHT);
             ar.setLineSpacing(Ui.dp(this,8),1.14f);
             panel.addView(ar); content.addView(panel); Ui.space(this,content,11);
-            LinearLayout translation=Ui.panel(this);
-            translation.addView(Ui.text(this,"اردو مفہوم",14,Ui.GOLD,true));
-            Ui.space(this,translation,10);
-            TextView urdu=Ui.text(this,quote.urdu,20,Ui.WHITE,false);
-            urdu.setTextDirection(View.TEXT_DIRECTION_RTL);
-            urdu.setGravity(Gravity.RIGHT);
-            urdu.setLineSpacing(Ui.dp(this,7),1.12f);
-            translation.addView(urdu); content.addView(translation);
+            if (quote.hasUrdu()) {
+                LinearLayout translation=Ui.panel(this);
+                translation.addView(Ui.text(this,"اردو مفہوم • اصل خلاصہ",14,Ui.GOLD,true));
+                Ui.space(this,translation,10);
+                TextView urdu=Ui.text(this,quote.urdu,20,Ui.WHITE,false);
+                urdu.setTextDirection(View.TEXT_DIRECTION_RTL);
+                urdu.setGravity(Gravity.RIGHT);
+                urdu.setLineSpacing(Ui.dp(this,7),1.12f);
+                translation.addView(urdu); content.addView(translation);
+            } else {
+                Ui.space(this, content, 9);
+                content.addView(Ui.text(this,
+                        "Original Arabic is available offline. A reviewed Urdu meaning is not bundled for this entry; use the Urdu reading link below.",
+                        14, Ui.MUTED, false));
+            }
         } else {
             content.addView(Ui.text(this, "Read this saying in complete Urdu through the in-app source reader. An offline version is not yet bundled for this entry.", 16, Ui.MUTED, false));
         }
