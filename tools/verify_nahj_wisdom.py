@@ -13,5 +13,5 @@ assert all("urdu" in x for x in items), "Missing Urdu-availability field"
 meaning_count = sum(bool(x["urdu"].strip()) for x in items)
 assert meaning_count == 480, f"Every wisdom entry needs Urdu text for the dashboard: {meaning_count}/480"
 assert all(len(x["urdu"].strip()) >= 20 for x in items), "One or more Urdu meanings are incomplete"
-assert all(any("\\u0600" <= ch <= "\\u06ff" for ch in x["urdu"]) for x in items), "Missing Urdu script"
+assert all(any(0x0600 <= ord(ch) <= 0x06FF for ch in x["urdu"]) for x in items), "Missing Urdu script"
 print(f"Nahj collection verified: {len(items)} unique numbered Arabic sayings, {meaning_count} original Urdu summaries")
