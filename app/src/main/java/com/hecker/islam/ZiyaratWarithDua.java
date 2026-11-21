@@ -1,13 +1,9 @@
 package com.hecker.islam;
 
 /**
- * Ziyarat Warith — the photographed four-page excerpt, in original page order.
- * Arabic has been transcribed from the user-supplied pages. The accompanying
- * Urdu meanings are newly written renderings of those Arabic passages rather
- * than a reproduction of a printed translator's copyrighted wording.
- *
- * This is the excerpt shown in the four photos, not a claim to include all
- * sections of every longer traditional version of Ziyarat Warith.
+ * Ziyarat Warith — offline Arabic reading with corresponding Urdu meanings.
+ * The selected passage does not claim to include every section found in
+ * longer traditional versions of this ziyarat.
  */
 final class ZiyaratWarithDua {
     private ZiyaratWarithDua() { }
