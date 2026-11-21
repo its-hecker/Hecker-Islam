@@ -292,18 +292,6 @@ public final class MojzatActivity extends Activity {
         Ui.space(this, content, 13);
         }
 
-        LinearLayout reader = Ui.panel(this);
-        TextView title = Ui.text(this, showUrdu ? "اردو متن" : "Roman Urdu text",
-                13, Ui.GOLD, true);
-        reader.addView(title);
-        Ui.space(this, reader, 12);
-        storyText = showUrdu ? urdu(text, fontSize, Ui.WHITE, false)
-                : roman(text, fontSize, Ui.WHITE, false);
-        storyText.setLineSpacing(Ui.dp(this, 5), 1.12f);
-        reader.addView(storyText);
-        content.addView(reader);
-        Ui.space(this, content, 12);
-
         LinearLayout controls = Ui.panel(this);
         controls.addView(Ui.text(this, "سماعت اور مطالعہ", 13, Ui.GOLD, true));
         Ui.space(this, controls, 9);
@@ -341,6 +329,19 @@ public final class MojzatActivity extends Activity {
         controls.addView(zoom);
         content.addView(controls);
         Ui.space(this, content, 13);
+        // Keep reading, speech, speed and font controls visible before the story.
+        LinearLayout reader = Ui.panel(this);
+        TextView title = Ui.text(this, showUrdu ? "اردو متن" : "Roman Urdu text",
+                13, Ui.GOLD, true);
+        reader.addView(title);
+        Ui.space(this, reader, 12);
+        storyText = showUrdu ? urdu(text, fontSize, Ui.WHITE, false)
+                : roman(text, fontSize, Ui.WHITE, false);
+        storyText.setLineSpacing(Ui.dp(this, 5), 1.12f);
+        reader.addView(storyText);
+        content.addView(reader);
+        Ui.space(this, content, 12);
+
 
         String id = item.optString("id");
         action(saved(id) ? "★ محفوظ سے ہٹائیں" : "☆ محفوظ کریں", () -> toggleBookmark(id));
