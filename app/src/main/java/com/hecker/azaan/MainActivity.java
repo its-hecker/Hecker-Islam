@@ -274,7 +274,7 @@ public final class MainActivity extends Activity {
         for (AzaanText.Line line : AzaanText.LINES) {
             if (line.optional && !settings.wilayah()) continue;
             LinearLayout card = card(body);
-            label(card, line.repetitions + " TIMES" + (line.optional ? "  ·  OPTIONAL TESTIMONY" : "")); gap(card, 12);
+            label(card, line.repetitions + " TIMES" + (line.optional ? "  ·  DEVOTIONAL TESTIMONY" : "")); gap(card, 12);
             TextView arabic = text(line.arabic, 29, TEXT);
             arabic.setLayoutDirection(View.LAYOUT_DIRECTION_RTL); arabic.setGravity(Gravity.START); arabic.setTextDirection(View.TEXT_DIRECTION_RTL);
             card.addView(arabic); gap(card, 10);
