@@ -1,9 +1,16 @@
 package com.hecker.islam;
 
+import android.content.Context;
+import android.util.Log;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ThreadLocalRandom;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
-/** Public-domain source sayings; Urdu meanings are concise original renderings.
- * Numbering follows the Al-Islam.org Nahj al-Balagha short sayings edition.
+/** Complete public-domain classical Arabic sayings with original Urdu paraphrases.
+ * Numbering follows the 480-saying Nahj al-Balagha edition at Al-Islam.org.
  */
 public final class NahjWisdom {
     private NahjWisdom() { }
@@ -15,8 +22,11 @@ public final class NahjWisdom {
         Quote(int number, String arabic, String urdu) {
             this.number = number; this.arabic = arabic; this.urdu = urdu;
         }
+        public boolean hasUrdu() { return urdu != null && !urdu.trim().isEmpty(); }
+        public String displayText() { return hasUrdu() ? urdu : arabic; }
     }
-    public static final Quote[] QUOTES = {
+    // Fallback text is available even in a source checkout without generated assets.
+    private static final Quote[] FALLBACK = {
         new Quote(4, "الصَّبْرُ شَجَاعَةٌ وَ الزُّهْدُ ثَرْوَةٌ وَ الْوَرَعُ جُنَّةٌ",
             "صبر بہادری ہے، دنیا سے بے رغبتی ایک دولت ہے اور پرہیزگاری گناہ سے حفاظت کرتی ہے۔"),
         new Quote(5, "الْعِلْمُ وِرَاثَةٌ كَرِيمَةٌ وَ الْآدَابُ حُلَلٌ مُجَدَّدَةٌ وَ الْفِكْرُ مِرْآةٌ صَافِيَةٌ",
@@ -44,6 +54,49 @@ public final class NahjWisdom {
         new Quote(338, "الْعِلْمُ عِلْمَانِ: مَطْبُوعٌ وَمَسْمُوعٌ وَلاَ يَنْفَعُ الْمَسْمُوعُ إِذَا لَمْ يَكُنِ الْمَطْبُوعُ",
             "علم ایک وہ ہے جو سمجھ میں اترے اور دوسرا محض سنا ہوا؛ سمجھ کے بغیر سنا ہوا علم فائدہ نہیں دیتا۔")
     };
+    public static Quote[] QUOTES = FALLBACK;
+    private static volatile boolean loaded = false;
+
+    /**
+     * Load all 480 original Arabic sayings from the app's verified bundled file.
+     * The 57 originally written Urdu summaries accompany their matching Arabic
+     * passages, while other readings display original Arabic and link to the
+     * online Urdu collection instead of inventing attributed translations.
+     */
+    public static synchronized void initialize(Context context) {
+        if (loaded) return;
+        try (BufferedReader stream = new BufferedReader(new InputStreamReader(
+                context.getAssets().open("nahj/sayings_480.json"),
+                StandardCharsets.UTF_8))) {
+            StringBuilder data = new StringBuilder(190_000);
+            char[] buffer = new char[8192];
+            int read;
+            while ((read = stream.read(buffer)) >= 0) {
+                data.append(buffer, 0, read);
+            }
+            JSONArray records = new JSONObject(data.toString()).getJSONArray("sayings");
+            if (records.length() != 480) throw new IllegalStateException(
+                    "Expected all 480 Nahj sayings, found " + records.length());
+            Quote[] complete = new Quote[480];
+            for (int i = 0; i < complete.length; i++) {
+                JSONObject entry = records.getJSONObject(i);
+                int number = entry.getInt("number");
+                String arabic = entry.getString("arabic").trim();
+                if (number != i + 1 || arabic.length() < 12) {
+                    throw new IllegalStateException("Invalid wisdom " + (i + 1));
+                }
+                complete[i] = new Quote(number, arabic,
+                        entry.optString("urdu", "").trim());
+            }
+            QUOTES = complete;
+            loaded = true;
+        } catch (Exception problem) {
+            Log.e("NahjWisdom", "Complete offline sayings could not be loaded", problem);
+            // Do not suppress the error by reporting the fallback as full coverage.
+            QUOTES = FALLBACK;
+        }
+    }
+
     public static int randomOtherThan(int prior) {
         int index = ThreadLocalRandom.current().nextInt(QUOTES.length);
         if (QUOTES.length > 1 && index == prior) index = (index + 1) % QUOTES.length;
