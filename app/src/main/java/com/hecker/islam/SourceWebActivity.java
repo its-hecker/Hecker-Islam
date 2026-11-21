@@ -81,7 +81,8 @@ public final class SourceWebActivity extends Activity {
         String host=uri.getHost();
         return "nehjulbalagah.com".equals(host) || "www.nehjulbalagah.com".equals(host)
             || "fzic.org".equals(host) || "www.fzic.org".equals(host)
-            || "duas.org".equals(host) || "www.duas.org".equals(host);
+            || "duas.org".equals(host) || "www.duas.org".equals(host)
+            || "masaha.org".equals(host) || "www.masaha.org".equals(host);
     }
     @Override public void onBackPressed() {
         if(web!=null && web.canGoBack()) web.goBack(); else super.onBackPressed();
