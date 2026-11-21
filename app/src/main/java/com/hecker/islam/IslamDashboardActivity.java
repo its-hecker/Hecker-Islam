@@ -273,85 +273,112 @@ public final class IslamDashboardActivity extends Activity {
     private void dateDashboard(LocalDate date) {
         DashboardCalendar.Day calendar = DashboardCalendar.today(this, date);
         LinearLayout card = dashboardCard(true);
+        // Dense, readable calendar summary: the full Calendar remains one tap away.
+        card.setPadding(Ui.dp(this, 16), Ui.dp(this, 15),
+                Ui.dp(this, 16), Ui.dp(this, 15));
         card.addView(eyebrow("TODAY · YOUR CALENDAR"));
-        Ui.space(this, card, 14);
-        LinearLayout numberRow = new LinearLayout(this);
-        numberRow.setGravity(Gravity.CENTER_VERTICAL);
-        TextView number = Ui.text(this, String.valueOf(date.getDayOfMonth()), 64, Ui.GOLD, true);
-        number.setIncludeFontPadding(false);
-        numberRow.addView(number);
-        LinearLayout dateDetail = Ui.column(this);
-        dateDetail.setPadding(Ui.dp(this, 17), 0, 0, 0);
-        dateDetail.addView(Ui.text(this, date.format(DateTimeFormatter.ofPattern("EEEE", Locale.ENGLISH)),
-                23, Ui.WHITE, true));
-        dateDetail.addView(Ui.text(this, date.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH)),
-                15, Ui.MUTED, false));
-        numberRow.addView(dateDetail, new LinearLayout.LayoutParams(0, -2, 1));
-        card.addView(numberRow);
-        Ui.space(this, card, 16);
+        Ui.space(this, card, 8);
 
-        TextView hijri = Ui.text(this, "☾  " + calendar.hijriDate, 15, Ui.WHITE, true);
-        hijri.setPadding(Ui.dp(this, 13), Ui.dp(this, 11), Ui.dp(this, 13), Ui.dp(this, 11));
+        LinearLayout dateRow = new LinearLayout(this);
+        dateRow.setGravity(Gravity.CENTER_VERTICAL);
+        TextView number = Ui.text(this, String.valueOf(date.getDayOfMonth()),
+                43, Ui.GOLD, true);
+        number.setIncludeFontPadding(false);
+        dateRow.addView(number);
+        LinearLayout dateDetail = Ui.column(this);
+        dateDetail.setPadding(Ui.dp(this, 12), 0, 0, 0);
+        dateDetail.addView(Ui.text(this,
+                date.format(DateTimeFormatter.ofPattern("EEEE", Locale.ENGLISH)),
+                17, Ui.WHITE, true));
+        dateDetail.addView(Ui.text(this,
+                date.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH)),
+                13, Ui.MUTED, false));
+        dateRow.addView(dateDetail, new LinearLayout.LayoutParams(0, -2, 1));
+        card.addView(dateRow);
+        Ui.space(this, card, 10);
+
+        TextView hijri = Ui.text(this, "☾  " + calendar.hijriDate,
+                13, Ui.WHITE, true);
+        hijri.setPadding(Ui.dp(this, 10), Ui.dp(this, 7),
+                Ui.dp(this, 10), Ui.dp(this, 7));
         GradientDrawable hijriBg = new GradientDrawable();
         hijriBg.setColor(mix(Ui.CARD, Ui.GOLD, .13f));
-        hijriBg.setCornerRadius(Ui.dp(this, 17));
+        hijriBg.setCornerRadius(Ui.dp(this, 13));
         hijri.setBackground(hijriBg);
         card.addView(hijri);
-        Ui.space(this, card, 9);
-        TextView desi = Ui.text(this, "✦  " + calendar.desiDate + " · Desi calendar", 13, Ui.MUTED, false);
-        desi.setPadding(Ui.dp(this, 9), Ui.dp(this, 3), Ui.dp(this, 9), Ui.dp(this, 3));
+        Ui.space(this, card, 5);
+        TextView desi = Ui.text(this,
+                "✦  " + calendar.desiDate + " · Desi calendar",
+                12, Ui.MUTED, false);
+        desi.setPadding(Ui.dp(this, 6), 0, Ui.dp(this, 6), 0);
         card.addView(desi);
-        separator(card);
+
+        Ui.space(this, card, 10);
+        View separator = new View(this);
+        separator.setBackgroundColor(Ui.OUTLINE);
+        card.addView(separator, new LinearLayout.LayoutParams(-1, Ui.dp(this, 1)));
+        Ui.space(this, card, 10);
 
         if (!calendar.calendarLoaded) {
             card.addView(eyebrow("CALENDAR EVENTS"));
-            Ui.space(this, card, 7);
-            card.addView(Ui.text(this, "Calendar details are unavailable in this build.", 14, Ui.MUTED, false));
+            Ui.space(this, card, 4);
+            card.addView(Ui.text(this,
+                    "Calendar details are unavailable in this build.",
+                    12, Ui.MUTED, false));
         } else if (!calendar.today.isEmpty()) {
             card.addView(eyebrow("TODAY'S OCCASION"));
-            Ui.space(this, card, 7);
+            Ui.space(this, card, 4);
             DashboardCalendar.Occasion event = calendar.today.get(0);
-            card.addView(Ui.text(this, event.title, 18, Ui.WHITE, true));
+            TextView occasionTitle = Ui.text(this, event.title, 15, Ui.WHITE, true);
+            occasionTitle.setMaxLines(2);
+            card.addView(occasionTitle);
             if (!event.summary.isEmpty()) {
-                Ui.space(this, card, 5);
-                card.addView(Ui.text(this, event.summary, 13, Ui.MUTED, false));
+                Ui.space(this, card, 4);
+                TextView summary = Ui.text(this, event.summary, 12, Ui.MUTED, false);
+                summary.setMaxLines(2);
+                card.addView(summary);
             }
             if (calendar.today.size() > 1) {
-                Ui.space(this, card, 8);
+                Ui.space(this, card, 5);
                 card.addView(Ui.text(this, "+" + (calendar.today.size() - 1)
-                        + " more occasion(s) · View Calendar", 12, Ui.GOLD, true));
+                        + " more occasion(s) · View Calendar", 11, Ui.GOLD, true));
             }
         } else {
             card.addView(eyebrow("UPCOMING OCCASION"));
-            Ui.space(this, card, 7);
+            Ui.space(this, card, 4);
             if (calendar.upcoming != null) {
-                card.addView(Ui.text(this, calendar.upcoming.title, 17, Ui.WHITE, true));
-                Ui.space(this, card, 5);
+                TextView title = Ui.text(this, calendar.upcoming.title,
+                        15, Ui.WHITE, true);
+                title.setMaxLines(2);
+                card.addView(title);
+                Ui.space(this, card, 3);
                 card.addView(Ui.text(this, "In " + calendar.daysUntilNext
-                        + (calendar.daysUntilNext == 1 ? " day" : " days")
-                        + " · Based on the Calendar's Hijri dates", 13, Ui.MUTED, false));
+                        + (calendar.daysUntilNext == 1 ? " day" : " days"),
+                        12, Ui.MUTED, false));
             } else {
-                card.addView(Ui.text(this, "No upcoming occasion listed.", 14, Ui.MUTED, false));
+                card.addView(Ui.text(this,
+                        "No upcoming occasion listed.", 12, Ui.MUTED, false));
             }
         }
-        // Keep the calendar card's existing tap action, but give today's
-        // Ziyarat a separate accessible tap target inside the same card.
-        Ui.space(this, card, 18);
+
+        // Nested tap target deliberately remains separate from the Calendar.
+        Ui.space(this, card, 11);
         LinearLayout ziyaratShortcut = Ui.column(this);
-        ziyaratShortcut.setPadding(Ui.dp(this, 15), Ui.dp(this, 14),
-                Ui.dp(this, 15), Ui.dp(this, 14));
+        ziyaratShortcut.setPadding(Ui.dp(this, 11), Ui.dp(this, 9),
+                Ui.dp(this, 11), Ui.dp(this, 9));
         GradientDrawable ziyaratBackground = new GradientDrawable();
         ziyaratBackground.setColor(mix(Ui.CARD, Ui.GOLD, .10f));
-        ziyaratBackground.setCornerRadius(Ui.dp(this, 18));
-        ziyaratBackground.setStroke(Ui.dp(this, 1), mix(Ui.OUTLINE, Ui.GOLD, .24f));
+        ziyaratBackground.setCornerRadius(Ui.dp(this, 15));
+        ziyaratBackground.setStroke(Ui.dp(this, 1),
+                mix(Ui.OUTLINE, Ui.GOLD, .24f));
         ziyaratShortcut.setBackground(ziyaratBackground);
         ziyaratShortcut.addView(eyebrow("TODAY'S ZIYARAT"));
-        Ui.space(this, ziyaratShortcut, 8);
+        Ui.space(this, ziyaratShortcut, 3);
         String ziyaratName = DailyZiaraatActivity.labelForDate(date);
-        ziyaratShortcut.addView(Ui.text(this, ziyaratName + "  ›", 17, Ui.WHITE, true));
-        Ui.space(this, ziyaratShortcut, 5);
-        ziyaratShortcut.addView(Ui.text(this,
-                "Read today's ziyarat in Arabic & Urdu", 13, Ui.MUTED, false));
+        TextView ziyaratTitle = Ui.text(this, ziyaratName + "  ›",
+                14, Ui.WHITE, true);
+        ziyaratTitle.setMaxLines(2);
+        ziyaratShortcut.addView(ziyaratTitle);
         ziyaratShortcut.setContentDescription("Read today's Ziyarat: " + ziyaratName);
         ziyaratShortcut.setOnClickListener(v -> {
             Intent intent = new Intent(this, DailyZiaraatActivity.class);
@@ -359,8 +386,8 @@ public final class IslamDashboardActivity extends Activity {
             startActivity(intent);
         });
         card.addView(ziyaratShortcut);
-        Ui.space(this, card, 15);
-        card.addView(Ui.text(this, "Open full calendar  ›", 13, Ui.GOLD, true));
+        Ui.space(this, card, 9);
+        card.addView(Ui.text(this, "Open full calendar  ›", 12, Ui.GOLD, true));
         card.setContentDescription("Open Islamic calendar with today's dates and occasions");
         card.setOnClickListener(v -> launch(com.sabber.taqwim.MainActivity.class));
         addCard(card);
@@ -736,7 +763,7 @@ public final class IslamDashboardActivity extends Activity {
         Ui.space(this, content, 12);
         tile("Shia Hadith Library", "Al-Kafi, Al-Faqih and Ahlulbayt narrations", () -> launch(ShiaHadithActivity.class));
         tile("Nahj al-Balagha", "Imam Ali’s wisdom • Arabic & Urdu", () -> launch(NahjAlBalaghaActivity.class));
-        tile("Mola Ali Mojza • معجزہ مولا علیؑ", "Iranian woodcutter story • Urdu and Roman Urdu",
+        tile("Shia Mojzaat • معجزات اہلِ بیتؑ", "Mola Ali and Sayyida Fatima Zahra • Urdu readings",
                 () -> launch(MojzatActivity.class));
         tile("Azkar & daily remembrance", "Daily supplications and repeat counts", () -> library("azkar"));
         tile("Prayer tracker", "Keep a personal record of five daily prayers",
@@ -768,7 +795,7 @@ public final class IslamDashboardActivity extends Activity {
         tile("Tasbeeh counter", "Remembrance and saved counts", () -> launch(TasbeehActivity.class));
         tile("Nahj al-Balagha", "480 wisdom sayings and Urdu reference links", () -> launch(NahjAlBalaghaActivity.class));
         tile("Shia Hadith", "Read Shia source books", () -> launch(ShiaHadithActivity.class));
-        tile("Mola Ali Mojza • معجزہ مولا علیؑ", "Urdu / Roman Urdu • Recitation and bookmarks",
+        tile("Shia Mojzaat • معجزات اہلِ بیتؑ", "Mola Ali and Sayyida Fatima Zahra • recitation and bookmarks",
                 () -> launch(MojzatActivity.class));
         tile("Shia Duas & Ziyarat", "Ahlulbayt supplications, bookmarks and source texts",
                 () -> launch(ShiaDuasActivity.class));
