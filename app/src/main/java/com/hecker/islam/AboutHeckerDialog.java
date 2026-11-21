@@ -15,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.hecker.azaan.R;
 
 /** Material You-style About panel, matching the Hecker Islam card palette. */
 final class AboutHeckerDialog {
