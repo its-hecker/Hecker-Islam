@@ -565,7 +565,11 @@ public final class IslamDashboardActivity extends Activity {
     private void today() {
         renderedCalendarDay = LocalDate.now();
         AppSettings cfg = new AppSettings(this);
-        content.addView(Ui.text(this, "Assalamu Alaikum", 30, Ui.WHITE, true));
+        TextView devotionalGreeting = Ui.text(this, "السلام علیکم یا علیؑ مدد", 29, Ui.WHITE, true);
+        devotionalGreeting.setTextDirection(View.TEXT_DIRECTION_RTL);
+        devotionalGreeting.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+        devotionalGreeting.setLineSpacing(Ui.dp(this, 3), 1.08f);
+        content.addView(devotionalGreeting);
         Ui.space(this, content, 5);
         content.addView(Ui.text(this, "Your day, your prayers, your moments.", 14, Ui.MUTED, false));
         Ui.space(this, content, 22);
