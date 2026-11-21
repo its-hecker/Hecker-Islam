@@ -51,6 +51,7 @@ public final class ShiaDuasActivity extends Activity {
                 case "iftitah": return "دعائے افتتاح: رمضان المبارک میں دعا، حمد اور رحمت کی طلب؛ یہ مکمل متن کا ترجمہ نہیں۔";
                 case "simaat": return "دعائے سمات: اللہ کی حمد اور اس کے اسمائے مبارکہ کے وسیلے سے دعا؛ یہ خلاصہ ہے۔";
                 case "sabah": return "دعائے صباح: اللہ کی عظمت، ہدایت اور رحمت کی التجا؛ یہ تعارف ہے، مکمل ترجمہ نہیں۔";
+                case "ziyarat_warith": return ZiyaratWarithDua.urdu();
                 case "ashura": return "زیارت عاشورا: امام حسینؑ کی یاد، سلام اور وفاداری کی زیارت؛ یہ مکمل ترجمہ نہیں۔";
                 default: return "";
             }
@@ -147,6 +148,11 @@ public final class ShiaDuasActivity extends Activity {
             "Morning supplication attributed to Imam Ali (a.s.)",
             "", "Full prayer: opens the attributed text at Duas.org.",
             "https://www.duas.org/mobile/dua-sabah.html"),
+        new Dua("ziyarat_warith", "Ziyarat Warith • Photographed Reading", "زیارت وارث",
+            "Four supplied pages • Arabic and Urdu together • offline",
+            ZiyaratWarithDua.arabic(),
+            "The supplied photographed four-page passage, preserving its Arabic and the corresponding newly written Urdu meanings in reading order. It is not independently authenticated as an entire traditional version.",
+            ""),
         new Dua("ashura", "Ziyarat Ashura", "زیارت عاشورا",
             "Ziyarat of Imam Husayn (a.s.)",
             "", "Full ziyarat: opens the attributed text at Duas.org.",
@@ -332,7 +338,9 @@ public final class ShiaDuasActivity extends Activity {
         } else {
             button("▶ Open complete dua & recite", () -> openSource(dua));
         }
-        if ("baitul_mamoor".equals(dua.id)) {
+        if ("ziyarat_warith".equals(dua.id)) {
+            showZiyaratWarithBilingual();
+        } else if ("baitul_mamoor".equals(dua.id)) {
             showBaitAlMamoorBilingual();
         } else if (dua.offline()) {
             LinearLayout panel = Ui.panel(this);
@@ -351,7 +359,8 @@ public final class ShiaDuasActivity extends Activity {
             content.addView(panel);
             Ui.space(this, content, 14);
         }
-        if (!dua.urduTranslation.isEmpty() && !"baitul_mamoor".equals(dua.id)) {
+        if (!dua.urduTranslation.isEmpty() && !"baitul_mamoor".equals(dua.id)
+                && !"ziyarat_warith".equals(dua.id)) {
             Ui.space(this, content, 8);
             LinearLayout translation = Ui.panel(this);
             translation.addView(Ui.text(this,
@@ -381,6 +390,39 @@ public final class ShiaDuasActivity extends Activity {
      * translation, with the page break maintained between lines 7 and 8.
      * Recitation actions stay at the top, as in all other dua readers.
      */
+    /** Read each photographed Ziyarat Warith Arabic passage with its Urdu meaning. */
+    private void showZiyaratWarithBilingual() {
+        for (int page = 0; page < ZiyaratWarithDua.PAGE_STARTS.length - 1; page++) {
+            LinearLayout panel = Ui.panel(this);
+            TextView heading = Ui.text(this,
+                    "زیارت وارث • صفحہ " + (page + 1), 15, Ui.GOLD, true);
+            heading.setGravity(Gravity.RIGHT);
+            heading.setTextDirection(View.TEXT_DIRECTION_RTL);
+            panel.addView(heading);
+            Ui.space(this, panel, 12);
+            int start = ZiyaratWarithDua.PAGE_STARTS[page];
+            int end = ZiyaratWarithDua.PAGE_STARTS[page + 1];
+            for (int i = start; i < end; i++) {
+                TextView arabic = Ui.text(this, ZiyaratWarithDua.ARABIC[i],
+                        24, Ui.WHITE, false);
+                arabic.setTextDirection(View.TEXT_DIRECTION_RTL);
+                arabic.setGravity(Gravity.RIGHT);
+                arabic.setLineSpacing(Ui.dp(this, 6), 1.12f);
+                panel.addView(arabic);
+                Ui.space(this, panel, 7);
+                TextView urdu = Ui.text(this, ZiyaratWarithDua.URDU[i],
+                        18, Ui.MUTED, false);
+                urdu.setTextDirection(View.TEXT_DIRECTION_RTL);
+                urdu.setGravity(Gravity.RIGHT);
+                urdu.setLineSpacing(Ui.dp(this, 5), 1.12f);
+                panel.addView(urdu);
+                if (i + 1 < end) Ui.space(this, panel, 16);
+            }
+            content.addView(panel);
+            Ui.space(this, content, 13);
+        }
+    }
+
     private void showBaitAlMamoorBilingual() {
         for (int page = 0; page < 2; page++) {
             int start = page == 0 ? 0 : BaitAlMamoorDua.SECOND_PAGE_START;
