@@ -559,19 +559,45 @@ public final class IslamDashboardActivity extends Activity {
         }
     }
 
+    /**
+     * Dashboard quotes must have an Urdu rendering; the full Arabic text
+     * remains browsable in the Nahj collection reader.
+     */
+    private int[] urduWisdomIndices() {
+        int count = 0;
+        for (NahjWisdom.Quote quote : NahjWisdom.QUOTES) {
+            if (quote.hasUrdu()) count++;
+        }
+        int[] indices = new int[count];
+        for (int i = 0, pos = 0; i < NahjWisdom.QUOTES.length; i++) {
+            if (NahjWisdom.QUOTES[i].hasUrdu()) indices[pos++] = i;
+        }
+        return indices;
+    }
+
     /** Pick the next unused wisdom and save both selection and rotation time. */
     private void rotateWisdom() {
         if (wisdomText == null || wisdomReference == null) return;
         android.content.SharedPreferences prefs =
-                getSharedPreferences("nahj_wisdom_cycle", MODE_PRIVATE);
+                getSharedPreferences("nahj_urdu_only_wisdom_cycle", MODE_PRIVATE);
+        int[] eligible = urduWisdomIndices();
+        if (eligible.length == 0) {
+            wisdomText.setText("اردو مفہوم دستیاب نہیں۔");
+            wisdomReference.setText("نہج البلاغہ");
+            return;
+        }
         if (currentWisdom < 0 || currentWisdom >= NahjWisdom.QUOTES.length)
             currentWisdom = prefs.getInt("current", -1);
-        WisdomCycle.Pick next = WisdomCycle.next(NahjWisdom.QUOTES.length,
+        int previous = -1;
+        for (int i = 0; i < eligible.length; i++) {
+            if (eligible[i] == currentWisdom) { previous = i; break; }
+        }
+        WisdomCycle.Pick next = WisdomCycle.next(eligible.length,
                 prefs.getString("order", ""), prefs.getInt("cursor", 0),
-                currentWisdom, new java.util.Random());
-        currentWisdom = next.index;
+                previous, new java.util.Random());
+        currentWisdom = eligible[next.index];
         wisdomChangedAt = System.currentTimeMillis();
-        prefs.edit().putInt("current", next.index).putString("order", next.order)
+        prefs.edit().putInt("current", currentWisdom).putString("order", next.order)
                 .putInt("cursor", next.cursor)
                 .putLong(WISDOM_CHANGED_KEY, wisdomChangedAt).apply();
         showCurrentWisdom();
@@ -592,22 +618,21 @@ public final class IslamDashboardActivity extends Activity {
     private void showCurrentWisdom() {
         if (wisdomText == null || wisdomReference == null) return;
         android.content.SharedPreferences prefs =
-                getSharedPreferences("nahj_wisdom_cycle", MODE_PRIVATE);
+                getSharedPreferences("nahj_urdu_only_wisdom_cycle", MODE_PRIVATE);
         if (currentWisdom < 0 || currentWisdom >= NahjWisdom.QUOTES.length)
             currentWisdom = prefs.getInt("current", -1);
-        if (currentWisdom < 0 || currentWisdom >= NahjWisdom.QUOTES.length) {
+        if (currentWisdom < 0 || currentWisdom >= NahjWisdom.QUOTES.length
+                || !NahjWisdom.QUOTES[currentWisdom].hasUrdu()) {
             rotateWisdom();
             return;
         }
         NahjWisdom.Quote quote = NahjWisdom.QUOTES[currentWisdom];
-        String display = quote.displayText();
+        String display = quote.urdu;
         int quoteLength = display.codePointCount(0, display.length());
         wisdomText.setTextSize(TypedValue.COMPLEX_UNIT_SP,
                 quoteLength > 105 ? 15f : quoteLength > 73 ? 17f : 18f);
         wisdomText.setText(display);
-        wisdomReference.setText(quote.hasUrdu()
-                ? "نہج البلاغہ • اردو مفہوم"
-                : "نہج البلاغہ • اصل عربی • مکمل مطالعہ کے لیے کھولیں");
+        wisdomReference.setText("نہج البلاغہ • اردو مفہوم");
         // First render of older installations: initialize once, then persist.
         // On later launches the saved epoch lets us rotate immediately if due.
         if (wisdomChangedAt <= 0L) {
