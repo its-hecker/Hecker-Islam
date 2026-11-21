@@ -299,6 +299,38 @@ public final class ShiaDuasActivity extends Activity {
     private void showDua(Dua dua) {
         content.addView(Ui.text(this, dua.occasion, 15, Ui.MUTED, false));
         Ui.space(this, content, 16);
+        // Reader actions stay above the Arabic and Urdu reading, even for long duas.
+        if (dua.offline()) {
+            LinearLayout audioPanel = Ui.panel(this);
+            audioPanel.addView(Ui.text(this, "RECITATION", 12, Ui.GOLD, true));
+            Ui.space(this, audioPanel, 10);
+            TextView arabicRecite = Ui.text(this, "▶ Recite Arabic", 16, Ui.WHITE, true);
+            arabicRecite.setPadding(0, Ui.dp(this, 9), 0, Ui.dp(this, 9));
+            arabicRecite.setOnClickListener(v -> reciter.playOrStop(dua.arabic, new Locale("ar")));
+            reciter.attach(arabicRecite);
+            audioPanel.addView(arabicRecite);
+            if (!dua.urduTranslation.isEmpty()) {
+                Ui.space(this, audioPanel, 9);
+                TextView urduRecite = Ui.text(this, "▶ Recite Urdu translation", 16, Ui.GOLD, true);
+                urduRecite.setPadding(0, Ui.dp(this, 9), 0, Ui.dp(this, 9));
+                urduRecite.setOnClickListener(v ->
+                    reciter.speak(dua.urduTranslation, new Locale("ur", "PK")));
+                audioPanel.addView(urduRecite);
+            }
+            Ui.space(this, audioPanel, 9);
+            TextView speed = Ui.text(this, "Recitation speed • " + reciter.speedLabel() + "  ›", 15, Ui.GOLD, true);
+            speed.setPadding(0, Ui.dp(this, 10), 0, Ui.dp(this, 10));
+            speed.setOnClickListener(v -> reciter.chooseSpeed(speed));
+            audioPanel.addView(speed);
+            Ui.space(this, audioPanel, 8);
+            audioPanel.addView(Ui.text(this,
+                "Uses Android speech voices; it is not a recorded human reciter.",
+                12, Ui.MUTED, false));
+            content.addView(audioPanel);
+            Ui.space(this, content, 12);
+        } else {
+            button("▶ Open complete dua & recite", () -> openSource(dua));
+        }
         if (dua.offline()) {
             LinearLayout panel = Ui.panel(this);
             TextView original = Ui.text(this, dua.arabic, 25, Ui.WHITE, false);
@@ -330,37 +362,6 @@ public final class ShiaDuasActivity extends Activity {
             translation.addView(text);
             content.addView(translation);
             Ui.space(this, content, 12);
-        }
-        if (dua.offline()) {
-            LinearLayout audioPanel = Ui.panel(this);
-            audioPanel.addView(Ui.text(this, "RECITATION", 12, Ui.GOLD, true));
-            Ui.space(this, audioPanel, 10);
-            TextView arabicRecite = Ui.text(this, "▶ Recite Arabic", 16, Ui.WHITE, true);
-            arabicRecite.setPadding(0, Ui.dp(this, 9), 0, Ui.dp(this, 9));
-            arabicRecite.setOnClickListener(v -> reciter.playOrStop(dua.arabic, new Locale("ar")));
-            reciter.attach(arabicRecite);
-            audioPanel.addView(arabicRecite);
-            if (!dua.urduTranslation.isEmpty()) {
-                Ui.space(this, audioPanel, 9);
-                TextView urduRecite = Ui.text(this, "▶ Recite Urdu translation", 16, Ui.GOLD, true);
-                urduRecite.setPadding(0, Ui.dp(this, 9), 0, Ui.dp(this, 9));
-                urduRecite.setOnClickListener(v ->
-                    reciter.speak(dua.urduTranslation, new Locale("ur", "PK")));
-                audioPanel.addView(urduRecite);
-            }
-            Ui.space(this, audioPanel, 9);
-            TextView speed = Ui.text(this, "Recitation speed • " + reciter.speedLabel() + "  ›", 15, Ui.GOLD, true);
-            speed.setPadding(0, Ui.dp(this, 10), 0, Ui.dp(this, 10));
-            speed.setOnClickListener(v -> reciter.chooseSpeed(speed));
-            audioPanel.addView(speed);
-            Ui.space(this, audioPanel, 8);
-            audioPanel.addView(Ui.text(this,
-                "Uses Android speech voices; it is not a recorded human reciter.",
-                12, Ui.MUTED, false));
-            content.addView(audioPanel);
-            Ui.space(this, content, 12);
-        } else {
-            button("▶ Open complete dua & recite", () -> openSource(dua));
         }
         content.addView(Ui.text(this, dua.instructions, 13, Ui.MUTED, false));
         Ui.space(this, content, 15);
