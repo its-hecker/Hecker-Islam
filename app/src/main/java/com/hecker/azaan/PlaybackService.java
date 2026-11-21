@@ -131,7 +131,17 @@ public final class PlaybackService extends Service {
                 if (builtIn) BundledAzaan.configure(this, player);
                 else player.setDataSource(this, Uri.parse(recording));
                 player.setVolume(settings.volume(), settings.volume());
-                player.setOnPreparedListener(p -> { if (running) p.start(); });
+                player.setOnPreparedListener(p -> {
+                    if (!running || player != p) return;
+                    if (builtIn) {
+                        p.setOnSeekCompleteListener(seeked -> {
+                            if (running && player == seeked) seeked.start();
+                        });
+                        p.seekTo(BundledAzaan.START_AFTER_INTRO_MS, MediaPlayer.SEEK_CLOSEST_SYNC);
+                    } else {
+                        p.start();
+                    }
+                });
                 player.setOnCompletionListener(p -> { releasePlayer(); languageIndex++; playLanguage(); });
                 player.setOnErrorListener((p, what, extra) -> {
                     fail("Could not play " + language.title + " recording. Check the bundled audio or selected file.");
