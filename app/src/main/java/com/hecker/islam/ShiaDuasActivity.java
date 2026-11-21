@@ -43,6 +43,7 @@ public final class ShiaDuasActivity extends Activity {
                 case "salawat": return "اے اللہ! محمدؐ اور آلِ محمدؑ پر رحمت نازل فرما۔";
                 case "ahad": return "دعائے عہد: امام مہدیؑ سے اپنے عہد کی تجدید کے لیے پڑھی جانے والی دعا۔ مکمل عربی متن اور اردو ترجمہ ماخذ پر دستیاب ہے۔";
                 case "kisa": return "حدیثِ کساء: حضرت فاطمہ زہراؑ سے منقول روایت جس میں رسولِ خداؐ، امام علیؑ، حضرت فاطمہؑ، امام حسنؑ اور امام حسینؑ کا ایک چادر کے نیچے جمع ہونا بیان ہوا ہے۔ یہ صرف تعارف ہے؛ مکمل عربی متن اور اردو ترجمہ ماخذ پر دستیاب ہیں۔";
+                case "baitul_mamoor": return BaitAlMamoorDua.urdu();
                 case "yastasheer": return "دعائے یستشیر: اللہ تعالیٰ کی حمد و ثنا، اس کی قدرت، رحمت اور بخشش کی مناجات۔ مکمل عربی متن اور دستیاب ترجمہ اصل ماخذ میں پڑھیں۔ یہ تعارف ہے، مکمل اردو ترجمہ نہیں۔";
                 case "kumayl": return "دعائے کمیل: اللہ سے مغفرت، رحمت اور بندگی کی درخواست۔ یہ مکمل دعا کا ترجمہ نہیں بلکہ تعارف ہے۔";
                 case "tawassul": return "دعائے توسل: اللہ سے اہلِ بیتؑ کے وسیلے سے دعا۔ یہ مکمل دعا کا ترجمہ نہیں بلکہ تعارف ہے۔";
@@ -114,6 +115,11 @@ public final class ShiaDuasActivity extends Activity {
             "اللَّهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَآلِ مُحَمَّدٍ",
             "A short form of salawat, available offline.",
             "https://www.duas.org/Allahumma.htm"),
+        new Dua("baitul_mamoor", "Dua-e-Bait al-Mamoor", "دعائے بیت المعمور",
+            "Arabic and Urdu supplication • complete two-page reading available offline",
+            BaitAlMamoorDua.arabic(),
+            "Read the Arabic and corresponding Urdu lines in their original order.",
+            ""),
         new Dua("yastasheer", "Dua-e-Yastasheer", "دعائے یستشیر",
             "Supplication of praise and reliance on Allah • Sahifa Alawiya",
             "", "Open the complete source for Arabic, transliteration and available translation. It is not a short offline supplication.",
@@ -326,7 +332,9 @@ public final class ShiaDuasActivity extends Activity {
         } else {
             button("▶ Open complete dua & recite", () -> openSource(dua));
         }
-        if (dua.offline()) {
+        if ("baitul_mamoor".equals(dua.id)) {
+            showBaitAlMamoorBilingual();
+        } else if (dua.offline()) {
             LinearLayout panel = Ui.panel(this);
             TextView original = Ui.text(this, dua.arabic, 25, Ui.WHITE, false);
             original.setGravity(Gravity.RIGHT);
@@ -343,7 +351,7 @@ public final class ShiaDuasActivity extends Activity {
             content.addView(panel);
             Ui.space(this, content, 14);
         }
-        if (!dua.urduTranslation.isEmpty()) {
+        if (!dua.urduTranslation.isEmpty() && !"baitul_mamoor".equals(dua.id)) {
             Ui.space(this, content, 8);
             LinearLayout translation = Ui.panel(this);
             translation.addView(Ui.text(this,
@@ -362,8 +370,49 @@ public final class ShiaDuasActivity extends Activity {
         Ui.space(this, content, 15);
         button(favorite(dua.id) ? "★ Remove bookmark" : "☆ Save dua",
                 () -> toggleFavorite(dua));
-        button(dua.source.contains("fzic.org")
-                ? "Read complete Arabic & Urdu translation ›"
-                : "Read full source (online) ›", () -> openSource(dua));
+        if (!dua.source.isEmpty()) {
+            button(dua.source.contains("fzic.org")
+                    ? "Read complete Arabic & Urdu translation ›"
+                    : "Read full source (online) ›", () -> openSource(dua));
+        }
+    }
+    /**
+     * Keep every Arabic line followed immediately by its printed Urdu
+     * translation, with the page break maintained between lines 7 and 8.
+     * Recitation actions stay at the top, as in all other dua readers.
+     */
+    private void showBaitAlMamoorBilingual() {
+        for (int page = 0; page < 2; page++) {
+            int start = page == 0 ? 0 : BaitAlMamoorDua.SECOND_PAGE_START;
+            int end = page == 0 ? BaitAlMamoorDua.SECOND_PAGE_START
+                    : BaitAlMamoorDua.ARABIC.length;
+            LinearLayout panel = Ui.panel(this);
+            TextView caption = Ui.text(this,
+                    page == 0 ? "دعائے بیت المعمور • صفحہ ۱"
+                            : "دعائے بیت المعمور • صفحہ ۲",
+                    14, Ui.GOLD, true);
+            caption.setGravity(Gravity.RIGHT);
+            caption.setTextDirection(View.TEXT_DIRECTION_RTL);
+            panel.addView(caption);
+            Ui.space(this, panel, 14);
+            for (int i = start; i < end; i++) {
+                TextView arabic = Ui.text(this, BaitAlMamoorDua.ARABIC[i],
+                        24, Ui.WHITE, false);
+                arabic.setGravity(Gravity.RIGHT);
+                arabic.setTextDirection(View.TEXT_DIRECTION_RTL);
+                arabic.setLineSpacing(Ui.dp(this, 7), 1.12f);
+                panel.addView(arabic);
+                Ui.space(this, panel, 7);
+                TextView urdu = Ui.text(this, BaitAlMamoorDua.URDU[i],
+                        18, Ui.MUTED, false);
+                urdu.setGravity(Gravity.RIGHT);
+                urdu.setTextDirection(View.TEXT_DIRECTION_RTL);
+                urdu.setLineSpacing(Ui.dp(this, 5), 1.12f);
+                panel.addView(urdu);
+                if (i + 1 < end) Ui.space(this, panel, 19);
+            }
+            content.addView(panel);
+            Ui.space(this, content, 12);
+        }
     }
 }
