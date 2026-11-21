@@ -1,5 +1,14 @@
 plugins { id 'com.android.application' }
 
+// Never commit a release keystore or signing passwords. GitHub Actions injects
+// the credentials only for the manually requested signed-release workflow.
+def releaseSigningAvailable = [
+    'HECKER_RELEASE_KEYSTORE',
+    'HECKER_RELEASE_STORE_PASSWORD',
+    'HECKER_RELEASE_KEY_ALIAS',
+    'HECKER_RELEASE_KEY_PASSWORD'
+].every { System.getenv(it) != null && !System.getenv(it).isEmpty() }
+
 android {
     // Keep the Azaan source package's generated R/BuildConfig namespace.
     namespace 'com.hecker.azaan'
@@ -10,6 +19,27 @@ android {
         targetSdk 35
         versionCode 9
         versionName '0.4.5-alpha'
+    }
+    signingConfigs {
+        heckerRelease {
+            if (releaseSigningAvailable) {
+                storeFile file(System.getenv('HECKER_RELEASE_KEYSTORE'))
+                storePassword System.getenv('HECKER_RELEASE_STORE_PASSWORD')
+                keyAlias System.getenv('HECKER_RELEASE_KEY_ALIAS')
+                keyPassword System.getenv('HECKER_RELEASE_KEY_PASSWORD')
+                enableV1Signing false
+                enableV2Signing true
+                enableV3Signing true
+            }
+        }
+    }
+    buildTypes {
+        release {
+            // No debug-key fallback: only user-controlled production signing.
+            if (releaseSigningAvailable) {
+                signingConfig signingConfigs.heckerRelease
+            }
+        }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
