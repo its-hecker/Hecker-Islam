@@ -1,11 +1,9 @@
 package com.hecker.islam;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.drawable.GradientDrawable;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -25,8 +23,8 @@ import java.util.Locale;
  * A photographed book excerpt is not independently authenticated as a hadith.
  */
 public final class MojzatActivity extends Activity {
-    private JSONArray stories = new JSONArray(), books = new JSONArray();
-    private String catalogNote = "", selectedId;
+    private JSONArray stories = new JSONArray();
+    private String selectedId;
     private LinearLayout content;
     private TextView storyText;
     private ReaderSpeech reciter;
@@ -71,13 +69,9 @@ public final class MojzatActivity extends Activity {
             while ((count = stream.read(bytes)) != -1) buffer.write(bytes, 0, count);
             JSONObject root = new JSONObject(buffer.toString(StandardCharsets.UTF_8.name()));
             stories = root.optJSONArray("stories");
-            books = root.optJSONArray("books");
             if (stories == null) stories = new JSONArray();
-            if (books == null) books = new JSONArray();
-            catalogNote = root.optString("note");
         } catch (Exception e) {
-            stories = new JSONArray(); books = new JSONArray();
-            catalogNote = "اردو مواد اس بلڈ میں دستیاب نہیں۔ براہِ کرم مکمل APK انسٹال کریں۔";
+            stories = new JSONArray();
         }
     }
     private JSONObject find(String id) {
@@ -185,16 +179,6 @@ public final class MojzatActivity extends Activity {
         content.addView(urdu("معجزۂ مولا علی علیہ السلام", 23, Ui.GOLD, true));
         Ui.space(this, content, 9);
         Ui.space(this, content, 17);
-        LinearLayout introduction = Ui.panel(this);
-        introduction.addView(roman(
-                "Five photographed book pages, transcribed in sequence in Urdu.",
-                16, Ui.WHITE, false));
-        Ui.space(this, introduction, 9);
-        introduction.addView(urdu(
-                "متن فراہم کردہ کتابی تصاویر کی ترتیب کے مطابق نقل کیا گیا ہے۔ اس کی سند کی آزادانہ تصدیق نہیں ہوئی۔",
-                14, Ui.MUTED, false));
-        content.addView(introduction);
-        Ui.space(this, content, 17);
         for (int i = 0; i < stories.length(); i++) {
             JSONObject item = stories.optJSONObject(i);
             if (item != null) featured(item);
@@ -202,20 +186,6 @@ public final class MojzatActivity extends Activity {
         if (stories.length() == 0)
             content.addView(urdu("حکایات اس بلڈ میں موجود نہیں۔", 16, Ui.MUTED, false));
 
-        Ui.space(this, content, 10);
-        content.addView(Ui.text(this, "Source & context", 19, Ui.WHITE, true));
-        Ui.space(this, content, 9);
-        for (int i = 0; i < books.length(); i++) {
-            JSONObject book = books.optJSONObject(i);
-            if (book == null) continue;
-            String url = book.optString("url");
-            LinearLayout box = Ui.panel(this);
-            box.addView(urdu(book.optString("title") + "  ›", 16, Ui.GOLD, true));
-            box.setOnClickListener(v -> openSource(url));
-            content.addView(box);
-            Ui.space(this, content, 9);
-        }
-        content.addView(roman(catalogNote, 12, Ui.MUTED, false));
     }
     private void featured(JSONObject item) {
         LinearLayout card = Ui.panel(this);
@@ -253,14 +223,6 @@ public final class MojzatActivity extends Activity {
         content.addView(urduOnly ? urdu(item.optString("subtitle"), 16, Ui.GOLD, false)
                 : roman(item.optString("subtitle"), 16, Ui.GOLD, false));
         Ui.space(this, content, 18);
-        LinearLayout label = Ui.panel(this);
-        label.addView(urdu("نوعیتِ روایت", 13, Ui.GOLD, true));
-        Ui.space(this, label, 7);
-        label.addView(urduOnly ? urdu(item.optString("label"), 15, Ui.WHITE, false)
-                : roman(item.optString("label"), 15, Ui.WHITE, false));
-        content.addView(label);
-        Ui.space(this, content, 13);
-
         if (!urduOnly) {
         LinearLayout switcher = Ui.panel(this);
         switcher.addView(Ui.text(this, "READING LANGUAGE", 12, Ui.GOLD, true));
@@ -345,39 +307,15 @@ public final class MojzatActivity extends Activity {
 
         String id = item.optString("id");
         action(saved(id) ? "★ محفوظ سے ہٹائیں" : "☆ محفوظ کریں", () -> toggleBookmark(id));
-        if (item.optString("source").startsWith("https://"))
-            action("ماخذ / مکمل حوالہ کھولیں  ›", () -> openSource(item.optString("source")));
         action("حکایت شیئر کریں", () -> {
             Intent share = new Intent(Intent.ACTION_SEND);
             share.setType("text/plain");
-            String source = item.optString("source");
-            share.putExtra(Intent.EXTRA_TEXT, item.optString("title") + "\n\n"
-                    + text + "\n\n" + item.optString("label")
-                    + (source.isEmpty() ? "" : "\n" + source));
+            share.putExtra(Intent.EXTRA_TEXT, item.optString("title") + "\n\n" + text);
             startActivity(Intent.createChooser(share, "Share devotional story"));
         });
-        content.addView(urduOnly ? urdu("ماخذ: " + item.optString("sourceTitle"), 13, Ui.MUTED, false)
-                : roman("Source: " + item.optString("sourceTitle"), 13, Ui.MUTED, false));
-        Ui.space(this, content, 8);
-        content.addView(urdu(
-                urduOnly
-                    ? "یہ کتابی تصاویر سے نقل شدہ اردو متن ہے۔ چند غیر واضح حروف اور الفاظ کا اصل صفحات سے موازنہ کیا جا سکتا ہے؛ اسے سند کے لحاظ سے مستند حدیث قرار نہیں دیا گیا۔"
-                    : "یہ روایت کا بامحاورہ بیان ہے؛ اسے لفظ بہ لفظ نقل یا مستند تاریخی حدیث نہ سمجھا جائے۔",
-                13, Ui.MUTED, false));
     }
     private void size(int change) {
         fontSize = Math.max(16, Math.min(32, fontSize + change));
         if (storyText != null) storyText.setTextSize(TypedValue.COMPLEX_UNIT_SP, fontSize);
-    }
-    private void openSource(String raw) {
-        try {
-            Uri uri = Uri.parse(raw);
-            if (!"https".equalsIgnoreCase(uri.getScheme())) throw new IllegalArgumentException();
-            startActivity(new Intent(Intent.ACTION_VIEW, uri));
-        } catch (Exception ex) {
-            new AlertDialog.Builder(this)
-                    .setMessage("یہ ماخذ کھولنے کے لیے براؤزر درکار ہے۔")
-                    .setPositiveButton("ٹھیک ہے", null).show();
-        }
     }
 }
