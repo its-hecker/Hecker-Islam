@@ -165,16 +165,33 @@ public final class IslamDashboardActivity extends Activity {
         LinearLayout line = new LinearLayout(this);
         line.setGravity(Gravity.CENTER_VERTICAL);
         if (page == 0) {
-            // Keep the greeting in the small app header, not in a separate card.
-            // Two deliberate lines leave room for the About and Settings icons.
+            // A compact single-line greeting fills the available header column.
+            // The colored pill makes the area beside the action icons deliberate.
+            LinearLayout greetingPill = Ui.column(this);
+            greetingPill.setGravity(Gravity.CENTER);
+            greetingPill.setPadding(Ui.dp(this, 8), Ui.dp(this, 5),
+                    Ui.dp(this, 8), Ui.dp(this, 5));
+            GradientDrawable greetingBackground = new GradientDrawable(
+                    GradientDrawable.Orientation.LEFT_RIGHT,
+                    new int[]{mix(Ui.CARD, Ui.GOLD, .20f),
+                              mix(Ui.CARD, Ui.GOLD, .06f)});
+            greetingBackground.setCornerRadius(Ui.dp(this, 17));
+            greetingBackground.setStroke(Ui.dp(this, 1),
+                    mix(Ui.OUTLINE, Ui.GOLD, .48f));
+            greetingPill.setBackground(greetingBackground);
             ShimmerGreeting heading = new ShimmerGreeting(this);
-            heading.setText("السلام علیکم\nیا علیؑ مدد");
-            heading.setTextSize(TypedValue.COMPLEX_UNIT_SP, 21);
-            heading.setTextAlignment(View.TEXT_ALIGNMENT_GRAVITY);
-            heading.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
-            heading.setLineSpacing(Ui.dp(this, 1), 1.06f);
-            heading.setMaxLines(2);
-            line.addView(heading, new LinearLayout.LayoutParams(0, Ui.dp(this, 72), 1));
+            heading.setText("السلام علیکم یا علیؑ مدد");
+            heading.setSingleLine(true);
+            heading.setGravity(Gravity.CENTER);
+            // Android sizes the text to the available width rather than making
+            // a ragged two-line header on Pixel 4-series-sized screens.
+            heading.setAutoSizeTextTypeUniformWithConfiguration(
+                    14, 22, 1, TypedValue.COMPLEX_UNIT_SP);
+            greetingPill.addView(heading, new LinearLayout.LayoutParams(-1, -1));
+            LinearLayout.LayoutParams greetingParams =
+                    new LinearLayout.LayoutParams(0, Ui.dp(this, 52), 1);
+            greetingParams.setMargins(0, 0, Ui.dp(this, 9), 0);
+            line.addView(greetingPill, greetingParams);
         } else {
             TextView heading = Ui.text(this, "HECKER ISLAM", 14, Ui.GOLD, true);
             line.addView(heading, new LinearLayout.LayoutParams(0, Ui.dp(this, 48), 1));
@@ -523,71 +540,88 @@ public final class IslamDashboardActivity extends Activity {
             return;
         }
         NahjWisdom.Quote quote = NahjWisdom.QUOTES[currentWisdom];
+        // Compact typography, but never truncate a wisdom to save space.
+        int quoteLength = quote.urdu.codePointCount(0, quote.urdu.length());
+        wisdomText.setTextSize(TypedValue.COMPLEX_UNIT_SP,
+                quoteLength > 105 ? 16f : quoteLength > 73 ? 17f : 18f);
         wisdomText.setText(quote.urdu);
         wisdomReference.setText("نہج البلاغہ • اردو مفہوم");
         if (wisdomChangedAt == 0)
             wisdomChangedAt = android.os.SystemClock.elapsedRealtime();
     }
     private void wisdomCard() {
-        // The former welcome card is now the single dashboard wisdom card.
+        // Short dashboard preview: full text expands naturally for longer quotes,
+        // but there is no redundant full-width bottom action row.
         LinearLayout card = dashboardCard(true);
+        card.setPadding(Ui.dp(this, 15), Ui.dp(this, 13),
+                Ui.dp(this, 15), Ui.dp(this, 13));
         GradientDrawable wisdomSurface = new GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
                 new int[]{mix(Ui.CARD, Ui.GOLD, .16f),
                           mix(Ui.CARD, Ui.GOLD, .05f)});
-        wisdomSurface.setCornerRadius(Ui.dp(this, 26));
+        wisdomSurface.setCornerRadius(Ui.dp(this, 24));
         wisdomSurface.setStroke(Ui.dp(this, 1),
-                mix(Ui.OUTLINE, Ui.GOLD, .46f));
+                mix(Ui.OUTLINE, Ui.GOLD, .44f));
         card.setBackground(wisdomSurface);
+
         LinearLayout wisdomHeader = new LinearLayout(this);
         wisdomHeader.setGravity(Gravity.CENTER_VERTICAL);
-        TextView wisdomHeading = Ui.text(this, "WISDOM FROM IMAM ALI (A.S.)", 12, Ui.GOLD, true);
-        wisdomHeader.addView(wisdomHeading, new LinearLayout.LayoutParams(0, -2, 1));
+        TextView wisdomHeading =
+                Ui.text(this, "WISDOM FROM IMAM ALI (A.S.)", 11, Ui.GOLD, true);
+        wisdomHeading.setMaxLines(2);
+        wisdomHeader.addView(wisdomHeading,
+                new LinearLayout.LayoutParams(0, -2, 1));
+
+        GradientDrawable buttonSurface = new GradientDrawable();
+        buttonSurface.setColor(mix(Ui.CARD, Ui.GOLD, .11f));
+        buttonSurface.setCornerRadius(Ui.dp(this, 22));
+        buttonSurface.setStroke(Ui.dp(this, 1), Ui.OUTLINE);
+
         ImageView nextWisdom = new ImageView(this);
         nextWisdom.setImageResource(android.R.drawable.ic_media_next);
         nextWisdom.setColorFilter(Ui.GOLD);
         nextWisdom.setContentDescription("Show next wisdom quote");
-        nextWisdom.setPadding(Ui.dp(this, 12), Ui.dp(this, 12),
-                Ui.dp(this, 12), Ui.dp(this, 12));
-        GradientDrawable nextSurface = new GradientDrawable();
-        nextSurface.setColor(mix(Ui.CARD, Ui.GOLD, .12f));
-        nextSurface.setCornerRadius(Ui.dp(this, 22));
-        nextSurface.setStroke(Ui.dp(this, 1), Ui.OUTLINE);
-        nextWisdom.setBackground(nextSurface);
+        nextWisdom.setPadding(Ui.dp(this, 11), Ui.dp(this, 11),
+                Ui.dp(this, 11), Ui.dp(this, 11));
+        nextWisdom.setBackground(buttonSurface.getConstantState().newDrawable().mutate());
         nextWisdom.setOnClickListener(v -> rotateWisdom());
         wisdomHeader.addView(nextWisdom, new LinearLayout.LayoutParams(
                 Ui.dp(this, 44), Ui.dp(this, 44)));
-        card.addView(wisdomHeader);
-        Ui.space(this, card, 12);
-        wisdomText = Ui.text(this, "", 19, Ui.WHITE, false);
-        wisdomText.setTextDirection(View.TEXT_DIRECTION_RTL);
-        wisdomText.setGravity(Gravity.RIGHT);
-        wisdomText.setLineSpacing(Ui.dp(this, 5), 1.12f);
-        card.addView(wisdomText);
-        Ui.space(this, card, 12);
-        wisdomReference = Ui.text(this, "", 12, Ui.MUTED, false);
-        card.addView(wisdomReference);
-        Ui.space(this, card, 14);
-        LinearLayout actions = new LinearLayout(this);
-        actions.setGravity(Gravity.CENTER_VERTICAL);
-        TextView openCollection = Ui.text(this, "Read all wisdoms   ›", 13, Ui.GOLD, true);
-        openCollection.setOnClickListener(v -> launch(NahjAlBalaghaActivity.class));
-        actions.addView(openCollection, new LinearLayout.LayoutParams(0, Ui.dp(this, 46), 1));
-        TextView shareStatus = Ui.text(this, "↗  WhatsApp Status", 14, Ui.GOLD, true);
-        shareStatus.setGravity(Gravity.CENTER);
-        shareStatus.setPadding(Ui.dp(this, 12), 0, Ui.dp(this, 12), 0);
-        shareStatus.setContentDescription("Share this wisdom as a WhatsApp status image");
+
+        ImageView shareStatus = new ImageView(this);
+        shareStatus.setImageResource(android.R.drawable.ic_menu_share);
+        shareStatus.setColorFilter(Ui.GOLD);
+        shareStatus.setContentDescription("Share this wisdom to WhatsApp Status");
+        shareStatus.setPadding(Ui.dp(this, 11), Ui.dp(this, 11),
+                Ui.dp(this, 11), Ui.dp(this, 11));
+        shareStatus.setBackground(buttonSurface.getConstantState().newDrawable().mutate());
+        LinearLayout.LayoutParams shareParams = new LinearLayout.LayoutParams(
+                Ui.dp(this, 44), Ui.dp(this, 44));
+        shareParams.setMargins(Ui.dp(this, 7), 0, 0, 0);
+        wisdomHeader.addView(shareStatus, shareParams);
         shareStatus.setOnClickListener(v -> {
             if (currentWisdom >= 0 && currentWisdom < NahjWisdom.QUOTES.length)
                 QuoteStatusShare.share(this, NahjWisdom.QUOTES[currentWisdom]);
         });
-        actions.addView(shareStatus);
-        card.addView(actions);
+        card.addView(wisdomHeader);
+        Ui.space(this, card, 7);
+
+        wisdomText = Ui.text(this, "", 18, Ui.WHITE, false);
+        wisdomText.setTextDirection(View.TEXT_DIRECTION_RTL);
+        wisdomText.setGravity(Gravity.RIGHT);
+        wisdomText.setLineSpacing(Ui.dp(this, 2), 1.06f);
+        card.addView(wisdomText);
+        Ui.space(this, card, 6);
+
+        wisdomReference = Ui.text(this, "", 11, Ui.MUTED, false);
+        wisdomReference.setTextDirection(View.TEXT_DIRECTION_RTL);
+        wisdomReference.setGravity(Gravity.RIGHT);
+        card.addView(wisdomReference);
         showCurrentWisdom();
-        card.setContentDescription("Wisdom from Nahj al-Balagha. Use the next quote icon for another saying, or share to WhatsApp Status.");
+        card.setContentDescription("Nahj al-Balagha wisdom. Tap to read, or use the next quote and share buttons.");
         card.setOnClickListener(v -> launch(NahjAlBalaghaActivity.class));
         content.addView(card);
-        Ui.space(this, content, 13);
+        Ui.space(this, content, 12);
     }
     /**
      * Animated but readable theme-accent shimmer. Uses the actual TextView width
