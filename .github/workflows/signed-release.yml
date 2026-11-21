@@ -1,0 +1,76 @@
+name: Signed release
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    env:
+      ANDROID_HOME: ${{ github.workspace }}/.android-sdk
+      ANDROID_SDK_ROOT: ${{ github.workspace }}/.android-sdk
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify and stage private signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.HECKER_ISLAM_KEYSTORE_B64 }}
+          STORE_PASSWORD: ${{ secrets.HECKER_ISLAM_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.HECKER_ISLAM_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.HECKER_ISLAM_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$KEYSTORE_BASE64" || -z "$STORE_PASSWORD" || -z "$KEY_ALIAS" || -z "$KEY_PASSWORD" ]]; then
+            echo 'Release signing is not configured. Add the four HECKER_ISLAM_* secrets before requesting a signed release.'
+            exit 1
+          fi
+          umask 077
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/hecker-islam-release.jks"
+          test -s "$RUNNER_TEMP/hecker-islam-release.jks"
+          echo "HECKER_RELEASE_KEYSTORE=$RUNNER_TEMP/hecker-islam-release.jks" >> "$GITHUB_ENV"
+      - name: Embed pinned Arabic muezzin recording
+        run: python3 tools/fetch_azaan_audio.py
+      - name: Bundle Shia Urdu Qur'an translations
+        run: python3 tools/fetch_shia_quran_translations.py
+      - name: Verify bundled offline catalogs
+        run: |
+          python3 tools/bundle_reference_assets.py --verify
+          python3 tools/verify_daily_ziaraat.py
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Android SDK
+        run: |
+          mkdir -p "$ANDROID_HOME/cmdline-tools"
+          curl -fsSL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o /tmp/android-cli.zip
+          unzip -q /tmp/android-cli.zip -d /tmp/android-tools
+          mv /tmp/android-tools/cmdline-tools "$ANDROID_HOME/cmdline-tools/latest"
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" --licenses >/dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+      - name: Create standard launcher PNG icons
+        run: |
+          python3 -m venv .launcher-venv
+          .launcher-venv/bin/python -m pip install --disable-pip-version-check 'cairosvg==2.7.1'
+          .launcher-venv/bin/python tools/generate_launcher_icons.py
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Compile, test and sign production APK
+        env:
+          HECKER_RELEASE_STORE_PASSWORD: ${{ secrets.HECKER_ISLAM_STORE_PASSWORD }}
+          HECKER_RELEASE_KEY_ALIAS: ${{ secrets.HECKER_ISLAM_KEY_ALIAS }}
+          HECKER_RELEASE_KEY_PASSWORD: ${{ secrets.HECKER_ISLAM_KEY_PASSWORD }}
+        run: |
+          set -e
+          gradle --no-daemon testDebugUnitTest lintRelease assembleRelease
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose app/build/outputs/apk/release/app-release.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hecker-islam-signed-release-apk
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+      - name: Destroy staged keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/hecker-islam-release.jks"
