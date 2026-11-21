@@ -13,6 +13,11 @@ This change is based on `fix/standalone-offline-expressive`, not the old one-fil
 - Foreground location only: no background permission or continuous tracking while the app is closed. Changes appear while the app is open or when it is reopened.
 - Test on-device with Location enabled and disabled, approximate/precise permission, indoors, and outside Pakistan.
 
+## After Namaz Ziaraat
+- Adds an offline **After Namaz Ziaraat** shortcut and four reader entries: all three together, Imam Husayn/Hazrat Abbas, Imam Reza, and Imam-e-Zamana.
+- Each entry has complete Arabic salutations and a carefully written Urdu rendering, selectable Arabic and Urdu device-voice recitation, speed controls and bookmarks.
+- These are optional post-prayer devotions, not compulsory parts of Salah; the Arabic source is https://www.duas.org/ziarataftersalaat.htm.
+
 ## Shia duas
 - Adds **Dua Imam-e-Zamana (Dua al-Faraj)** and **Dua-e-Ahad**.
 - Adds **Hadith-e-Kisa (حدیثِ کساء)** to the Shia Duas catalogue, with Urdu introduction, bookmarking, and a linked in-app full Arabic/Urdu reader with Arabic and Urdu audio at FZIC. The complete narration and recitations require internet access.
