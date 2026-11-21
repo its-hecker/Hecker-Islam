@@ -604,8 +604,9 @@ public final class IslamDashboardActivity extends Activity {
         }
 
         private void startShimmer() {
-            if (gradient == null || shimmer != null || !ValueAnimator.areAnimatorsEnabled())
-                return;
+            if (gradient == null || shimmer != null
+                    || getWindowVisibility() != View.VISIBLE
+                    || !ValueAnimator.areAnimatorsEnabled()) return;
             shimmer = ValueAnimator.ofFloat(0f, 1f);
             shimmer.setDuration(4200L);
             shimmer.setRepeatCount(ValueAnimator.INFINITE);
@@ -625,11 +626,24 @@ public final class IslamDashboardActivity extends Activity {
             startShimmer();
         }
 
-        @Override protected void onDetachedFromWindow() {
+        @Override protected void onWindowVisibilityChanged(int visibility) {
+            super.onWindowVisibilityChanged(visibility);
+            if (visibility == View.VISIBLE) {
+                startShimmer();
+            } else {
+                stopShimmer();
+            }
+        }
+
+        private void stopShimmer() {
             if (shimmer != null) {
                 shimmer.cancel();
                 shimmer = null;
             }
+        }
+
+        @Override protected void onDetachedFromWindow() {
+            stopShimmer();
             super.onDetachedFromWindow();
         }
     }
