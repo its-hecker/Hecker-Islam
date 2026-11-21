@@ -9,14 +9,12 @@ import java.io.IOException;
 final class BundledAzaan {
     static final String ASSET = "azaan/nizar_al_qatari.mp3";
     /*
-     * The bundled 316s recording contains an extended recited introduction.
-     * The previous 25.55s seek skips only its first part; the remaining
-     * introductory praises are still audible. The next long silent boundary
-     * at 64.88s–67.10s precedes the Adhan proper. Begin after it so the first
-     * phrase played is Allahu Akbar. This applies ONLY to the pinned bundled
-     * recording (user-imported recordings must remain untouched).
+     * The pinned recording contains an introductory segment. Offline analysis
+     * found a 2.5-second silence boundary (23.02s–25.54s) immediately before
+     * the main Adhan. Skip that introductory segment for the bundled recording
+     * only; never trim a user's imported audio.
      */
-    static final long START_AFTER_INTRO_MS = 67_130L;
+    static final long START_AFTER_INTRO_MS = 25_550L;
     private BundledAzaan() {}
     static boolean available(Context context) {
         try (AssetFileDescriptor file = context.getAssets().openFd(ASSET)) {
