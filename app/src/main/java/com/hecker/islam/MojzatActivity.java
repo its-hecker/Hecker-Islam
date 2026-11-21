@@ -21,8 +21,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 /**
- * Traditional devotional narrative of Mola Ali (A.S.) in Urdu and Roman Urdu.
- * A devotional retelling is not represented as an authenticated hadith.
+ * Devotional narrative of Mola Ali (A.S.) from the user's supplied printed Urdu pages.
+ * A photographed book excerpt is not independently authenticated as a hadith.
  */
 public final class MojzatActivity extends Activity {
     private JSONArray stories = new JSONArray(), books = new JSONArray();
@@ -187,11 +187,11 @@ public final class MojzatActivity extends Activity {
         Ui.space(this, content, 17);
         LinearLayout introduction = Ui.panel(this);
         introduction.addView(roman(
-                "The Iranian woodcutter story, available in Urdu and Roman Urdu.",
+                "Five photographed book pages, transcribed in sequence in Urdu.",
                 16, Ui.WHITE, false));
         Ui.space(this, introduction, 9);
         introduction.addView(urdu(
-                "یہ ایک روایتی مجلسی حکایت ہے، مستند تاریخی حدیث نہیں۔",
+                "متن فراہم کردہ کتابی تصاویر کی ترتیب کے مطابق نقل کیا گیا ہے۔ اس کی سند کی آزادانہ تصدیق نہیں ہوئی۔",
                 14, Ui.MUTED, false));
         content.addView(introduction);
         Ui.space(this, content, 17);
@@ -349,16 +349,19 @@ public final class MojzatActivity extends Activity {
         action("حکایت شیئر کریں", () -> {
             Intent share = new Intent(Intent.ACTION_SEND);
             share.setType("text/plain");
+            String source = item.optString("source");
             share.putExtra(Intent.EXTRA_TEXT, item.optString("title") + "\n\n"
-                    + text + "\n\n" + item.optString("label") + "\n"
-                    + item.optString("source"));
+                    + text + "\n\n" + item.optString("label")
+                    + (source.isEmpty() ? "" : "\n" + source));
             startActivity(Intent.createChooser(share, "Share devotional story"));
         });
         content.addView(urduOnly ? urdu("ماخذ: " + item.optString("sourceTitle"), 13, Ui.MUTED, false)
                 : roman("Source: " + item.optString("sourceTitle"), 13, Ui.MUTED, false));
         Ui.space(this, content, 8);
         content.addView(urdu(
-                "یہ روایت کا بامحاورہ بیان ہے؛ اسے لفظ بہ لفظ نقل یا مستند تاریخی حدیث نہ سمجھا جائے۔",
+                urduOnly
+                    ? "یہ کتابی تصاویر سے نقل شدہ اردو متن ہے۔ چند غیر واضح حروف اور الفاظ کا اصل صفحات سے موازنہ کیا جا سکتا ہے؛ اسے سند کے لحاظ سے مستند حدیث قرار نہیں دیا گیا۔"
+                    : "یہ روایت کا بامحاورہ بیان ہے؛ اسے لفظ بہ لفظ نقل یا مستند تاریخی حدیث نہ سمجھا جائے۔",
                 13, Ui.MUTED, false));
     }
     private void size(int change) {
