@@ -182,6 +182,7 @@ public final class ReferenceReadingActivity extends Activity {
         generation++;
         recitationControl = null;
         urduRecitationControl = null;
+        quranSpeedControl = null;
         content.removeAllViews();
         TextView back = Ui.text(this, "‹  " + (stage == 0 ? "Hecker Islam" : "Back"), 15, Ui.GOLD, true);
         back.setOnClickListener(v -> onBackPressed());
@@ -343,7 +344,7 @@ public final class ReferenceReadingActivity extends Activity {
     }
     private void speakDua(String arabic) {
         if (arabic == null || arabic.trim().isEmpty()) return;
-        RecitationService.toggleText(this, arabic, Locale.forLanguageTag("ar-SA"), 0.80f);
+        RecitationService.toggleText(this, arabic, Locale.forLanguageTag("ar-SA"), quranSpeed());
     }
     private String urduEdition() {
         return "najafi".equals(saved.getString("urduEdition", "jawadi")) ? "najafi" : "jawadi";
@@ -542,12 +543,20 @@ public final class ReferenceReadingActivity extends Activity {
             }
             if (shown == 0) card("No chapters in this category", null, null);
         } else {
+            // Keep playback speed above the readings, not after a long list.
+            quranSpeedControl = button("Playback speed • " + quranSpeedLabel() + "  ›",
+                    this::chooseQuranSpeed);
             int shown = 0;
             for (int i = 0; i < azkarItems.length(); i++) {
                 JSONObject o = azkarItems.optJSONObject(i);
                 if (o == null || o.optInt("chapterId") != chapter) continue;
                 shown++;
                 LinearLayout p = Ui.panel(this);
+                TextView audio = Ui.text(this, "▶ Listen to Dua • Arabic voice", 14, Ui.GOLD, true);
+                audio.setPadding(0, Ui.dp(this, 7), 0, Ui.dp(this, 10));
+                audio.setOnClickListener(v -> speakDua(o.optString("ar")));
+                p.addView(audio);
+                Ui.space(this, p, 10);
                 TextView arabic = Ui.text(this, o.optString("ar"), 22, Ui.WHITE, false);
                 arabic.setTextDirection(View.TEXT_DIRECTION_RTL); arabic.setGravity(Gravity.RIGHT);
                 arabic.setLineSpacing(Ui.dp(this, 7), 1.15f);
@@ -557,9 +566,6 @@ public final class ReferenceReadingActivity extends Activity {
                 p.addView(Ui.text(this, "Repeat " + o.optInt("repeat", 1) + " time(s)", 13, Ui.GOLD, true));
                 String ref = o.optJSONObject("ref") == null ? "" : o.optJSONObject("ref").optString("en");
                 if (!ref.isEmpty()) { Ui.space(this, p, 8); p.addView(Ui.text(this, ref, 11, Ui.MUTED, false)); }
-                TextView audio = Ui.text(this, "▶ Listen to Dua • Arabic voice", 14, Ui.GOLD, true);
-                Ui.space(this, p, 12); p.addView(audio);
-                audio.setOnClickListener(v -> speakDua(o.optString("ar")));
                 String key = "dhikr_" + o.optInt("id");
                 TextView mark = Ui.text(this, bookmarked(key) ? "★ Saved" : "☆ Save", 14, Ui.GOLD, true);
                 Ui.space(this, p, 12); p.addView(mark);
