@@ -1,0 +1,25 @@
+plugins { id 'com.android.application' }
+
+android {
+    // Keep the Azaan source package's generated R/BuildConfig namespace.
+    namespace 'com.hecker.azaan'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'com.hecker.islam'
+        minSdk 29
+        targetSdk 35
+        versionCode 4
+        versionName '0.4.0-alpha'
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    lint { abortOnError true; checkReleaseBuilds true }
+}
+
+dependencies {
+    implementation 'org.brotli:dec:0.1.2'
+    implementation 'androidx.core:core:1.15.0'
+    testImplementation 'junit:junit:4.13.2'
+}

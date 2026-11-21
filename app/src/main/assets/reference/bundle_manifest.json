@@ -1,0 +1,166 @@
+{
+  "version": 1,
+  "source": "ST-261104-v1.7.0-stable-317dffb.apk",
+  "files": {
+    "adhan/catalog.json": {
+      "sha256": "e9d5caf46cf71fa017c9cb97c38221d74521484f0a1c34eafaa632d19b82c98d",
+      "size": 15015
+    },
+    "adhan_background/catalog.json": {
+      "sha256": "f03f81541e4740db503d378b1884bd66aa68f6b3a38a583ac342d2d803ca384a",
+      "size": 5433
+    },
+    "azkar/categories.json": {
+      "sha256": "2ca7fc150c3124204b3e16156e210c984c8742ea6e562f20c0464e0691299ec2",
+      "size": 1372
+    },
+    "azkar/chapters.json": {
+      "sha256": "7e0cd2d9b7535d776adec35a249e63acca32ab3bc09035a91f2c1ffc1f37cb5e",
+      "size": 36496
+    },
+    "azkar/items.json": {
+      "sha256": "a981b5717bbbe5a79da5ee3bd34195c804fac1d133d1c039e368d921914597da",
+      "size": 644406
+    },
+    "hadith/categories.json": {
+      "sha256": "99a85591f61db0d044dd32545bc7d3057f5cefc48822ea11df20192d9094e892",
+      "size": 54366
+    },
+    "hadith/hadith.ndjson.br": {
+      "sha256": "2964ef2d14ce62b13d17bb696b9e1c1b661f83c6a932e7ae3e2ace6666228be7",
+      "size": 3254325
+    },
+    "hadith/languages.json": {
+      "sha256": "c6dfb80a18e3820208eb57f62cd369cc119b9640f71063b4a86cfd135f9609a2",
+      "size": 2678
+    },
+    "hadith/manifest.json": {
+      "sha256": "c1849bdc373f05d986525ff41b1b9e63fdc3b07ddbb1341950352739bff6b443",
+      "size": 56
+    },
+    "location/chunks/a.tsv": {
+      "sha256": "479ff72b7a16fa19cf2ab7e834cac1b7b8a30cb6c65eddd6d9a767eea4025851",
+      "size": 117302
+    },
+    "location/chunks/b.tsv": {
+      "sha256": "d5191aefe7750bedbde122f00e91ffd652bab869cd8a4b8f2603acd074cdb6d9",
+      "size": 147692
+    },
+    "location/chunks/c.tsv": {
+      "sha256": "83f5cec08929c1a1f8b5179172948253735657512bc8f9903f379f4a66bc38e3",
+      "size": 125468
+    },
+    "location/chunks/d.tsv": {
+      "sha256": "d0fad5ad17226e4c7947c6d9dee56715c547c9f46fe488d944fd60b7345f4799",
+      "size": 58394
+    },
+    "location/chunks/e.tsv": {
+      "sha256": "6da0acc7109faba40bcfa1be614596c3ed89af9e8fa28b095fb6f8466f69c932",
+      "size": 41084
+    },
+    "location/chunks/f.tsv": {
+      "sha256": "97830cd296e1dd6ffd80230087c95c8b9dc1c52d49d4f5e5a51110ef713ad8f2",
+      "size": 37280
+    },
+    "location/chunks/g.tsv": {
+      "sha256": "39854954b959283b238d73a47142e0f68a0d091b0ab247696b2d0c779ae4c068",
+      "size": 64408
+    },
+    "location/chunks/h.tsv": {
+      "sha256": "65508a5305e05b7ef6ef9c57b1bf011ca6b8935208fc867eccacc5d7c0a95b46",
+      "size": 62174
+    },
+    "location/chunks/i.tsv": {
+      "sha256": "e008ef8de8f96c2973897a09118aa5e20bfea4b8492bc5c4e8bf60da480a9488",
+      "size": 34145
+    },
+    "location/chunks/j.tsv": {
+      "sha256": "2f09661fa436106ba15fd21dfe6c1322e6555735d1815212bebfaf8dfa011d03",
+      "size": 33827
+    },
+    "location/chunks/k.tsv": {
+      "sha256": "aa36528ee3daaf81bac5e4d4ea92e901aa584f652b0c499db2e8d6d28bc38808",
+      "size": 118936
+    },
+    "location/chunks/l.tsv": {
+      "sha256": "4f476b8c8750608499b7541b251fb2ac0f20b1bbc44a9e4d9cb64d8b88fb125e",
+      "size": 81824
+    },
+    "location/chunks/m.tsv": {
+      "sha256": "a1716f240886be9ba3d13c9297c7035007d23414dc2cb5053701c63477f99299",
+      "size": 138906
+    },
+    "location/chunks/n.tsv": {
+      "sha256": "d524cd2bcc0e4bf8b7dbd493322b6ff3a65f843ec4b79f2b41eb5f40a34a6b49",
+      "size": 73957
+    },
+    "location/chunks/o.tsv": {
+      "sha256": "1b43cb2c085c7bbbcdaeb81cfde572b875bf6942acec36dd7fd807ed04a58020",
+      "size": 34010
+    },
+    "location/chunks/other.tsv": {
+      "sha256": "7e461c815444f9adfed4c7dcdbb438076ad51f654fef252bee2c91e5f0ab571b",
+      "size": 69
+    },
+    "location/chunks/p.tsv": {
+      "sha256": "d31289c51ddbf3b896e896d8135d5820eb4e9bdde02510ae6daf9229a353f63d",
+      "size": 107519
+    },
+    "location/chunks/q.tsv": {
+      "sha256": "01c637bd0f8b5debe387fa5eb09562570bc598d1c306d4eb0b2f73f6a291f6f5",
+      "size": 11992
+    },
+    "location/chunks/r.tsv": {
+      "sha256": "0bc6b2f67aba698c274cda40fd6654fa91acfad325075b08d3822ca5118fa1b6",
+      "size": 53276
+    },
+    "location/chunks/s.tsv": {
+      "sha256": "3cbd091616a460e431f1c836ef7aae6005dedd0a7a8794c84f32a433e07a020f",
+      "size": 208043
+    },
+    "location/chunks/t.tsv": {
+      "sha256": "552fc418d19864b9df626cd529947b7a7ecd7b62027ccfaa03c1aff7a2e9e51b",
+      "size": 91560
+    },
+    "location/chunks/u.tsv": {
+      "sha256": "aedaa90c0445be76f134eb683636ead2fd753c58dd9a03baff4b666befca310d",
+      "size": 18382
+    },
+    "location/chunks/v.tsv": {
+      "sha256": "9f1e31ff94176580c89586819388c02fdd1fd358670bbeb6a956d5511fc6f036",
+      "size": 43125
+    },
+    "location/chunks/w.tsv": {
+      "sha256": "ddf1c5be31a63dad8e227b6b2595b930b2e5cfa4821dd07135bce66d27a3ce2e",
+      "size": 42567
+    },
+    "location/chunks/x.tsv": {
+      "sha256": "78339ba98b194d225a3af24cf9edb76de9f6a272759b6e101f6ad69b6ef9ff8f",
+      "size": 8630
+    },
+    "location/chunks/y.tsv": {
+      "sha256": "bcf4ff8a2520d38cc70431b58efd4b8845e29e79ccb6b49b03af42fa31168d08",
+      "size": 22826
+    },
+    "location/chunks/z.tsv": {
+      "sha256": "bba3de1e09e7a2f725362d201e07cf51dd5be39b0f0ac89df1b935b6cec5f7fc",
+      "size": 22415
+    },
+    "location/city_index.json": {
+      "sha256": "2b1468c7a0222a232eb8365ca6aac51b0ffa1aa635e68de70f932330cd9be589",
+      "size": 320
+    },
+    "quran/chapters.json": {
+      "sha256": "ada6d2ab7374bd506898aee343c22100dc2ae54eeaefaf7e7f243a3081ca837f",
+      "size": 19250
+    },
+    "quran/juz_pages.json": {
+      "sha256": "ba6256b7437438761b2a500c2093688cf909f692cb7dfd46268250d748dbd271",
+      "size": 646
+    },
+    "quran/quran_uthmani.json": {
+      "sha256": "e2ce4d33dd5f8d4f6a22f832037303780b69d727d06e275ca2fa868de84c18d0",
+      "size": 1763334
+    }
+  }
+}

@@ -1,0 +1,56 @@
+package com.hecker.islam;
+
+import java.util.concurrent.ThreadLocalRandom;
+
+/** Public-domain source sayings; Urdu meanings are concise original renderings.
+ * Numbering follows the Al-Islam.org Nahj al-Balagha short sayings edition.
+ */
+public final class NahjWisdom {
+    private NahjWisdom() { }
+    public static final String COLLECTION = "https://al-islam.org/nahjul-balagha-part-2-letters-and-sayings";
+    public static final String URDU_BOOK = "https://nehjulbalagah.com/category/hikmat/";
+    public static final class Quote {
+        public final int number;
+        public final String arabic, urdu;
+        Quote(int number, String arabic, String urdu) {
+            this.number = number; this.arabic = arabic; this.urdu = urdu;
+        }
+    }
+    public static final Quote[] QUOTES = {
+        new Quote(4, "الصَّبْرُ شَجَاعَةٌ وَ الزُّهْدُ ثَرْوَةٌ وَ الْوَرَعُ جُنَّةٌ",
+            "صبر بہادری ہے، دنیا سے بے رغبتی ایک دولت ہے اور پرہیزگاری گناہ سے حفاظت کرتی ہے۔"),
+        new Quote(5, "الْعِلْمُ وِرَاثَةٌ كَرِيمَةٌ وَ الْآدَابُ حُلَلٌ مُجَدَّدَةٌ وَ الْفِكْرُ مِرْآةٌ صَافِيَةٌ",
+            "علم گراں قدر میراث ہے، اچھے آداب انسان کا زیور ہیں اور غور و فکر صاف آئینے کی مانند ہے۔"),
+        new Quote(10, "خَالِطُوا النَّاسَ مُخَالَطَةً إِنْ مِتُّمْ مَعَهَا بَكَوْا عَلَيْكُمْ وَ إِنْ عِشْتُمْ حَنُّوا إِلَيْكُمْ",
+            "لوگوں سے ایسا حسنِ سلوک رکھو کہ تم نہ رہو تو وہ تمہیں یاد کریں اور تم موجود ہو تو تمہاری رفاقت چاہیں۔"),
+        new Quote(11, "إِذَا قَدَرْتَ عَلَى عَدُوِّكَ فَاجْعَلِ الْعَفْوَ عَنْهُ شُكْراً لِلْقُدْرَةِ عَلَيْهِ",
+            "جب کسی مخالف پر قدرت حاصل ہو تو معاف کر دینا اس قدرت کا شکر بناؤ۔"),
+        new Quote(13, "إِذَا وَصَلَتْ إِلَيْكُمْ أَطْرَافُ النِّعَمِ فَلَا تُنَفِّرُوا أَقْصَاهَا بِقِلَّةِ الشُّكْرِ",
+            "نعمتوں کی ابتدا ملے تو ناشکری سے باقی نعمتوں کو خود سے دور نہ کرو۔"),
+        new Quote(21, "الْفُرْصَةُ تَمُرُّ مَرَّ السَّحَابِ، فَانْتَهِزُوا فُرَصَ الْخَيْرِ",
+            "موقع بادل کی طرح گزرتا ہے، اس لیے نیکی کے مواقع سے فائدہ اٹھاؤ۔"),
+        new Quote(23, "مَنْ أَبْطَأَ بِهِ عَمَلُهُ لَمْ يُسْرِعْ بِهِ حَسَبُهُ",
+            "جس کے اعمال اسے پیچھے رکھیں، اس کا نسب اسے آگے نہیں بڑھا سکتا۔"),
+        new Quote(24, "مِنْ كَفَّارَاتِ الذُّنُوبِ الْعِظَامِ إِغَاثَةُ الْمَلْهُوفِ وَالتَّنْفِيسُ عَنِ الْمَكْرُوبِ",
+            "مصیبت زدہ کی مدد اور پریشان حال کو راحت پہنچانا بڑے گناہوں کے کفارے کے اسباب میں ہے۔"),
+        new Quote(54, "لاَ غِنَى كَالْعَقْلِ، وَلاَ فَقْرَ كَالْجَهْلِ، وَلاَ ظَهِيرَ كَالْمُشَاوَرَةِ",
+            "عقل جیسی دولت نہیں، جہالت جیسی محتاجی نہیں، اور مشورے جیسی مدد نہیں۔"),
+        new Quote(55, "الصَّبْرُ صَبْرَانِ: صَبْرٌ عَلَى مَا تَكْرَهُ، وَصَبْرٌ عَمَّا تُحِبُّ",
+            "صبر کی دو صورتیں ہیں: ناپسندیدہ مشکل کو برداشت کرنا، اور پسندیدہ مگر نامناسب چیز سے رکنا۔"),
+        new Quote(57, "الْقَنَاعَةُ مَالٌ لاَ يَنْفَدُ",
+            "قناعت ایسی دولت ہے جو ختم نہیں ہوتی۔"),
+        new Quote(67, "لاَ تَسْتَحِ مِنْ إِعْطَاءِ الْقَلِيلِ، فَإِنَّ الْحِرْمَانَ أَقَلُّ مِنْهُ",
+            "تھوڑی چیز دینے سے شرم نہ کرو؛ کچھ بھی نہ دینا اس سے بھی کم ہے۔"),
+        new Quote(338, "الْعِلْمُ عِلْمَانِ: مَطْبُوعٌ وَمَسْمُوعٌ وَلاَ يَنْفَعُ الْمَسْمُوعُ إِذَا لَمْ يَكُنِ الْمَطْبُوعُ",
+            "علم ایک وہ ہے جو سمجھ میں اترے اور دوسرا محض سنا ہوا؛ سمجھ کے بغیر سنا ہوا علم فائدہ نہیں دیتا۔")
+    };
+    public static int randomOtherThan(int prior) {
+        int index = ThreadLocalRandom.current().nextInt(QUOTES.length);
+        if (QUOTES.length > 1 && index == prior) index = (index + 1) % QUOTES.length;
+        return index;
+    }
+    public static Quote find(int number) {
+        for (Quote quote : QUOTES) if (quote.number == number) return quote;
+        return null;
+    }
+}

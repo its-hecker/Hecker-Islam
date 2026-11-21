@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" role="img" aria-label="Hecker Islam: mihrab, crescent, mosque and open book">
+<defs><linearGradient id="emerald" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#086257"/><stop offset="1" stop-color="#032822"/></linearGradient><linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFDEA0"/><stop offset="1" stop-color="#C6A24B"/></linearGradient></defs>
+<rect width="108" height="108" rx="24" fill="url(#emerald)"/>
+<path d="M15 92V48C15 31 31 28 42 20 48 16 52 12 54 8 56 12 60 16 66 20 77 28 93 31 93 48V92" fill="none" stroke="url(#gold)" stroke-width="4.2" stroke-linejoin="round"/>
+<path d="M61 27c-6 1-10 7-9 14 1 7 8 11 14 8-7 1-11-4-11-10 0-6 2-9 6-12z" fill="#F9DEA0"/>
+<path d="M29 75V54h-2v-3l4-4v-4l2-3 2 3v4l4 4v3h-2v21zm42 0V54h-2v-3l4-4v-4l2-3 2 3v4l4 4v3h-2v21z" fill="#9DCDB6"/>
+<path d="M32 68V58q1-3 2 0v10zm42 0V58q1-3 2 0v10z" fill="#06352F"/>
+<path d="M36 77V67c0-9 6-12 10-14 3-2 6-6 8-10 2 4 5 8 8 10 4 2 10 5 10 14v10z" fill="#A6D8C0"/>
+<path d="M49 77v-8q5-9 10 0v8z" fill="#06352F"/>
+<path d="M20 81c14-4 23-1 34 7 11-8 20-11 34-7l6 7c-16-4-27-1-40 7-13-8-24-11-40-7z" fill="#F6F5DB"/>
+<path d="M54 88c11-8 20-11 34-7l6 7c-16-4-27-1-40 7z" fill="#BFE1C5"/>
+<path d="M14 89c18-5 29-1 40 8 11-9 22-13 40-8v3c-18-4-28-1-40 9-12-10-22-13-40-9z" fill="url(#gold)"/>
+</svg>
