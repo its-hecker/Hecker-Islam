@@ -57,11 +57,11 @@ final class QuoteStatusShare {
     }
 
     static void share(Activity activity, NahjWisdom.Quote quote) {
-        if (quote == null || quote.urdu == null || quote.urdu.trim().isEmpty()) return;
+        if (quote == null || quote.displayText().trim().isEmpty()) return;
         final Bitmap[] bitmap = new Bitmap[1];
         final int[] currentStyle = {nextStyle(activity)};
         try {
-            bitmap[0] = renderStatus(quote.urdu, currentStyle[0]);
+            bitmap[0] = renderStatus(posterText(quote.displayText()), currentStyle[0]);
         } catch (Exception ex) {
             android.util.Log.e("WisdomStatus", "Could not draw wisdom image", ex);
             Toast.makeText(activity, "Unable to prepare status preview.", Toast.LENGTH_LONG).show();
@@ -121,7 +121,7 @@ final class QuoteStatusShare {
         another.setOnClickListener(v -> {
             try {
                 int next = nextStyle(activity);
-                Bitmap replacement = renderStatus(quote.urdu, next);
+                Bitmap replacement = renderStatus(posterText(quote.displayText()), next);
                 Bitmap previous = bitmap[0];
                 bitmap[0] = replacement;
                 currentStyle[0] = next;
@@ -181,6 +181,18 @@ final class QuoteStatusShare {
 
     private static int dp(Activity activity, int dip) {
         return (int) (activity.getResources().getDisplayMetrics().density * dip + 0.5f);
+    }
+
+    /** Keep long classical sayings readable in a WhatsApp-sized image.
+     * The complete saying remains available on the Nahj reading page.
+     */
+    private static String posterText(String source) {
+        if (source == null) return "";
+        String text = source.trim().replaceAll("\\s+", " ");
+        int length = text.codePointCount(0, text.length());
+        if (length <= 320) return text;
+        int cut = text.offsetByCodePoints(0, 317);
+        return text.substring(0, cut).trim() + "…";
     }
 
     /**
