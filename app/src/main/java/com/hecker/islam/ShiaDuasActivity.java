@@ -43,6 +43,8 @@ public final class ShiaDuasActivity extends Activity {
                 case "salawat": return "اے اللہ! محمدؐ اور آلِ محمدؑ پر رحمت نازل فرما۔";
                 case "ahad": return "دعائے عہد: امام مہدیؑ سے اپنے عہد کی تجدید کے لیے پڑھی جانے والی دعا۔ مکمل عربی متن اور اردو ترجمہ ماخذ پر دستیاب ہے۔";
                 case "kisa": return "حدیثِ کساء: حضرت فاطمہ زہراؑ سے منقول روایت جس میں رسولِ خداؐ، امام علیؑ، حضرت فاطمہؑ، امام حسنؑ اور امام حسینؑ کا ایک چادر کے نیچے جمع ہونا بیان ہوا ہے۔ یہ صرف تعارف ہے؛ مکمل عربی متن اور اردو ترجمہ ماخذ پر دستیاب ہیں۔";
+                case "baitul_mamoor": return "دعائے بیت المعمور: اہلِ بیتؑ سے منسوب ایک طویل دعا، جس میں اللہ کی حمد، مغفرت اور رحمت کی التجا بیان ہوتی ہے۔ مکمل عربی متن کے لیے حوالہ کھولیں۔ یہ تعارف ہے، مکمل اردو ترجمہ نہیں۔";
+                case "yastasheer": return "دعائے یستشیر: اللہ تعالیٰ کی حمد و ثنا، اس کی قدرت، رحمت اور بخشش کی مناجات۔ مکمل عربی متن اور دستیاب ترجمہ اصل ماخذ میں پڑھیں۔ یہ تعارف ہے، مکمل اردو ترجمہ نہیں۔";
                 case "kumayl": return "دعائے کمیل: اللہ سے مغفرت، رحمت اور بندگی کی درخواست۔ یہ مکمل دعا کا ترجمہ نہیں بلکہ تعارف ہے۔";
                 case "tawassul": return "دعائے توسل: اللہ سے اہلِ بیتؑ کے وسیلے سے دعا۔ یہ مکمل دعا کا ترجمہ نہیں بلکہ تعارف ہے۔";
                 case "nudba": return "دعائے ندبہ: امام زمانہؑ کی یاد اور انتظار سے متعلق مناجات؛ یہ مکمل متن کا ترجمہ نہیں۔";
@@ -113,6 +115,14 @@ public final class ShiaDuasActivity extends Activity {
             "اللَّهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَآلِ مُحَمَّدٍ",
             "A short form of salawat, available offline.",
             "https://www.duas.org/Allahumma.htm"),
+        new Dua("baitul_mamoor", "Dua-e-Bait al-Mamoor", "دعائے بیت المعمور",
+            "Long supplication attributed in Bihar al-Anwar to Ahl al-Bayt; full Arabic source online",
+            "", "The full prayer is opened at the cited Arabic manuscript source; the Urdu introduction is not the whole translation.",
+            "https://www.masaha.org/book/view/2156/page/366"),
+        new Dua("yastasheer", "Dua-e-Yastasheer", "دعائے یستشیر",
+            "Supplication of praise and reliance on Allah • Sahifa Alawiya",
+            "", "Open the complete source for Arabic, transliteration and available translation. It is not a short offline supplication.",
+            "https://www.duas.org/dua-yastasheer.html"),
         new Dua("kumayl", "Dua Kumayl", "دعائے کمیل", "Commonly recited on Thursday nights",
             "", "Full prayer: opens the attributed text at Duas.org.",
             "https://fzic.org/library/dua/kumail-1285"),
