@@ -20,5 +20,6 @@ android {
 
 dependencies {
     implementation 'org.brotli:dec:0.1.2'
+    implementation 'androidx.core:core:1.15.0'
     testImplementation 'junit:junit:4.13.2'
 }
