@@ -61,8 +61,10 @@ public final class AppSettings {
     public void providerEnabled(boolean enabled) {
         prefs.edit().putBoolean("remote_times", enabled).apply();
     }
-    public boolean wilayah() { return prefs.getBoolean("wilayah", true); }
-    public void wilayah(boolean value) { prefs.edit().putBoolean("wilayah", value).apply(); }
+    /** The Hecker Islam recitation preset includes this devotional testimony. */
+    public boolean wilayah() { return true; }
+    /** Kept for compatibility with older settings calls; the app no longer exposes a toggle. */
+    @Deprecated public void wilayah(boolean value) { prefs.edit().remove("wilayah").apply(); }
     public boolean language(AzaanText.Language l) { return l == AzaanText.Language.ARABIC || prefs.getBoolean("lang_" + l.name(), false); }
     public void language(AzaanText.Language l, boolean value) { prefs.edit().putBoolean("lang_" + l.name(), value).apply(); }
     public List<AzaanText.Language> languages() {
