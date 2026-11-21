@@ -53,7 +53,7 @@ public final class DevotionalWelcomeActivity extends Activity {
     private void showDeclined() {
         new AlertDialog.Builder(this)
                 .setTitle("Hecker Islam")
-                .setMessage("This app is designed around the Shia devotional tradition selected by its creator. You may leave or reconsider your choice.")
+                .setMessage("This app is for Momineen Only. You can select Yes if this reflects your devotional practice, or close the app.")
                 .setCancelable(false)
                 .setPositiveButton("Choose again", (dialog, which) -> render())
                 .setNegativeButton("Exit", (dialog, which) -> finish())
