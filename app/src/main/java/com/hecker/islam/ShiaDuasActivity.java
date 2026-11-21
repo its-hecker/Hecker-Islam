@@ -240,6 +240,10 @@ public final class ShiaDuasActivity extends Activity {
             }
             @Override public void afterTextChanged(Editable s) { }
         });
+        button("☼ Daily Ziaraat • روزانہ کی زیارات (Saturday–Friday)", () -> {
+            reciter.stop();
+            startActivity(new Intent(this, DailyZiaraatActivity.class));
+        });
         button("☾ After Namaz Ziaraat • نماز کے بعد زیارات", () -> {
             reciter.stop();
             selected = DUAS[0];
