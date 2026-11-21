@@ -31,6 +31,13 @@ This change is based on `fix/standalone-offline-expressive`, not the old one-fil
 - Both entries work offline with Arabic and Urdu readings, device text-to-speech recitation, adjustable speed, and bookmarks; the source link requires internet.
 - An index shortcut provides quick access to these supplications; wording is not presented as an entire funeral prayer.
 
+## 0.4.5 — New supplications, Azaan and welcome
+- **Dua-e-Bait al-Mamoor** and **Dua-e-Yastasheer** appear under Shia Duas, with Urdu introductions and linked complete primary Arabic sources. Their introductions are explicitly not the full Urdu translation.
+- The bundled Nizar al-Qatari Azaan recording now begins after an introductory passage, seeking to the observed silence boundary at approximately 25.55 seconds. This only applies to the built-in recording, not imported audio; the spoken phrase boundary should be confirmed on-device.
+- The app keeps the Aliyyun Waliullah devotional testimony in the display/TTS recitation preset and removes its on/off toggle. This preference must not be described as a universal religious obligation or a formal constituent of Adhan/Iqamah; see Sayyid Sistani's rulings https://www.sistani.org/english/book/48/2228/.
+- Launcher begins with a Yes/No personal devotional confirmation. Accepting with **Don't remind me again** remembers consent locally, shows the requested greeting once, and skips the question on later launches. A No choice prevents entry while allowing reconsideration or exit. The dialog avoids derogatory language.
+- The app never transmits the answer, and previous app data is preserved on upgrade.
+
 ## Shia duas
 - Adds **Dua Imam-e-Zamana (Dua al-Faraj)** and **Dua-e-Ahad**.
 - Adds **Hadith-e-Kisa (حدیثِ کساء)** to the Shia Duas catalogue, with Urdu introduction, bookmarking, and a linked in-app full Arabic/Urdu reader with Arabic and Urdu audio at FZIC. The complete narration and recitations require internet access.
