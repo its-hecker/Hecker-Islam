@@ -36,6 +36,7 @@ public final class ShiaDuasActivity extends Activity {
                 case "tasbih": return "اللہ سب سے بڑا ہے (۳۴ مرتبہ)۔ تمام تعریفیں اللہ ہی کے لیے ہیں (۳۳ مرتبہ)۔ اللہ ہر نقص سے پاک ہے (۳۳ مرتبہ)۔";
                 case "salawat": return "اے اللہ! محمدؐ اور آلِ محمدؑ پر رحمت نازل فرما۔";
                 case "ahad": return "دعائے عہد: امام مہدیؑ سے اپنے عہد کی تجدید کے لیے پڑھی جانے والی دعا۔ مکمل عربی متن اور اردو ترجمہ ماخذ پر دستیاب ہے۔";
+                case "kisa": return "حدیثِ کساء: حضرت فاطمہ زہراؑ سے منقول روایت جس میں رسولِ خداؐ، امام علیؑ، حضرت فاطمہؑ، امام حسنؑ اور امام حسینؑ کا ایک چادر کے نیچے جمع ہونا بیان ہوا ہے۔ یہ صرف تعارف ہے؛ مکمل عربی متن اور اردو ترجمہ ماخذ پر دستیاب ہیں۔";
                 case "kumayl": return "دعائے کمیل: اللہ سے مغفرت، رحمت اور بندگی کی درخواست۔ یہ مکمل دعا کا ترجمہ نہیں بلکہ تعارف ہے۔";
                 case "tawassul": return "دعائے توسل: اللہ سے اہلِ بیتؑ کے وسیلے سے دعا۔ یہ مکمل دعا کا ترجمہ نہیں بلکہ تعارف ہے۔";
                 case "nudba": return "دعائے ندبہ: امام زمانہؑ کی یاد اور انتظار سے متعلق مناجات؛ یہ مکمل متن کا ترجمہ نہیں۔";
@@ -62,6 +63,10 @@ public final class ShiaDuasActivity extends Activity {
             "Morning covenant supplication • full Arabic, English and Urdu from FZIC",
             "", "Complete Arabic and Urdu text are available at the linked reference.",
             "https://fzic.org/library/dua/dua-e-ahad-1232"),
+        new Dua("kisa", "Hadith-e-Kisa (Tradition of the Cloak)", "حدیثِ کساء",
+            "Narration of Ahl al-Kisa • full Arabic, Urdu, and recitations from FZIC",
+            "", "Read the complete Arabic and Urdu narration, or play the Arabic and Urdu recitations in the linked in-app reader.",
+            "https://fzic.org/library/dua/hadees-e-kisa-1274"),
         new Dua("tasbih", "Tasbih of Sayyida Fatima al-Zahra", "تسبیحِ حضرت فاطمہ زہراؑ",
             "Remembrance after prayers",
             "اللَّهُ أَكْبَرُ × 34\nالْحَمْدُ لِلَّهِ × 33\nسُبْحَانَ اللَّهِ × 33",
