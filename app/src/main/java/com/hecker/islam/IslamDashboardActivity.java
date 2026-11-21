@@ -2,6 +2,11 @@ package com.hecker.islam;
 
 import android.app.Activity;
 import android.animation.ValueAnimator;
+import android.graphics.LinearGradient;
+import android.graphics.Matrix;
+import android.graphics.Shader;
+import android.graphics.Typeface;
+import android.util.TypedValue;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.Color;
 import android.view.View;
@@ -562,17 +567,110 @@ public final class IslamDashboardActivity extends Activity {
         content.addView(card);
         Ui.space(this, content, 13);
     }
+    /**
+     * Animated but readable theme-accent shimmer. Uses the actual TextView width
+     * and cancels its animator whenever the dashboard is redrawn or backgrounded.
+     * With system animations disabled, the text remains a static accent color.
+     */
+    private static final class ShimmerGreeting extends TextView {
+        private LinearGradient gradient;
+        private final Matrix matrix = new Matrix();
+        private ValueAnimator shimmer;
+
+        ShimmerGreeting(Activity activity) {
+            super(activity);
+            setText("السلام علیکم یا علیؑ مدد");
+            setTextDirection(View.TEXT_DIRECTION_RTL);
+            setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+            setGravity(Gravity.CENTER);
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 27);
+            setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+            setTextColor(Ui.GOLD);
+            setIncludeFontPadding(true);
+            setLineSpacing(Ui.dp(activity, 5), 1.08f);
+            setContentDescription("السلام علیکم یا علیؑ مدد");
+        }
+
+        @Override protected void onSizeChanged(int w, int h, int oldW, int oldH) {
+            super.onSizeChanged(w, h, oldW, oldH);
+            if (w <= 0) return;
+            int glow = mix(Ui.GOLD, Ui.WHITE, .76f);
+            gradient = new LinearGradient(-w, 0, w, 0,
+                    new int[]{Ui.GOLD, glow, Ui.GOLD},
+                    new float[]{0f, .5f, 1f}, Shader.TileMode.CLAMP);
+            getPaint().setShader(gradient);
+            if (isAttachedToWindow()) startShimmer();
+            invalidate();
+        }
+
+        private void startShimmer() {
+            if (gradient == null || shimmer != null || !ValueAnimator.areAnimatorsEnabled())
+                return;
+            shimmer = ValueAnimator.ofFloat(0f, 1f);
+            shimmer.setDuration(4200L);
+            shimmer.setRepeatCount(ValueAnimator.INFINITE);
+            shimmer.setRepeatMode(ValueAnimator.REVERSE);
+            shimmer.addUpdateListener(animation -> {
+                if (gradient == null) return;
+                float fraction = (Float) animation.getAnimatedValue();
+                matrix.setTranslate((fraction - .5f) * getWidth(), 0);
+                gradient.setLocalMatrix(matrix);
+                invalidate();
+            });
+            shimmer.start();
+        }
+
+        @Override protected void onAttachedToWindow() {
+            super.onAttachedToWindow();
+            startShimmer();
+        }
+
+        @Override protected void onDetachedFromWindow() {
+            if (shimmer != null) {
+                shimmer.cancel();
+                shimmer = null;
+            }
+            super.onDetachedFromWindow();
+        }
+    }
+
     private void today() {
         renderedCalendarDay = LocalDate.now();
         AppSettings cfg = new AppSettings(this);
-        TextView devotionalGreeting = Ui.text(this, "السلام علیکم یا علیؑ مدد", 29, Ui.WHITE, true);
-        devotionalGreeting.setTextDirection(View.TEXT_DIRECTION_RTL);
-        devotionalGreeting.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
-        devotionalGreeting.setLineSpacing(Ui.dp(this, 3), 1.08f);
-        content.addView(devotionalGreeting);
-        Ui.space(this, content, 5);
-        content.addView(Ui.text(this, "Your day, your prayers, your moments.", 14, Ui.MUTED, false));
-        Ui.space(this, content, 22);
+        // A centered full-width greeting removes the empty left-hand space
+        // created by right-aligning an RTL line in the old header.
+        LinearLayout greetingCard = Ui.panel(this);
+        greetingCard.setGravity(Gravity.CENTER);
+        greetingCard.setPadding(Ui.dp(this, 14), Ui.dp(this, 18),
+                Ui.dp(this, 14), Ui.dp(this, 18));
+        GradientDrawable greetingSurface = new GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                new int[]{mix(Ui.CARD, Ui.GOLD, .16f),
+                          mix(Ui.CARD, Ui.GOLD, .05f)});
+        greetingSurface.setCornerRadius(Ui.dp(this, 26));
+        greetingSurface.setStroke(Ui.dp(this, 1), mix(Ui.OUTLINE, Ui.GOLD, .46f));
+        greetingCard.setBackground(greetingSurface);
+
+        ShimmerGreeting devotionalGreeting = new ShimmerGreeting(this);
+        greetingCard.addView(devotionalGreeting, new LinearLayout.LayoutParams(-1, -2));
+        Ui.space(this, greetingCard, 10);
+        View ornament = new View(this);
+        GradientDrawable ornamentSurface = new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{mix(Ui.CARD, Ui.GOLD, .12f),
+                          Ui.GOLD, mix(Ui.CARD, Ui.GOLD, .12f)});
+        ornamentSurface.setCornerRadius(Ui.dp(this, 2));
+        ornament.setBackground(ornamentSurface);
+        greetingCard.addView(ornament,
+                new LinearLayout.LayoutParams(Ui.dp(this, 108), Ui.dp(this, 2)));
+        Ui.space(this, greetingCard, 11);
+        TextView devotionalSubtitle = Ui.text(this,
+                "Your day, your prayers, your moments.", 13, Ui.MUTED, false);
+        devotionalSubtitle.setGravity(Gravity.CENTER);
+        devotionalSubtitle.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        greetingCard.addView(devotionalSubtitle);
+        content.addView(greetingCard);
+        Ui.space(this, content, 18);
 
         dateDashboard(renderedCalendarDay);
         wisdomCard();
