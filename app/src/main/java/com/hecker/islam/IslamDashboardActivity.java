@@ -472,8 +472,24 @@ public final class IslamDashboardActivity extends Activity {
         Ui.space(this, card, 12);
         wisdomReference = Ui.text(this, "", 12, Ui.MUTED, false);
         card.addView(wisdomReference);
+        Ui.space(this, card, 14);
+        LinearLayout actions = new LinearLayout(this);
+        actions.setGravity(Gravity.CENTER_VERTICAL);
+        TextView openCollection = Ui.text(this, "Read all wisdoms   ›", 13, Ui.GOLD, true);
+        openCollection.setOnClickListener(v -> launch(NahjAlBalaghaActivity.class));
+        actions.addView(openCollection, new LinearLayout.LayoutParams(0, Ui.dp(this, 46), 1));
+        TextView shareStatus = Ui.text(this, "↗  WhatsApp Status", 14, Ui.GOLD, true);
+        shareStatus.setGravity(Gravity.CENTER);
+        shareStatus.setPadding(Ui.dp(this, 12), 0, Ui.dp(this, 12), 0);
+        shareStatus.setContentDescription("Share this wisdom as a WhatsApp status image");
+        shareStatus.setOnClickListener(v -> {
+            if (currentWisdom >= 0 && currentWisdom < NahjWisdom.QUOTES.length)
+                QuoteStatusShare.share(this, NahjWisdom.QUOTES[currentWisdom]);
+        });
+        actions.addView(shareStatus);
+        card.addView(actions);
         rotateWisdom();
-        card.setContentDescription("Rotating wisdom from Nahj al-Balagha. Tap to open the collection.");
+        card.setContentDescription("Rotating wisdom from Nahj al-Balagha. Tap to open the collection, or share to WhatsApp Status.");
         card.setOnClickListener(v -> launch(NahjAlBalaghaActivity.class));
         content.addView(card);
         Ui.space(this, content, 13);
