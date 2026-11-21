@@ -1,14 +1,14 @@
-# Hecker Islam — Mola Ali Mojza reader
+# Hecker Islam — Mojzaat reader
 
 ## Shipped content
 
-The Mojzat catalog at `app/src/main/assets/mojzat/catalog.json` contains only **Mola Ali (A.S.) — the Iranian woodcutter story**. It is provided in Urdu and Roman Urdu. The previously included Bibi Fatima (S.A.) retelling was withdrawn from the app at the user's request because its accuracy was uncertain.
+The Mojzat catalog at `app/src/main/assets/mojzat/catalog.json` currently contains three Urdu-script stories: **Mola Ali (A.S.) — the Iranian woodcutter**, **Sayyida Fatima Zahra (S.A.) — the sunaran story**, and **Hazrat Abbas (A.S.) — the four-page scanned narrative**. The first two entries were present before this update and are not modified here. The Hazrat Abbas story was manually transcribed from user-supplied photos in page order **33 → 34 → 35 → 36**, with paragraph separators preserving page breaks. Its source is the supplied scanned pages, not a verified hadith reference.
 
 This is a traditional devotional narrative rather than an authenticated hadith.
 
 ## Reader features
 
-- Urdu and Roman Urdu toggle with Urdu right-to-left layout.
+- Urdu right-to-left reader; the language toggle remains available for stories containing a Roman Urdu version.
 - Recite using the installed Urdu Android text-to-speech voice; the reader uses the foreground playback service.
 - Adjustable font size and recitation speed, bookmarks, source information and sharing.
 
@@ -26,7 +26,7 @@ The dashboard's WhatsApp Status flow now renders **eight** different 9:16 artwor
 
 ## QA checks
 
-1. Confirm only one Mojza story appears in the catalog and the dashboard/More show the Mola Ali shortcut.
+1. Confirm the Mojza index shows all three entries, including `معجزہ حضرت عباس علیہ السلام`; open Abbas and verify the story begins on page 33, continues in page order, and ends with the page 36 conclusion.
 2. Open the story in Urdu and Roman Urdu and verify bookmarks, playback and text sharing.
 3. Open the status preview for short and long Nahj al-Balagha quotes; ensure the attribution remains below the panel without overlapping its border.
 4. Verify sharing to WhatsApp Status and other apps.
