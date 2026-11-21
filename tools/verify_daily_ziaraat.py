@@ -32,7 +32,7 @@ def main():
         assert z["source"].startswith("https://"), uid
         assert len(z["arabic"]) >= 130, f"Arabic too short for {uid}"
         assert len(z["urdu"]) >= 150, f"Urdu too short for {uid}"
-        assert "\\n" in z["arabic"], f"Expected prayer paragraphs for {uid}"
+        assert len(z["arabic"].splitlines()) > 1, f"Expected multiple lines for {uid}"
     assert found == EXPECTED, f"Weekday entries don't match: {found!r}"
     print("PASS: Nine sourced Arabic/Urdu Ziaraat across seven weekdays")
 
