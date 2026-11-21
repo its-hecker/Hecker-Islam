@@ -48,6 +48,10 @@ public final class IslamDashboardActivity extends Activity {
     private TextView nextAzaanCountdown;
     private TextView wisdomText, wisdomReference;
     private int currentWisdom = -1;
+    // Persist the last automatic/manual change so frequent location/Prayer refreshes
+    // cannot indefinitely postpone the next wisdom.
+    private static final long WISDOM_ROTATION_INTERVAL_MS = 30_000L;
+    private static final String WISDOM_CHANGED_KEY = "changed_at_ms";
     private long wisdomChangedAt;
     private Instant nextAzaanInstant;
     private LocalDate renderedCalendarDay;
@@ -62,8 +66,8 @@ public final class IslamDashboardActivity extends Activity {
                 render(); return;
             }
             updateCountdown();
-            if (wisdomText != null && android.os.SystemClock.elapsedRealtime() - wisdomChangedAt > 90_000) rotateWisdom();
-            clock.postDelayed(this, 15_000);
+            rotateWisdomIfDue();
+            clock.postDelayed(this, 5_000);
         }
     };
     private int page = 0;
@@ -145,7 +149,10 @@ public final class IslamDashboardActivity extends Activity {
         tabs();
         if (page == 0) {
             updateCountdown();
-            clock.postDelayed(clockTick, 15_000);
+            // Catch up even when onResume/location/calendar renders have reset
+            // the regular clock callback. Rotation never resets on a UI refresh.
+            rotateWisdomIfDue();
+            clock.postDelayed(clockTick, 5_000);
         }
         if (ValueAnimator.areAnimatorsEnabled()) {
             for (int i = 0; i < content.getChildCount(); i++) {
@@ -539,42 +546,79 @@ public final class IslamDashboardActivity extends Activity {
         Ui.space(this, content, 12);
     }
 
-    /** Pick the next unused wisdom and save progress for process restarts. */
+    /** Rotate after a real 30-second interval, even across repeated dashboard renders. */
+    private void rotateWisdomIfDue() {
+        if (page != 0 || wisdomText == null || wisdomReference == null) return;
+        android.content.SharedPreferences prefs =
+                getSharedPreferences("nahj_wisdom_cycle", MODE_PRIVATE);
+        long now = System.currentTimeMillis();
+        if (wisdomChangedAt <= 0L) {
+            wisdomChangedAt = prefs.getLong(WISDOM_CHANGED_KEY, 0L);
+        }
+        if (wisdomChangedAt <= 0L || wisdomChangedAt > now) {
+            wisdomChangedAt = now;
+            prefs.edit().putLong(WISDOM_CHANGED_KEY, now).apply();
+        }
+        if (now - wisdomChangedAt >= WISDOM_ROTATION_INTERVAL_MS) {
+            rotateWisdom();
+        }
+    }
+
+    /** Pick the next unused wisdom and save both selection and rotation time. */
     private void rotateWisdom() {
         if (wisdomText == null || wisdomReference == null) return;
-        android.content.SharedPreferences prefs = getSharedPreferences("nahj_wisdom_cycle", MODE_PRIVATE);
+        android.content.SharedPreferences prefs =
+                getSharedPreferences("nahj_wisdom_cycle", MODE_PRIVATE);
         if (currentWisdom < 0 || currentWisdom >= NahjWisdom.QUOTES.length)
             currentWisdom = prefs.getInt("current", -1);
         WisdomCycle.Pick next = WisdomCycle.next(NahjWisdom.QUOTES.length,
                 prefs.getString("order", ""), prefs.getInt("cursor", 0),
                 currentWisdom, new java.util.Random());
         currentWisdom = next.index;
+        wisdomChangedAt = System.currentTimeMillis();
         prefs.edit().putInt("current", next.index).putString("order", next.order)
-                .putInt("cursor", next.cursor).apply();
+                .putInt("cursor", next.cursor)
+                .putLong(WISDOM_CHANGED_KEY, wisdomChangedAt).apply();
         showCurrentWisdom();
-        wisdomChangedAt = android.os.SystemClock.elapsedRealtime();
+        if (ValueAnimator.areAnimatorsEnabled() && wisdomText.isAttachedToWindow()) {
+            // Subtle transition without moving or resizing the entire card.
+            wisdomText.animate().cancel();
+            wisdomText.setAlpha(.35f);
+            wisdomText.setTranslationY(Ui.dp(this, 5));
+            wisdomText.animate().alpha(1f).translationY(0f)
+                    .setDuration(320).setInterpolator(new DecelerateInterpolator()).start();
+            wisdomReference.animate().cancel();
+            wisdomReference.setAlpha(.35f);
+            wisdomReference.animate().alpha(1f).setDuration(320).start();
+        }
     }
 
-    /** A UI refresh must not consume a new quote or make the same quote reappear. */
+    /** Re-rendering the dashboard does not consume a quote or restart the timer. */
     private void showCurrentWisdom() {
         if (wisdomText == null || wisdomReference == null) return;
-        if (currentWisdom < 0 || currentWisdom >= NahjWisdom.QUOTES.length) {
-            currentWisdom = getSharedPreferences("nahj_wisdom_cycle", MODE_PRIVATE)
-                    .getInt("current", -1);
-        }
+        android.content.SharedPreferences prefs =
+                getSharedPreferences("nahj_wisdom_cycle", MODE_PRIVATE);
+        if (currentWisdom < 0 || currentWisdom >= NahjWisdom.QUOTES.length)
+            currentWisdom = prefs.getInt("current", -1);
         if (currentWisdom < 0 || currentWisdom >= NahjWisdom.QUOTES.length) {
             rotateWisdom();
             return;
         }
         NahjWisdom.Quote quote = NahjWisdom.QUOTES[currentWisdom];
-        // Compact typography, but never truncate a wisdom to save space.
         int quoteLength = quote.urdu.codePointCount(0, quote.urdu.length());
         wisdomText.setTextSize(TypedValue.COMPLEX_UNIT_SP,
                 quoteLength > 105 ? 16f : quoteLength > 73 ? 17f : 18f);
         wisdomText.setText(quote.urdu);
         wisdomReference.setText("نہج البلاغہ • اردو مفہوم");
-        if (wisdomChangedAt == 0)
-            wisdomChangedAt = android.os.SystemClock.elapsedRealtime();
+        // First render of older installations: initialize once, then persist.
+        // On later launches the saved epoch lets us rotate immediately if due.
+        if (wisdomChangedAt <= 0L) {
+            wisdomChangedAt = prefs.getLong(WISDOM_CHANGED_KEY, 0L);
+            if (wisdomChangedAt <= 0L) {
+                wisdomChangedAt = System.currentTimeMillis();
+                prefs.edit().putLong(WISDOM_CHANGED_KEY, wisdomChangedAt).apply();
+            }
+        }
     }
     private void wisdomCard() {
         // Short dashboard preview: full text expands naturally for longer quotes,
