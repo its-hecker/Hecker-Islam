@@ -164,8 +164,21 @@ public final class IslamDashboardActivity extends Activity {
     private void header() {
         LinearLayout line = new LinearLayout(this);
         line.setGravity(Gravity.CENTER_VERTICAL);
-        TextView heading = Ui.text(this, "HECKER ISLAM", 14, Ui.GOLD, true);
-        line.addView(heading, new LinearLayout.LayoutParams(0, Ui.dp(this, 40), 1));
+        if (page == 0) {
+            // Keep the greeting in the small app header, not in a separate card.
+            // Two deliberate lines leave room for the About and Settings icons.
+            ShimmerGreeting heading = new ShimmerGreeting(this);
+            heading.setText("السلام علیکم\nیا علیؑ مدد");
+            heading.setTextSize(TypedValue.COMPLEX_UNIT_SP, 21);
+            heading.setTextAlignment(View.TEXT_ALIGNMENT_GRAVITY);
+            heading.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+            heading.setLineSpacing(Ui.dp(this, 1), 1.06f);
+            heading.setMaxLines(2);
+            line.addView(heading, new LinearLayout.LayoutParams(0, Ui.dp(this, 72), 1));
+        } else {
+            TextView heading = Ui.text(this, "HECKER ISLAM", 14, Ui.GOLD, true);
+            line.addView(heading, new LinearLayout.LayoutParams(0, Ui.dp(this, 48), 1));
+        }
         TextView info = Ui.text(this, "ⓘ", 25, Ui.GOLD, false);
         info.setGravity(Gravity.CENTER); info.setContentDescription("App information and credits");
         info.setOnClickListener(v -> AboutHeckerDialog.show(this));
@@ -516,7 +529,16 @@ public final class IslamDashboardActivity extends Activity {
             wisdomChangedAt = android.os.SystemClock.elapsedRealtime();
     }
     private void wisdomCard() {
-        LinearLayout card = Ui.panel(this);
+        // The former welcome card is now the single dashboard wisdom card.
+        LinearLayout card = dashboardCard(true);
+        GradientDrawable wisdomSurface = new GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                new int[]{mix(Ui.CARD, Ui.GOLD, .16f),
+                          mix(Ui.CARD, Ui.GOLD, .05f)});
+        wisdomSurface.setCornerRadius(Ui.dp(this, 26));
+        wisdomSurface.setStroke(Ui.dp(this, 1),
+                mix(Ui.OUTLINE, Ui.GOLD, .46f));
+        card.setBackground(wisdomSurface);
         LinearLayout wisdomHeader = new LinearLayout(this);
         wisdomHeader.setGravity(Gravity.CENTER_VERTICAL);
         TextView wisdomHeading = Ui.text(this, "WISDOM FROM IMAM ALI (A.S.)", 12, Ui.GOLD, true);
@@ -651,43 +673,10 @@ public final class IslamDashboardActivity extends Activity {
     private void today() {
         renderedCalendarDay = LocalDate.now();
         AppSettings cfg = new AppSettings(this);
-        // A centered full-width greeting removes the empty left-hand space
-        // created by right-aligning an RTL line in the old header.
-        LinearLayout greetingCard = Ui.panel(this);
-        greetingCard.setGravity(Gravity.CENTER);
-        greetingCard.setPadding(Ui.dp(this, 14), Ui.dp(this, 18),
-                Ui.dp(this, 14), Ui.dp(this, 18));
-        GradientDrawable greetingSurface = new GradientDrawable(
-                GradientDrawable.Orientation.TL_BR,
-                new int[]{mix(Ui.CARD, Ui.GOLD, .16f),
-                          mix(Ui.CARD, Ui.GOLD, .05f)});
-        greetingSurface.setCornerRadius(Ui.dp(this, 26));
-        greetingSurface.setStroke(Ui.dp(this, 1), mix(Ui.OUTLINE, Ui.GOLD, .46f));
-        greetingCard.setBackground(greetingSurface);
-
-        ShimmerGreeting devotionalGreeting = new ShimmerGreeting(this);
-        greetingCard.addView(devotionalGreeting, new LinearLayout.LayoutParams(-1, -2));
-        Ui.space(this, greetingCard, 10);
-        View ornament = new View(this);
-        GradientDrawable ornamentSurface = new GradientDrawable(
-                GradientDrawable.Orientation.LEFT_RIGHT,
-                new int[]{mix(Ui.CARD, Ui.GOLD, .12f),
-                          Ui.GOLD, mix(Ui.CARD, Ui.GOLD, .12f)});
-        ornamentSurface.setCornerRadius(Ui.dp(this, 2));
-        ornament.setBackground(ornamentSurface);
-        greetingCard.addView(ornament,
-                new LinearLayout.LayoutParams(Ui.dp(this, 108), Ui.dp(this, 2)));
-        Ui.space(this, greetingCard, 11);
-        TextView devotionalSubtitle = Ui.text(this,
-                "Your day, your prayers, your moments.", 13, Ui.MUTED, false);
-        devotionalSubtitle.setGravity(Gravity.CENTER);
-        devotionalSubtitle.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-        greetingCard.addView(devotionalSubtitle);
-        content.addView(greetingCard);
-        Ui.space(this, content, 18);
-
-        dateDashboard(renderedCalendarDay);
+        // One interactive wisdom card directly beneath the header,
+        // followed by the calendar. No duplicate wisdom below the calendar.
         wisdomCard();
+        dateDashboard(renderedCalendarDay);
         azaanDashboard(cfg);
 
         Ui.space(this, content, 10);
