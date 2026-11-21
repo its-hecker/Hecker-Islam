@@ -244,17 +244,11 @@ public final class IslamDashboardActivity extends Activity {
                 Math.round(Color.blue(a) * inverse + Color.blue(b) * amount));
     }
 
+    /** One surface palette for wisdom, calendar, Azaan and exploration tiles. */
     private LinearLayout dashboardCard(boolean featured) {
         LinearLayout card = Ui.panel(this);
-        GradientDrawable surface = new GradientDrawable(
-                GradientDrawable.Orientation.TL_BR,
-                new int[]{featured ? mix(Ui.CARD, Ui.GOLD, .12f) : Ui.CARD,
-                          featured ? mix(Ui.CARD, Ui.GOLD, .03f) : Ui.CARD});
-        surface.setCornerRadius(Ui.dp(this, 30));
-        surface.setStroke(Ui.dp(this, 1), Ui.OUTLINE);
-        card.setBackground(surface);
-        card.setPadding(Ui.dp(this, 20), Ui.dp(this, 21),
-                Ui.dp(this, 20), Ui.dp(this, 21));
+        card.setPadding(Ui.dp(this, 18), Ui.dp(this, 18),
+                Ui.dp(this, 18), Ui.dp(this, 18));
         return card;
     }
 
@@ -626,15 +620,6 @@ public final class IslamDashboardActivity extends Activity {
         LinearLayout card = dashboardCard(true);
         card.setPadding(Ui.dp(this, 15), Ui.dp(this, 13),
                 Ui.dp(this, 15), Ui.dp(this, 13));
-        GradientDrawable wisdomSurface = new GradientDrawable(
-                GradientDrawable.Orientation.TL_BR,
-                new int[]{mix(Ui.CARD, Ui.GOLD, .16f),
-                          mix(Ui.CARD, Ui.GOLD, .05f)});
-        wisdomSurface.setCornerRadius(Ui.dp(this, 24));
-        wisdomSurface.setStroke(Ui.dp(this, 1),
-                mix(Ui.OUTLINE, Ui.GOLD, .44f));
-        card.setBackground(wisdomSurface);
-
         LinearLayout wisdomHeader = new LinearLayout(this);
         wisdomHeader.setGravity(Gravity.CENTER_VERTICAL);
         TextView wisdomHeading =
