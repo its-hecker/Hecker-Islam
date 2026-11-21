@@ -21,6 +21,14 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:supportsRtl="true"
         android:enableOnBackInvokedCallback="true">
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.statusfiles"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/status_share_paths"/>
+        </provider>
         <activity android:name="com.hecker.islam.IslamDashboardActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
