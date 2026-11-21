@@ -36,6 +36,8 @@ public final class ShiaDuasActivity extends Activity {
                 case "namaz_husayn": return "زیارتِ امام حسینؑ اور حضرت عباسؑ\nآپ پر سلام ہو، اے ابا عبداللہؑ!\nآپ پر سلام ہو، اے رسولِ خداؐ کے فرزند!\nآپ پر سلام ہو، اے امیرالمؤمنینؑ کے فرزند!\nآپ پر سلام ہو، اے حضرت فاطمہ زہراؑ کے فرزند!\nآپ پر سلام ہو، اے ابوالفضل العباسؑ!\nآپ سب پر اللہ کی رحمت اور برکتیں ہوں۔";
                 case "namaz_reza": return "زیارتِ امام علی رضا علیہ السلام\nآپ پر سلام ہو، اے غریب الغرباؑ!\nآپ پر سلام ہو، اے علی بن موسیٰ الرضاؑ!\nآپ پر اللہ کی رحمت اور برکتیں ہوں۔";
                 case "namaz_mahdi": return "زیارتِ امامِ زمانہ علیہ السلام\nآپ پر سلام ہو، اے صاحبِ عصر و زمان!\nآپ پر سلام ہو، اے انسانوں اور جنوں کے امام!\nآپ پر سلام ہو، اے قرآن کے ساتھی!\nامان، امان، امان!\nآپ پر اللہ کی رحمت اور برکتیں ہوں۔\nاے اللہ! محمدؐ اور آلِ محمدؑ پر رحمت نازل فرما۔";
+                case "maghfirat": return "اے اللہ! ہمارے زندہ اور وفات پا جانے والے مومن مردوں اور مومن عورتوں کی مغفرت فرما۔";
+                case "qabristan_salam": return "ان قبروں میں رہنے والے مومنوں اور مسلمانوں پر سلام ہو۔\nآپ ہم سے پہلے جا چکے ہیں،\nاور اگر اللہ نے چاہا تو ہم بھی آپ سے آ ملیں گے۔";
                 case "faraj": return "اے اللہ! اپنے ولی، حجت ابن الحسنؑ کے لیے اس گھڑی اور ہر گھڑی سرپرست، محافظ، رہنما، مددگار اور نگہبان بن، یہاں تک کہ تو انہیں اپنی زمین پر بااختیار طور پر بسائے اور انہیں طویل عرصے تک اس سے بہرہ مند فرمائے۔";
                 case "tasbih": return "اللہ سب سے بڑا ہے (۳۴ مرتبہ)۔ تمام تعریفیں اللہ ہی کے لیے ہیں (۳۳ مرتبہ)۔ اللہ ہر نقص سے پاک ہے (۳۳ مرتبہ)۔";
                 case "salawat": return "اے اللہ! محمدؐ اور آلِ محمدؑ پر رحمت نازل فرما۔";
@@ -75,6 +77,16 @@ public final class ShiaDuasActivity extends Activity {
             "السَّلَامُ عَلَيْكَ يَا صَاحِبَ الْعَصْرِ وَالزَّمَانِ\nالسَّلَامُ عَلَيْكَ يَا إِمَامَ الْإِنْسِ وَالْجَانِّ\nالسَّلَامُ عَلَيْكَ يَا شَرِيكَ الْقُرْآنِ\nالْأَمَانَ، الْأَمَانَ، الْأَمَانَ\nالسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللَّهِ وَبَرَكَاتُهُ\nاللَّهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَآلِ مُحَمَّدٍ",
             "Optional ziyarat after namaz, not part of the obligatory prayer. Arabic salutation text from Duas.org; Urdu rendering prepared for Hecker Islam.",
             "https://www.duas.org/ziarataftersalaat.htm"),
+        new Dua("maghfirat", "Dua-e-Maghfirat (Forgiveness)", "دعائے مغفرت",
+            "Prayer for the forgiveness of believing men and women, living and deceased",
+            "اللَّهُمَّ اغْفِرْ لِأَحْيَائِنَا وَأَمْوَاتِنَا مِنَ الْمُؤْمِنِينَ وَالْمُؤْمِنَاتِ",
+            "A short Shia-sourced supplication quoted from al-Kafi's funeral-prayer reports. This is a standalone excerpt for personal remembrance, not the complete Salat al-Mayyit.",
+            "https://shialibrary.com/book/kafi/chapter/527065"),
+        new Dua("qabristan_salam", "Durood-e-Qabristan (Salaam at the Graveyard)", "درودِ قبرستان / سلامِ اہلِ قبور",
+            "Salutation to the believing inhabitants of a cemetery",
+            "السَّلَامُ عَلَى أَهْلِ الدِّيَارِ مِنَ الْمُؤْمِنِينَ وَالْمُسْلِمِينَ\nأَنْتُمْ لَنَا فَرَطٌ\nوَنَحْنُ إِنْ شَاءَ اللَّهُ بِكُمْ لَاحِقُونَ",
+            "The cemetery greeting reported from Imam Ja'far al-Sadiq (a.s.) via Abdullah ibn Sinan; commonly referred to here as Durood-e-Qabristan, but its traditional form is a salam rather than a salawat.",
+            "https://www.duas.org/mobile/visit-graveyard.html"),
         new Dua("faraj", "Dua Imam-e-Zamana (Dua al-Faraj)", "دعائے امامِ زمانہؑ / دعائے فرج",
             "Supplication for Imam al-Mahdi (a.j.)",
             "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\n"
@@ -231,6 +243,11 @@ public final class ShiaDuasActivity extends Activity {
         button("☾ After Namaz Ziaraat • نماز کے بعد زیارات", () -> {
             reciter.stop();
             selected = DUAS[0];
+            render();
+        });
+        button("✦ Maghfirat & Qabristan • مغفرت و قبرستان", () -> {
+            reciter.stop();
+            selected = DUAS[4];
             render();
         });
         button(favoritesOnly ? "★ Showing saved • Show all" : "☆ Show saved duas", () -> {
