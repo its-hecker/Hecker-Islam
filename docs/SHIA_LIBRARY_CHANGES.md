@@ -15,6 +15,7 @@ This change is based on `fix/standalone-offline-expressive`, not the old one-fil
 
 ## Shia duas
 - Adds **Dua Imam-e-Zamana (Dua al-Faraj)** and **Dua-e-Ahad**.
+- Adds **Hadith-e-Kisa (حدیثِ کساء)** to the Shia Duas catalogue, with Urdu introduction, bookmarking, and a linked in-app full Arabic/Urdu reader with Arabic and Urdu audio at FZIC. The complete narration and recitations require internet access.
 - Short Arabic duas include original Urdu renderings offline.
 - The longer duas show clearly labelled Urdu introductions, not misrepresented abbreviated translations.
 - Links for Dua Kumayl, Tawassul, Nudba, Iftitah, Ahad and Ziyarat Ashura open verified complete Arabic/Urdu readings from FZIC **inside Hecker Islam**; other sources continue to open from Duas.org, where language availability differs.
