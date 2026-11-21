@@ -127,65 +127,126 @@ final class QuoteStatusShare {
         return (int) (activity.getResources().getDisplayMetrics().density * dip + 0.5f);
     }
 
+    /**
+     * The on-device renderer matches the approved 9:16 preview:
+     * title and quotation inside the frame, with the Imam Ali (A.S.)
+     * attribution entirely BELOW it. Neither app branding nor wisdom
+     * numbering is drawn into the export.
+     */
     private static Bitmap renderStatus(String quote) {
+        final int panelLeft = 90, panelTop = 310, panelRight = 990, panelBottom = 1310;
+        final int quoteWidth = 780, quoteTop = 625, quoteBottom = 1210;
+        final int attributionTop = 1400;
+        final int ivory = 0xfff6f1e7;
         Bitmap image = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(image);
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
+        // Deep teal, understated emerald glow, and a gentle vignette.
         paint.setShader(new LinearGradient(0, 0, WIDTH, HEIGHT,
-                new int[]{0xff0b1720, 0xff15312f, 0xff09151e}, null, Shader.TileMode.CLAMP));
+                new int[]{0xff091e26, 0xff103a37, 0xff091f28},
+                null, Shader.TileMode.CLAMP));
+        canvas.drawRect(0, 0, WIDTH, HEIGHT, paint);
+        paint.setShader(new RadialGradient(WIDTH / 2f, 830, 780,
+                new int[]{0x4026b59d, 0x16208579, 0x0014262b},
+                new float[]{0f, .56f, 1f}, Shader.TileMode.CLAMP));
         canvas.drawRect(0, 0, WIDTH, HEIGHT, paint);
         paint.setShader(null);
 
-        // Warm, subtle light behind the quotation; no app branding or numbering.
-        paint.setShader(new RadialGradient(WIDTH / 2f, HEIGHT * 0.42f, 730,
-                new int[]{0x2639b59e, 0x0e24575b, 0x001a2932},
-                new float[]{0f, .53f, 1f}, Shader.TileMode.CLAMP));
-        canvas.drawRect(0, 0, WIDTH, HEIGHT, paint);
-        paint.setShader(null);
-
-        paint.setColor(0x2626a28b);
-        canvas.drawRoundRect(92, 310, 988, 1540, 64, 64, paint);
+        // Symmetrical top motif, kept OUTSIDE the bordered quote.
+        paint.setColor(0xbbe4c88e);
+        paint.setStrokeWidth(2.3f);
+        canvas.drawLine(350, 218, 490, 218, paint);
+        canvas.drawLine(590, 218, 730, 218, paint);
         paint.setColor(GOLD);
+        canvas.drawCircle(517, 218, 4.5f, paint);
+        canvas.drawCircle(563, 218, 4.5f, paint);
+        drawDiamond(canvas, 540, 218, 12f, paint);
+
+        // Framed emerald panel: inset and softly illuminated.
+        paint.setShader(new LinearGradient(panelLeft, panelTop, panelRight, panelBottom,
+                new int[]{0xff103a38, 0xff0f4740, 0xff103a38},
+                null, Shader.TileMode.CLAMP));
+        canvas.drawRoundRect(panelLeft, panelTop, panelRight, panelBottom,
+                62, 62, paint);
+        paint.setShader(null);
+        paint.setColor(0xffe6cc92);
+        paint.setStrokeWidth(2.7f);
         paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(2.5f);
-        canvas.drawRoundRect(92, 310, 988, 1540, 64, 64, paint);
+        canvas.drawRoundRect(panelLeft, panelTop, panelRight, panelBottom,
+                62, 62, paint);
         paint.setStyle(Paint.Style.FILL);
 
-        // Symmetrical ornaments instead of text-heavy headers or watermarks.
-        paint.setColor(GOLD);
-        canvas.drawCircle(540, 220, 9, paint);
-        canvas.drawCircle(518, 220, 3.5f, paint);
-        canvas.drawCircle(562, 220, 3.5f, paint);
-        paint.setStrokeWidth(2);
-        paint.setColor(0x88e4c88e);
-        canvas.drawRect(365, 226, 486, 228, paint);
-        canvas.drawRect(594, 226, 715, 228, paint);
-        canvas.drawRect(365, 1646, 715, 1648, paint);
+        // Title and rosette have their own fixed zone above the quote.
+        drawUrdu(canvas, "نہج البلاغہ", 61, GOLD, 820, 380, 105, false);
+        paint.setColor(0x99e4c88e);
+        paint.setStrokeWidth(2.4f);
+        canvas.drawLine(365, 547, 484, 547, paint);
+        canvas.drawLine(596, 547, 715, 547, paint);
+        drawRosette(canvas, 540, 547, GOLD, 1.0f);
 
-        drawUrdu(canvas, "نہج البلاغہ", 57, GOLD, 870, 385, 170, false);
-        drawUrdu(canvas, "❈", 44, GOLD, 850, 525, 90, false);
-
-        // Dynamically size RTL content to keep long quotations inside the frame.
+        // Fit the full Urdu quote, always centered inside a safe rectangle.
+        // The attribution is not part of this layout and cannot cross its border.
         TextPaint words = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         words.setTypeface(Typeface.create("serif", Typeface.NORMAL));
-        words.setColor(0xfff7f1e5);
+        words.setColor(ivory);
         StaticLayout layout = null;
-        int maxTextHeight = 760;
-        for (int point = 76; point >= 40; point -= 3) {
-            words.setTextSize(point);
-            layout = makeRtlLayout(quote, words, 770, 17, 1.18f);
-            if (layout.getHeight() <= maxTextHeight) break;
+        final int allowedHeight = quoteBottom - quoteTop;
+        for (int size = 82; size >= 24; size -= 2) {
+            words.setTextSize(size);
+            layout = makeRtlLayout(quote, words, quoteWidth, 15, 1.16f);
+            if (layout.getHeight() <= allowedHeight) break;
         }
-        int top = 925 - layout.getHeight() / 2;
-        canvas.save();
-        canvas.translate((WIDTH - 770) / 2f, top);
-        layout.draw(canvas);
-        canvas.restore();
+        if (layout != null) {
+            float y = quoteTop + (allowedHeight - layout.getHeight()) / 2f;
+            // Clip the quotation to its own area as a final layout guard.
+            canvas.save();
+            canvas.clipRect(130, quoteTop, 950, quoteBottom);
+            canvas.translate((WIDTH - quoteWidth) / 2f, y);
+            layout.draw(canvas);
+            canvas.restore();
+        }
 
-        drawUrdu(canvas, "امام علی علیہ السلام", 53, GOLD, 870, 1505, 110, true);
-        drawUrdu(canvas, "✦", 36, 0xffddc9a1, 870, 1696, 88, false);
+        // Crucial layout fix: the author sits well BELOW panelBottom=1310,
+        // not at its lower border. Keep plenty of vertical breathing room.
+        drawUrdu(canvas, "امام علی علیہ السلام", 55, GOLD, 900,
+                attributionTop, 95, true);
+        paint.setColor(0x88e4c88e);
+        paint.setStrokeWidth(2.2f);
+        canvas.drawLine(325, 1555, 490, 1555, paint);
+        canvas.drawLine(590, 1555, 755, 1555, paint);
+        drawRosette(canvas, 540, 1555, GOLD, .74f);
+        paint.setColor(0x77e4c88e);
+        drawDiamond(canvas, 540, 1650, 9f, paint);
         return image;
+    }
+
+    private static void drawDiamond(Canvas canvas, float cx, float cy,
+                                    float radius, Paint paint) {
+        android.graphics.Path diamond = new android.graphics.Path();
+        diamond.moveTo(cx, cy - radius);
+        diamond.lineTo(cx + radius * .72f, cy);
+        diamond.lineTo(cx, cy + radius);
+        diamond.lineTo(cx - radius * .72f, cy);
+        diamond.close();
+        canvas.drawPath(diamond, paint);
+    }
+
+    private static void drawRosette(Canvas canvas, float cx, float cy,
+                                    int color, float scale) {
+        Paint petal = new Paint(Paint.ANTI_ALIAS_FLAG);
+        petal.setColor(color);
+        canvas.save();
+        canvas.translate(cx, cy);
+        canvas.scale(scale, scale);
+        for (int i = 0; i < 8; i++) {
+            canvas.save();
+            canvas.rotate(i * 45f);
+            canvas.drawOval(-4f, -29f, 4f, -10f, petal);
+            canvas.restore();
+        }
+        canvas.drawCircle(0, 0, 6, petal);
+        canvas.restore();
     }
 
     private static StaticLayout makeRtlLayout(String value, TextPaint paint,

@@ -452,23 +452,60 @@ public final class IslamDashboardActivity extends Activity {
         Ui.space(this, content, 12);
     }
 
+    /** Pick the next unused wisdom and save progress for process restarts. */
     private void rotateWisdom() {
         if (wisdomText == null || wisdomReference == null) return;
-        currentWisdom = NahjWisdom.randomOtherThan(currentWisdom);
+        android.content.SharedPreferences prefs = getSharedPreferences("nahj_wisdom_cycle", MODE_PRIVATE);
+        if (currentWisdom < 0 || currentWisdom >= NahjWisdom.QUOTES.length)
+            currentWisdom = prefs.getInt("current", -1);
+        WisdomCycle.Pick next = WisdomCycle.next(NahjWisdom.QUOTES.length,
+                prefs.getString("order", ""), prefs.getInt("cursor", 0),
+                currentWisdom, new java.util.Random());
+        currentWisdom = next.index;
+        prefs.edit().putInt("current", next.index).putString("order", next.order)
+                .putInt("cursor", next.cursor).apply();
+        showCurrentWisdom();
+        wisdomChangedAt = android.os.SystemClock.elapsedRealtime();
+    }
+
+    /** A UI refresh must not consume a new quote or make the same quote reappear. */
+    private void showCurrentWisdom() {
+        if (wisdomText == null || wisdomReference == null) return;
+        if (currentWisdom < 0 || currentWisdom >= NahjWisdom.QUOTES.length) {
+            currentWisdom = getSharedPreferences("nahj_wisdom_cycle", MODE_PRIVATE)
+                    .getInt("current", -1);
+        }
+        if (currentWisdom < 0 || currentWisdom >= NahjWisdom.QUOTES.length) {
+            rotateWisdom();
+            return;
+        }
         NahjWisdom.Quote quote = NahjWisdom.QUOTES[currentWisdom];
         wisdomText.setText(quote.urdu);
         wisdomReference.setText("نہج البلاغہ • اردو مفہوم");
-        wisdomChangedAt = android.os.SystemClock.elapsedRealtime();
+        if (wisdomChangedAt == 0)
+            wisdomChangedAt = android.os.SystemClock.elapsedRealtime();
     }
-    private void openMojza(String storyId) {
-        Intent intent = new Intent(this, MojzatActivity.class);
-        intent.putExtra("mojzat_story", storyId);
-        startActivity(intent);
-    }
-
     private void wisdomCard() {
         LinearLayout card = Ui.panel(this);
-        card.addView(Ui.text(this, "WISDOM FROM IMAM ALI (A.S.)", 12, Ui.GOLD, true));
+        LinearLayout wisdomHeader = new LinearLayout(this);
+        wisdomHeader.setGravity(Gravity.CENTER_VERTICAL);
+        TextView wisdomHeading = Ui.text(this, "WISDOM FROM IMAM ALI (A.S.)", 12, Ui.GOLD, true);
+        wisdomHeader.addView(wisdomHeading, new LinearLayout.LayoutParams(0, -2, 1));
+        ImageView nextWisdom = new ImageView(this);
+        nextWisdom.setImageResource(android.R.drawable.ic_media_next);
+        nextWisdom.setColorFilter(Ui.GOLD);
+        nextWisdom.setContentDescription("Show next wisdom quote");
+        nextWisdom.setPadding(Ui.dp(this, 12), Ui.dp(this, 12),
+                Ui.dp(this, 12), Ui.dp(this, 12));
+        GradientDrawable nextSurface = new GradientDrawable();
+        nextSurface.setColor(mix(Ui.CARD, Ui.GOLD, .12f));
+        nextSurface.setCornerRadius(Ui.dp(this, 22));
+        nextSurface.setStroke(Ui.dp(this, 1), Ui.OUTLINE);
+        nextWisdom.setBackground(nextSurface);
+        nextWisdom.setOnClickListener(v -> rotateWisdom());
+        wisdomHeader.addView(nextWisdom, new LinearLayout.LayoutParams(
+                Ui.dp(this, 44), Ui.dp(this, 44)));
+        card.addView(wisdomHeader);
         Ui.space(this, card, 12);
         wisdomText = Ui.text(this, "", 19, Ui.WHITE, false);
         wisdomText.setTextDirection(View.TEXT_DIRECTION_RTL);
@@ -494,8 +531,8 @@ public final class IslamDashboardActivity extends Activity {
         });
         actions.addView(shareStatus);
         card.addView(actions);
-        rotateWisdom();
-        card.setContentDescription("Rotating wisdom from Nahj al-Balagha. Tap to open the collection, or share to WhatsApp Status.");
+        showCurrentWisdom();
+        card.setContentDescription("Wisdom from Nahj al-Balagha. Use the next quote icon for another saying, or share to WhatsApp Status.");
         card.setOnClickListener(v -> launch(NahjAlBalaghaActivity.class));
         content.addView(card);
         Ui.space(this, content, 13);
@@ -535,10 +572,8 @@ public final class IslamDashboardActivity extends Activity {
         Ui.space(this, content, 12);
         tile("Shia Hadith Library", "Al-Kafi, Al-Faqih and Ahlulbayt narrations", () -> launch(ShiaHadithActivity.class));
         tile("Nahj al-Balagha", "Imam Ali’s wisdom • Arabic & Urdu", () -> launch(NahjAlBalaghaActivity.class));
-        tile("Mojzat • معجزاتِ اہلِ بیتؑ", "Mola Ali (A.S.) and Bibi Fatima (S.A.)",
+        tile("Mola Ali Mojza • معجزہ مولا علیؑ", "Iranian woodcutter story • Urdu and Roman Urdu",
                 () -> launch(MojzatActivity.class));
-        tile("Bibi Fatima Mojza • معجزہ جنابِ سیدہؑ", "Read the Urdu story • Recitation available",
-                () -> openMojza("fatima-sayeda-tahira-goldsmith"));
         tile("Azkar & daily remembrance", "Daily supplications and repeat counts", () -> library("azkar"));
         tile("Prayer tracker", "Keep a personal record of five daily prayers",
                 () -> launch(PrayerTrackerActivity.class));
@@ -569,7 +604,7 @@ public final class IslamDashboardActivity extends Activity {
         tile("Tasbeeh counter", "Remembrance and saved counts", () -> launch(TasbeehActivity.class));
         tile("Nahj al-Balagha", "480 wisdom sayings and Urdu reference links", () -> launch(NahjAlBalaghaActivity.class));
         tile("Shia Hadith", "Read Shia source books", () -> launch(ShiaHadithActivity.class));
-        tile("Mojzat • معجزاتِ اہلِ بیتؑ", "Bibi Fatima (S.A.) and Mola Ali (A.S.) • Urdu recitation",
+        tile("Mola Ali Mojza • معجزہ مولا علیؑ", "Urdu / Roman Urdu • Recitation and bookmarks",
                 () -> launch(MojzatActivity.class));
         tile("Shia Duas & Ziyarat", "Ahlulbayt supplications, bookmarks and source texts",
                 () -> launch(ShiaDuasActivity.class));
