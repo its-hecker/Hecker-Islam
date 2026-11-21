@@ -113,7 +113,7 @@ public final class MojzatActivity extends Activity {
         setContentView(root);
 
         TextView back = Ui.text(this,
-                selectedId == null ? "‹   Hecker Islam" : "‹   مولا علیؑ کا معجزہ",
+                selectedId == null ? "‹   Hecker Islam" : "‹   معجزہ کی تفصیل",
                 16, Ui.GOLD, true);
         back.setContentDescription("Go back");
         back.setOnClickListener(v -> onBackPressed());
@@ -176,13 +176,13 @@ public final class MojzatActivity extends Activity {
         Ui.space(this, content, 10);
     }
     private void index() {
-        content.addView(Ui.text(this, "Mola Ali Mojza", 30, Ui.WHITE, true));
+        content.addView(Ui.text(this, "Mojzat • Ahlulbayt (A.S.)", 30, Ui.WHITE, true));
         Ui.space(this, content, 5);
-        content.addView(urdu("معجزۂ مولا مشکل کشاؑ", 23, Ui.GOLD, true));
+        content.addView(urdu("معجزاتِ اہلِ بیت علیہم السلام", 23, Ui.GOLD, true));
         Ui.space(this, content, 17);
         LinearLayout introduction = Ui.panel(this);
         introduction.addView(roman(
-                "The traditional story of the woodcutter of Iran, available in Urdu and Roman Urdu.",
+                "Traditional devotional stories of Mola Ali (A.S.) and Bibi Fatima (S.A.).",
                 16, Ui.WHITE, false));
         Ui.space(this, introduction, 9);
         introduction.addView(urdu(
@@ -190,9 +190,12 @@ public final class MojzatActivity extends Activity {
                 14, Ui.MUTED, false));
         content.addView(introduction);
         Ui.space(this, content, 17);
-        JSONObject item = find("ali-iran-woodcutter");
-        if (item != null) featured(item);
-        else content.addView(urdu("مولا علیؑ کی حکایت اس بلڈ میں موجود نہیں۔", 16, Ui.MUTED, false));
+        for (int i = 0; i < stories.length(); i++) {
+            JSONObject item = stories.optJSONObject(i);
+            if (item != null) featured(item);
+        }
+        if (stories.length() == 0)
+            content.addView(urdu("حکایات اس بلڈ میں موجود نہیں۔", 16, Ui.MUTED, false));
 
         Ui.space(this, content, 10);
         content.addView(Ui.text(this, "Source & context", 19, Ui.WHITE, true));
@@ -211,11 +214,15 @@ public final class MojzatActivity extends Activity {
     }
     private void featured(JSONObject item) {
         LinearLayout card = Ui.panel(this);
-        card.addView(roman(item.optString("title"), 19, Ui.WHITE, true));
+        boolean urduOnly = "urdu".equals(item.optString("script"));
+        card.addView(urduOnly ? urdu(item.optString("title"), 19, Ui.WHITE, true)
+                : roman(item.optString("title"), 19, Ui.WHITE, true));
         Ui.space(this, card, 7);
-        card.addView(roman(item.optString("subtitle"), 14, Ui.MUTED, false));
+        card.addView(urduOnly ? urdu(item.optString("subtitle"), 14, Ui.MUTED, false)
+                : roman(item.optString("subtitle"), 14, Ui.MUTED, false));
         Ui.space(this, card, 9);
-        card.addView(Ui.text(this, "Read in Urdu / Roman Urdu  ›", 14, Ui.GOLD, true));
+        card.addView(Ui.text(this, urduOnly ? "اردو میں پڑھیں  ›"
+                : "Read in Urdu / Roman Urdu  ›", 14, Ui.GOLD, true));
         card.setOnClickListener(v -> select(item.optString("id")));
         content.addView(card);
         Ui.space(this, content, 10);
@@ -230,20 +237,26 @@ public final class MojzatActivity extends Activity {
         if (item == null) { selectedId = null; render(); return; }
         boolean showUrdu = getSharedPreferences("mojzat_reader", MODE_PRIVATE)
                 .getBoolean("urdu_script", true);
+        boolean urduOnly = "urdu".equals(item.optString("script"));
+        if (urduOnly) showUrdu = true;
         String urduText = item.optString("urduText", "");
         String text = showUrdu && !urduText.isEmpty() ? urduText : item.optString("text");
         String recitationText = urduText.isEmpty() ? item.optString("text") : urduText;
-        content.addView(roman(item.optString("title"), 25, Ui.WHITE, true));
+        content.addView(urduOnly ? urdu(item.optString("title"), 25, Ui.WHITE, true)
+                : roman(item.optString("title"), 25, Ui.WHITE, true));
         Ui.space(this, content, 10);
-        content.addView(roman(item.optString("subtitle"), 16, Ui.GOLD, false));
+        content.addView(urduOnly ? urdu(item.optString("subtitle"), 16, Ui.GOLD, false)
+                : roman(item.optString("subtitle"), 16, Ui.GOLD, false));
         Ui.space(this, content, 18);
         LinearLayout label = Ui.panel(this);
         label.addView(urdu("نوعیتِ روایت", 13, Ui.GOLD, true));
         Ui.space(this, label, 7);
-        label.addView(roman(item.optString("label"), 15, Ui.WHITE, false));
+        label.addView(urduOnly ? urdu(item.optString("label"), 15, Ui.WHITE, false)
+                : roman(item.optString("label"), 15, Ui.WHITE, false));
         content.addView(label);
         Ui.space(this, content, 13);
 
+        if (!urduOnly) {
         LinearLayout switcher = Ui.panel(this);
         switcher.addView(Ui.text(this, "READING LANGUAGE", 12, Ui.GOLD, true));
         Ui.space(this, switcher, 10);
@@ -272,6 +285,7 @@ public final class MojzatActivity extends Activity {
         switcher.addView(options);
         content.addView(switcher);
         Ui.space(this, content, 13);
+        }
 
         LinearLayout reader = Ui.panel(this);
         TextView title = Ui.text(this, showUrdu ? "اردو متن" : "Roman Urdu text",
@@ -325,16 +339,18 @@ public final class MojzatActivity extends Activity {
 
         String id = item.optString("id");
         action(saved(id) ? "★ محفوظ سے ہٹائیں" : "☆ محفوظ کریں", () -> toggleBookmark(id));
-        action("ماخذ / مکمل حوالہ کھولیں  ›", () -> openSource(item.optString("source")));
+        if (item.optString("source").startsWith("https://"))
+            action("ماخذ / مکمل حوالہ کھولیں  ›", () -> openSource(item.optString("source")));
         action("حکایت شیئر کریں", () -> {
             Intent share = new Intent(Intent.ACTION_SEND);
             share.setType("text/plain");
             share.putExtra(Intent.EXTRA_TEXT, item.optString("title") + "\n\n"
                     + text + "\n\n" + item.optString("label") + "\n"
                     + item.optString("source"));
-            startActivity(Intent.createChooser(share, "Share Mola Ali mojza"));
+            startActivity(Intent.createChooser(share, "Share devotional story"));
         });
-        content.addView(roman("Source: " + item.optString("sourceTitle"), 13, Ui.MUTED, false));
+        content.addView(urduOnly ? urdu("ماخذ: " + item.optString("sourceTitle"), 13, Ui.MUTED, false)
+                : roman("Source: " + item.optString("sourceTitle"), 13, Ui.MUTED, false));
         Ui.space(this, content, 8);
         content.addView(urdu(
                 "یہ روایت کا بامحاورہ بیان ہے؛ اسے لفظ بہ لفظ نقل یا مستند تاریخی حدیث نہ سمجھا جائے۔",
