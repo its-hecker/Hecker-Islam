@@ -233,9 +233,6 @@ public final class DailyZiaraatActivity extends Activity {
         String name = selected.optString("name");
         content.addView(text("Arabic original · Original Urdu translation", 14, Ui.MUTED, false));
         Ui.space(this, content, 14);
-        rtlPanel("عربی متن", arabic, 24);
-        rtlPanel("اردو ترجمہ", urdu, 20);
-
         LinearLayout audio = Ui.panel(this);
         audio.addView(text("RECITATION · DEVICE VOICES", 12, Ui.GOLD, true));
         Ui.space(this, audio, 12);
@@ -259,6 +256,10 @@ public final class DailyZiaraatActivity extends Activity {
                 12, Ui.MUTED, false));
         content.addView(audio);
         Ui.space(this, content, 13);
+        // Recitation and playback controls precede the long bilingual reading.
+        rtlPanel("عربی متن", arabic, 24);
+        rtlPanel("اردو ترجمہ", urdu, 20);
+
 
         addButton(content, starred(id) ? "★ Remove from saved" : "☆ Save ziyarat",
                 () -> toggleStar(id));
