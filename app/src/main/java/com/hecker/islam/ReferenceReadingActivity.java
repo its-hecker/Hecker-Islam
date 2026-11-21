@@ -36,7 +36,8 @@ public final class ReferenceReadingActivity extends Activity {
     private String section, query = "";
     private int stage = 0, category = -1, chapter = -1;
     private JSONObject selectedHadith;
-    private TextView recitationControl, quranSpeedControl;
+    private TextView recitationControl, quranSpeedControl, urduRecitationControl;
+    private String urduRecitationText;
     private final android.content.BroadcastReceiver recitationUpdates =
             new android.content.BroadcastReceiver() {
                 @Override public void onReceive(android.content.Context context, android.content.Intent intent) {
@@ -180,6 +181,7 @@ public final class ReferenceReadingActivity extends Activity {
         }
         generation++;
         recitationControl = null;
+        urduRecitationControl = null;
         content.removeAllViews();
         TextView back = Ui.text(this, "‹  " + (stage == 0 ? "Hecker Islam" : "Back"), 15, Ui.GOLD, true);
         back.setOnClickListener(v -> onBackPressed());
@@ -261,6 +263,49 @@ public final class ReferenceReadingActivity extends Activity {
         } else {
             recitationControl.setText("▶ Listen • Mishary Alafasy");
         }
+        updateUrduRecitationControl();
+    }
+    private void updateUrduRecitationControl() {
+        if (urduRecitationControl == null) return;
+        if (urduRecitationText == null || urduRecitationText.isEmpty()) {
+            urduRecitationControl.setText(urduMissing
+                    ? "Urdu audio unavailable • translation not bundled"
+                    : "◌ Loading Urdu translation…");
+            return;
+        }
+        Locale urdu = Locale.forLanguageTag("ur-PK");
+        if (RecitationService.matchesText(this, urduRecitationText, urdu)) {
+            urduRecitationControl.setText(RecitationService.isLoading(this)
+                    ? "◌ Preparing Urdu translation audio…"
+                    : RecitationService.isPlaying(this)
+                    ? "Ⅱ Pause • اردو ترجمہ" : "▶ Resume • اردو ترجمہ");
+        } else {
+            urduRecitationControl.setText("▶ Listen • اردو ترجمہ");
+        }
+    }
+    private String buildUrduRecitationText() {
+        if (urduTranslations == null || !urduEdition().equals(loadedUrduEdition)
+                || chapter < 1 || chapter > 114 || verses == null) return null;
+        StringBuilder text = new StringBuilder();
+        for (int i = 0; i < verses.length(); i++) {
+            JSONObject verse = verses.optJSONObject(i);
+            if (verse == null || verse.optInt("ch") != chapter) continue;
+            String translation = urduTranslations.get(chapter * 1000 + verse.optInt("vn"));
+            if (translation != null && !translation.trim().isEmpty())
+                text.append(translation.trim()).append("\n");
+        }
+        return text.length() == 0 ? null : text.toString().trim();
+    }
+    private void playUrduTranslation() {
+        if (urduRecitationText == null) {
+            loadUrduTranslation();
+            android.widget.Toast.makeText(this, urduMissing
+                    ? "Urdu translation is missing from this build."
+                    : "The Urdu translation is still loading.", android.widget.Toast.LENGTH_LONG).show();
+            return;
+        }
+        RecitationService.toggleText(this, urduRecitationText,
+                Locale.forLanguageTag("ur-PK"), quranSpeed());
     }
     private void stopAudio() {
         RecitationService.stop(this);
@@ -338,10 +383,12 @@ public final class ReferenceReadingActivity extends Activity {
                 if (message == null) {
                     urduTranslations = results;
                     loadedUrduEdition = edition;
+                    urduRecitationText = null;
                     urduMissing = false;
                 } else {
                     urduTranslations = null;
                     loadedUrduEdition = null;
+                    urduRecitationText = null;
                     urduMissing = true;
                     android.util.Log.w("HeckerIslamQuran", "Urdu translation unavailable: " + message);
                 }
@@ -358,6 +405,9 @@ public final class ReferenceReadingActivity extends Activity {
                         (dialog, chosen) -> {
                             saved.edit().putString("urduEdition", chosen == 1 ? "najafi" : "jawadi").apply();
                             dialog.dismiss();
+                            if (urduRecitationText != null && RecitationService.matchesText(
+                                    this, urduRecitationText, Locale.forLanguageTag("ur-PK"))) stopAudio();
+                            urduRecitationText = null;
                             urduTranslations = null; loadedUrduEdition = null; urduMissing = false;
                             loadUrduTranslation(); draw();
                         })
@@ -406,10 +456,16 @@ public final class ReferenceReadingActivity extends Activity {
                 }
             }
             recitationControl = button("▶ Listen • Mishary Alafasy", this::playSurah);
+            if (showUrdu()) {
+                urduRecitationText = buildUrduRecitationText();
+                urduRecitationControl = button("▶ Listen • اردو ترجمہ", this::playUrduTranslation);
+            }
             updateRecitationControl();
             quranSpeedControl = button("Playback speed • " + quranSpeedLabel() + "  ›",
                     this::chooseQuranSpeed);
-            content.addView(Ui.text(this, "Recorded reciter playback requires internet. Qur’an text remains available offline.", 12, Ui.MUTED, false));
+            content.addView(Ui.text(this,
+                    "Arabic: recorded reciter (internet required). Urdu: offline device speech in the selected Shia translation; an installed Urdu TTS voice is required. Audio keeps playing with the screen off.",
+                    12, Ui.MUTED, false));
             Ui.space(this, content, 16);
             int selected = 0;
             for (int i = 0; i < verses.length(); i++) {
