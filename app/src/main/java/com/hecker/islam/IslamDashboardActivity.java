@@ -457,9 +457,15 @@ public final class IslamDashboardActivity extends Activity {
         currentWisdom = NahjWisdom.randomOtherThan(currentWisdom);
         NahjWisdom.Quote quote = NahjWisdom.QUOTES[currentWisdom];
         wisdomText.setText(quote.urdu);
-        wisdomReference.setText("Nahj al-Balagha • Wisdom " + quote.number + " • اردو مفہوم");
+        wisdomReference.setText("نہج البلاغہ • اردو مفہوم");
         wisdomChangedAt = android.os.SystemClock.elapsedRealtime();
     }
+    private void openMojza(String storyId) {
+        Intent intent = new Intent(this, MojzatActivity.class);
+        intent.putExtra("mojzat_story", storyId);
+        startActivity(intent);
+    }
+
     private void wisdomCard() {
         LinearLayout card = Ui.panel(this);
         card.addView(Ui.text(this, "WISDOM FROM IMAM ALI (A.S.)", 12, Ui.GOLD, true));
@@ -529,8 +535,10 @@ public final class IslamDashboardActivity extends Activity {
         Ui.space(this, content, 12);
         tile("Shia Hadith Library", "Al-Kafi, Al-Faqih and Ahlulbayt narrations", () -> launch(ShiaHadithActivity.class));
         tile("Nahj al-Balagha", "Imam Ali’s wisdom • Arabic & Urdu", () -> launch(NahjAlBalaghaActivity.class));
-        tile("Mola Ali Mojza • معجزہ مولا علیؑ", "Mola Mushkil Kusha • Urdu and Roman Urdu",
+        tile("Mojzat • معجزاتِ اہلِ بیتؑ", "Mola Ali (A.S.) and Bibi Fatima (S.A.)",
                 () -> launch(MojzatActivity.class));
+        tile("Bibi Fatima Mojza • معجزہ جنابِ سیدہؑ", "Read the Urdu story • Recitation available",
+                () -> openMojza("fatima-sayeda-tahira-goldsmith"));
         tile("Azkar & daily remembrance", "Daily supplications and repeat counts", () -> library("azkar"));
         tile("Prayer tracker", "Keep a personal record of five daily prayers",
                 () -> launch(PrayerTrackerActivity.class));
@@ -561,7 +569,7 @@ public final class IslamDashboardActivity extends Activity {
         tile("Tasbeeh counter", "Remembrance and saved counts", () -> launch(TasbeehActivity.class));
         tile("Nahj al-Balagha", "480 wisdom sayings and Urdu reference links", () -> launch(NahjAlBalaghaActivity.class));
         tile("Shia Hadith", "Read Shia source books", () -> launch(ShiaHadithActivity.class));
-        tile("Mola Ali Mojza • معجزہ مولا علیؑ", "Urdu & Roman Urdu • Source, bookmark & recitation",
+        tile("Mojzat • معجزاتِ اہلِ بیتؑ", "Bibi Fatima (S.A.) and Mola Ali (A.S.) • Urdu recitation",
                 () -> launch(MojzatActivity.class));
         tile("Shia Duas & Ziyarat", "Ahlulbayt supplications, bookmarks and source texts",
                 () -> launch(ShiaDuasActivity.class));
