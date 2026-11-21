@@ -9,11 +9,11 @@ import java.io.IOException;
 final class BundledAzaan {
     static final String ASSET = "azaan/nizar_al_qatari.mp3";
     /*
-     * Skip 42.55 seconds of the pinned bundled recording, as requested:
-     * 17 seconds more than the previous 25.55-second offset.
+     * Skip 40 seconds of the pinned bundled recording, as requested:
+     * The offset applies only to the bundled audio.
      * Do not change the start of user-imported recordings.
      */
-    static final long START_AFTER_INTRO_MS = 42_550L;
+    static final long START_AFTER_INTRO_MS = 40_000L;
     private BundledAzaan() {}
     static boolean available(Context context) {
         try (AssetFileDescriptor file = context.getAssets().openFd(ASSET)) {
