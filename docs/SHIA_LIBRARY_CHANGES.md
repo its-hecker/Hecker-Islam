@@ -18,6 +18,12 @@ This change is based on `fix/standalone-offline-expressive`, not the old one-fil
 - Each entry has complete Arabic salutations and a carefully written Urdu rendering, selectable Arabic and Urdu device-voice recitation, speed controls and bookmarks.
 - These are optional post-prayer devotions, not compulsory parts of Salah; the Arabic source is https://www.duas.org/ziarataftersalaat.htm.
 
+## Maghfirat and Qabristan recitations
+- Adds **Dua-e-Maghfirat (دعائے مغفرت)** for all living and deceased believers, using a short Arabic supplication from *Al-Kafi* (https://shialibrary.com/book/kafi/chapter/527065), with an original Urdu translation.
+- Adds **Durood-e-Qabristan / Salaam-e-Qabristan (درودِ قبرستان / سلامِ اہلِ قبور)** using the cemetery greeting reported from Imam Ja'far al-Sadiq (a.s.) via Abdullah ibn Sinan at https://www.duas.org/mobile/visit-graveyard.html. This is a *salaam*, not a fixed salawat.
+- Both entries work offline with Arabic and Urdu readings, device text-to-speech recitation, adjustable speed, and bookmarks; the source link requires internet.
+- An index shortcut provides quick access to these supplications; wording is not presented as an entire funeral prayer.
+
 ## Shia duas
 - Adds **Dua Imam-e-Zamana (Dua al-Faraj)** and **Dua-e-Ahad**.
 - Adds **Hadith-e-Kisa (حدیثِ کساء)** to the Shia Duas catalogue, with Urdu introduction, bookmarking, and a linked in-app full Arabic/Urdu reader with Arabic and Urdu audio at FZIC. The complete narration and recitations require internet access.
