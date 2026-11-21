@@ -38,6 +38,11 @@ jobs:
           mv /tmp/android-tools/cmdline-tools "$ANDROID_HOME/cmdline-tools/latest"
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" --licenses >/dev/null || true
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+      - name: Generate density-specific launcher PNG icons
+        run: |
+          python3 -m venv .launcher-venv
+          .launcher-venv/bin/python -m pip install --disable-pip-version-check 'cairosvg==2.7.1'
+          .launcher-venv/bin/python tools/generate_launcher_icons.py
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.11.1'
