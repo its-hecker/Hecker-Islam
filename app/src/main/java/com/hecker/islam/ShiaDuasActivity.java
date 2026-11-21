@@ -32,6 +32,10 @@ public final class ShiaDuasActivity extends Activity {
         }
         private static String translations(String id) {
             switch (id) {
+                case "namaz_ziyarat": return "زیارتِ امام حسینؑ اور حضرت عباسؑ\nآپ پر سلام ہو، اے ابا عبداللہؑ!\nآپ پر سلام ہو، اے رسولِ خداؐ کے فرزند!\nآپ پر سلام ہو، اے امیرالمؤمنینؑ کے فرزند!\nآپ پر سلام ہو، اے حضرت فاطمہ زہراؑ کے فرزند!\nآپ پر سلام ہو، اے ابوالفضل العباسؑ!\nآپ سب پر اللہ کی رحمت اور برکتیں ہوں۔\n\nزیارتِ امام علی رضا علیہ السلام\nآپ پر سلام ہو، اے غریب الغرباؑ!\nآپ پر سلام ہو، اے علی بن موسیٰ الرضاؑ!\nآپ پر اللہ کی رحمت اور برکتیں ہوں۔\n\nزیارتِ امامِ زمانہ علیہ السلام\nآپ پر سلام ہو، اے صاحبِ عصر و زمان!\nآپ پر سلام ہو، اے انسانوں اور جنوں کے امام!\nآپ پر سلام ہو، اے قرآن کے ساتھی!\nامان، امان، امان!\nآپ پر اللہ کی رحمت اور برکتیں ہوں۔\nاے اللہ! محمدؐ اور آلِ محمدؑ پر رحمت نازل فرما۔";
+                case "namaz_husayn": return "زیارتِ امام حسینؑ اور حضرت عباسؑ\nآپ پر سلام ہو، اے ابا عبداللہؑ!\nآپ پر سلام ہو، اے رسولِ خداؐ کے فرزند!\nآپ پر سلام ہو، اے امیرالمؤمنینؑ کے فرزند!\nآپ پر سلام ہو، اے حضرت فاطمہ زہراؑ کے فرزند!\nآپ پر سلام ہو، اے ابوالفضل العباسؑ!\nآپ سب پر اللہ کی رحمت اور برکتیں ہوں۔";
+                case "namaz_reza": return "زیارتِ امام علی رضا علیہ السلام\nآپ پر سلام ہو، اے غریب الغرباؑ!\nآپ پر سلام ہو، اے علی بن موسیٰ الرضاؑ!\nآپ پر اللہ کی رحمت اور برکتیں ہوں۔";
+                case "namaz_mahdi": return "زیارتِ امامِ زمانہ علیہ السلام\nآپ پر سلام ہو، اے صاحبِ عصر و زمان!\nآپ پر سلام ہو، اے انسانوں اور جنوں کے امام!\nآپ پر سلام ہو، اے قرآن کے ساتھی!\nامان، امان، امان!\nآپ پر اللہ کی رحمت اور برکتیں ہوں۔\nاے اللہ! محمدؐ اور آلِ محمدؑ پر رحمت نازل فرما۔";
                 case "faraj": return "اے اللہ! اپنے ولی، حجت ابن الحسنؑ کے لیے اس گھڑی اور ہر گھڑی سرپرست، محافظ، رہنما، مددگار اور نگہبان بن، یہاں تک کہ تو انہیں اپنی زمین پر بااختیار طور پر بسائے اور انہیں طویل عرصے تک اس سے بہرہ مند فرمائے۔";
                 case "tasbih": return "اللہ سب سے بڑا ہے (۳۴ مرتبہ)۔ تمام تعریفیں اللہ ہی کے لیے ہیں (۳۳ مرتبہ)۔ اللہ ہر نقص سے پاک ہے (۳۳ مرتبہ)۔";
                 case "salawat": return "اے اللہ! محمدؐ اور آلِ محمدؑ پر رحمت نازل فرما۔";
@@ -51,6 +55,26 @@ public final class ShiaDuasActivity extends Activity {
     }
 
     private static final Dua[] DUAS = {
+        new Dua("namaz_ziyarat", "Ziyarat After Namaz • Complete", "نماز کے بعد زیارات",
+            "Optional salutations after prayer • Imam Husayn, Imam Reza & Imam-e-Zamana",
+            "السَّلَامُ عَلَيْكَ يَا أَبَا عَبْدِ اللَّهِ\nالسَّلَامُ عَلَيْكَ يَا ابْنَ رَسُولِ اللَّهِ\nالسَّلَامُ عَلَيْكَ يَا ابْنَ أَمِيرِ الْمُؤْمِنِينَ\nالسَّلَامُ عَلَيْكَ يَا ابْنَ فَاطِمَةَ الزَّهْرَاءِ\nالسَّلَامُ عَلَيْكَ يَا أَبَا الْفَضْلِ الْعَبَّاسِ\nالسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللَّهِ وَبَرَكَاتُهُ\n\nالسَّلَامُ عَلَيْكَ يَا غَرِيبَ الْغُرَبَاءِ\nالسَّلَامُ عَلَيْكَ يَا عَلِيَّ بْنَ مُوسَى الرِّضَا\nالسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللَّهِ وَبَرَكَاتُهُ\n\nالسَّلَامُ عَلَيْكَ يَا صَاحِبَ الْعَصْرِ وَالزَّمَانِ\nالسَّلَامُ عَلَيْكَ يَا إِمَامَ الْإِنْسِ وَالْجَانِّ\nالسَّلَامُ عَلَيْكَ يَا شَرِيكَ الْقُرْآنِ\nالْأَمَانَ، الْأَمَانَ، الْأَمَانَ\nالسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللَّهِ وَبَرَكَاتُهُ\nاللَّهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَآلِ مُحَمَّدٍ",
+            "Optional ziyarat after namaz, not part of the obligatory prayer. Arabic salutation text from Duas.org; Urdu rendering prepared for Hecker Islam.",
+            "https://www.duas.org/ziarataftersalaat.htm"),
+        new Dua("namaz_husayn", "After Namaz • Imam Husayn & Abbas", "نماز کے بعد زیارتِ امام حسینؑ و حضرت عباسؑ",
+            "After Namaz • salutations to Imam Husayn (a.s.) and Hazrat Abbas (a.s.)",
+            "السَّلَامُ عَلَيْكَ يَا أَبَا عَبْدِ اللَّهِ\nالسَّلَامُ عَلَيْكَ يَا ابْنَ رَسُولِ اللَّهِ\nالسَّلَامُ عَلَيْكَ يَا ابْنَ أَمِيرِ الْمُؤْمِنِينَ\nالسَّلَامُ عَلَيْكَ يَا ابْنَ فَاطِمَةَ الزَّهْرَاءِ\nالسَّلَامُ عَلَيْكَ يَا أَبَا الْفَضْلِ الْعَبَّاسِ\nالسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللَّهِ وَبَرَكَاتُهُ",
+            "Optional ziyarat after namaz, not part of the obligatory prayer. Arabic salutation text from Duas.org; Urdu rendering prepared for Hecker Islam.",
+            "https://www.duas.org/ziarataftersalaat.htm"),
+        new Dua("namaz_reza", "After Namaz • Imam Reza", "نماز کے بعد زیارتِ امام رضاؑ",
+            "After Namaz • salutations to Imam Ali al-Rida (a.s.)",
+            "السَّلَامُ عَلَيْكَ يَا غَرِيبَ الْغُرَبَاءِ\nالسَّلَامُ عَلَيْكَ يَا عَلِيَّ بْنَ مُوسَى الرِّضَا\nالسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللَّهِ وَبَرَكَاتُهُ",
+            "Optional ziyarat after namaz, not part of the obligatory prayer. Arabic salutation text from Duas.org; Urdu rendering prepared for Hecker Islam.",
+            "https://www.duas.org/ziarataftersalaat.htm"),
+        new Dua("namaz_mahdi", "After Namaz • Imam-e-Zamana", "نماز کے بعد زیارتِ امام زمانہؑ",
+            "After Namaz • salutations to Imam al-Mahdi (a.j.)",
+            "السَّلَامُ عَلَيْكَ يَا صَاحِبَ الْعَصْرِ وَالزَّمَانِ\nالسَّلَامُ عَلَيْكَ يَا إِمَامَ الْإِنْسِ وَالْجَانِّ\nالسَّلَامُ عَلَيْكَ يَا شَرِيكَ الْقُرْآنِ\nالْأَمَانَ، الْأَمَانَ، الْأَمَانَ\nالسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللَّهِ وَبَرَكَاتُهُ\nاللَّهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَآلِ مُحَمَّدٍ",
+            "Optional ziyarat after namaz, not part of the obligatory prayer. Arabic salutation text from Duas.org; Urdu rendering prepared for Hecker Islam.",
+            "https://www.duas.org/ziarataftersalaat.htm"),
         new Dua("faraj", "Dua Imam-e-Zamana (Dua al-Faraj)", "دعائے امامِ زمانہؑ / دعائے فرج",
             "Supplication for Imam al-Mahdi (a.j.)",
             "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\n"
@@ -203,6 +227,11 @@ public final class ShiaDuasActivity extends Activity {
                 search = s.toString().trim();
             }
             @Override public void afterTextChanged(Editable s) { }
+        });
+        button("☾ After Namaz Ziaraat • نماز کے بعد زیارات", () -> {
+            reciter.stop();
+            selected = DUAS[0];
+            render();
         });
         button(favoritesOnly ? "★ Showing saved • Show all" : "☆ Show saved duas", () -> {
             favoritesOnly = !favoritesOnly; render();
