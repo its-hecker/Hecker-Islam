@@ -14,7 +14,7 @@ This is a traditional devotional narrative rather than an authenticated hadith.
 
 ## Nahj al-Balagha quote sharing
 
-The dashboard's WhatsApp Status card uses a dynamically rendered 9:16 image: dark teal gradient, gold ornamentation, framed Urdu quote and a centered attribution to **امام علی علیہ السلام** below the frame, separated with generous vertical spacing. The image does not carry Hecker Islam branding or a numbered wisdom reference. A preview appears inside the app before sharing; users choose My Status within WhatsApp.
+The dashboard's WhatsApp Status flow now renders **eight** different 9:16 artwork templates (Emerald Classic, Midnight Minimal, Ivory Manuscript, Royal Garnet, Ocean Split, Garden Glow, Bronze Heritage, Moonlit Paper). Successive share previews rotate through all eight styles before repetition, with their progress remembered across app launches. The preview includes a **Change design** action to select the next template, and the same preview image is exported to WhatsApp/other apps. Templates vary the palette, panel framing, ornamentation and quote typography/alignment. Every image keeps the legible Urdu quote with **امام علی علیہ السلام** below the quotation area, without Hecker Islam branding or a numbered wisdom reference.
 
 ## Dashboard wisdom rotation
 
