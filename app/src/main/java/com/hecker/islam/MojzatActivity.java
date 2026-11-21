@@ -19,8 +19,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 /**
- * Devotional narrative of Mola Ali (A.S.) from the user's supplied printed Urdu pages.
- * A photographed book excerpt is not independently authenticated as a hadith.
+ * Urdu devotional stories from the Ahlulbayt tradition, available offline.
+ * Attribution to a printed story does not establish hadith authenticity.
  */
 public final class MojzatActivity extends Activity {
     private JSONArray stories = new JSONArray();
@@ -174,9 +174,9 @@ public final class MojzatActivity extends Activity {
         Ui.space(this, content, 10);
     }
     private void index() {
-        content.addView(Ui.text(this, "Mola Ali Mojza", 30, Ui.WHITE, true));
+        content.addView(Ui.text(this, "Shia Mojzaat", 30, Ui.WHITE, true));
         Ui.space(this, content, 5);
-        content.addView(urdu("معجزۂ مولا علی علیہ السلام", 23, Ui.GOLD, true));
+        content.addView(urdu("معجزاتِ اہلِ بیتؑ", 23, Ui.GOLD, true));
         Ui.space(this, content, 9);
         Ui.space(this, content, 17);
         for (int i = 0; i < stories.length(); i++) {
